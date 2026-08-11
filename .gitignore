@@ -1,0 +1,12 @@
+
+# Node.js
+node_modules/
+dist/
+# Archivos de Sistema Operativo
+.DS_Store
+Thumbs.db
+# Editores / IDEs
+.vscode/
+.idea/
+# Variables de entorno globales (Secretos)
+.env

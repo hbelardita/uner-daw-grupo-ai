@@ -25,3 +25,35 @@ class Perro implements Animal {
     return "guauuu";
   }
 }
+
+class Gato implements Animal {
+  private _nombre: string;
+
+  constructor(nombre: string) {
+    this._nombre = nombre;
+  }
+
+  get nombre(): string {
+    return this._nombre;
+  }
+
+  public gritar(): string {
+    return "miauuu";
+  }
+}
+
+class Vaca implements Animal {
+  private _nombre: string;
+
+  constructor(nombre: string) {
+    this._nombre = nombre;
+  }
+
+  get nombre(): string {
+    return this._nombre;
+  }
+
+  public gritar(): string {
+    return "muuu";
+  }
+}

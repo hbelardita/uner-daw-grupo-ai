@@ -1,15 +1,22 @@
 {
   "name": "tp1-intro-typescript",
   "version": "1.0.0",
-  "description": "",
+  "description": "UNER - TUDW - DAW - Grupo AI - TP1",
   "main": "index.js",
   "scripts": {
+    "dev": "tsx watch index.ts",
     "build": "tsc",
     "start": "npm run build && node dist/index.js"
   },
   "keywords": [],
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
-    "typescript": "7.0.2"
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.2.0",
+    "eslint": "10.8.1",
+    "prettier": "3.9.6",
+    "tsx": "4.23.12",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.67.0"
   }
 }

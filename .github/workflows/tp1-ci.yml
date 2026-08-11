@@ -1,0 +1,36 @@
+name: CI TP1
+
+on:
+  pull_request:
+    paths:
+      - 'tp1-intro-typescript/**'
+  push:
+    branches:
+      - 'develop'
+      - 'main'
+    paths:
+      - 'tp1-intro-typescript/**'
+
+jobs:
+  build:
+    name: Build TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tp1-intro-typescript
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tp1-intro-typescript/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build

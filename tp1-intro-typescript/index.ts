@@ -81,14 +81,16 @@ describirAnimal(vaca);
 // Consigna 6
 
 enum DiasSemana {
-  Lunes = "Lunes",
-  Martes = "Martes",
-  Miercoles = "Miércoles",
-  Jueves = "Jueves",
-  Viernes = "Viernes",
-  Sabado = "Sábado",
-  Domingo = "Domingo"
+  Lun = "Lunes",
+  Mar = "Martes",
+  Mie = "Miércoles",
+  Jue = "Jueves",
+  Vie = "Viernes",
+  Sab = "Sábado",
+  Dom = "Domingo"
 }
+
+console.log(DiasSemana.Lun);
 
 // Consigna 7
 

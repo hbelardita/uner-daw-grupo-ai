@@ -64,6 +64,13 @@ function describirAnimal(animal: Animal): void {
   console.log(`El animal ${animal.nombre} hace ${animal.gritar()}`);
 }
 
+// Consigna 4
+
+const perro: Perro = new Perro("Firulais");
+const gato: Gato = new Gato("Apollo");
+const vaca: Vaca = new Vaca("Lola");
+
+
 // Consigna 6
 
 enum DiasSemana {
@@ -76,3 +83,8 @@ enum DiasSemana {
   Domingo = "Domingo"
 }
 
+
+// Consigna 7
+let valor: number | string;
+valor = "Messi";
+valor = 10;

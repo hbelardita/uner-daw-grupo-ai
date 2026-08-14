@@ -58,12 +58,30 @@ class Vaca implements Animal {
   }
 }
 
+// Consigna 3
+
+function describirAnimal(animal: Animal): void {
+  console.log(`El animal ${animal.nombre} hace ${animal.gritar()}`);
+}
 
 // Consigna 4
 
 const perro: Perro = new Perro("Firulais");
 const gato: Gato = new Gato("Apollo");
 const vaca: Vaca = new Vaca("Lola");
+
+
+// Consigna 6
+
+enum DiasSemana {
+  Lunes = "Lunes",
+  Martes = "Martes",
+  Miercoles = "Miercoles",
+  Jueves = "Jueves",
+  Viernes = "Viernes",
+  Sabado = "Sabado",
+  Domingo = "Domingo"
+}
 
 
 // Consigna 7

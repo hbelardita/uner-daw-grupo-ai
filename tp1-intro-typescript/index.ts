@@ -70,7 +70,6 @@ const perro: Perro = new Perro("Firulais");
 const gato: Gato = new Gato("Apollo");
 const vaca: Vaca = new Vaca("Lola");
 
-
 // Consigna 6
 
 enum DiasSemana {
@@ -80,11 +79,31 @@ enum DiasSemana {
   Jueves = "Jueves",
   Viernes = "Viernes",
   Sabado = "Sabado",
-  Domingo = "Domingo"
+  Domingo = "Domingo",
 }
-
 
 // Consigna 7
 let valor: number | string;
 valor = "Messi";
 valor = 10;
+
+// Consigna 8
+interface Fila<T> {
+  agregar(elemento: T): void;
+  remover(): T | undefined;
+}
+
+class Cola<T> implements Fila<T> {
+  private elementos: Array<T> = [];
+  agregar(elemento: T): void {
+    this.elementos.push(elemento);
+  }
+  remover(): T | undefined {
+    return this.elementos.shift();
+  }
+}
+
+// Consigna 9
+const filaNumeros: Fila<number> = new Cola<number>();
+const filaStrings: Fila<string> = new Cola<string>();
+const filaAnimales: Fila<Animal> = new Cola<Animal>();

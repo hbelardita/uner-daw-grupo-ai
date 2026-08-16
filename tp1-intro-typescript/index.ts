@@ -2,14 +2,12 @@
 // Integrantes: Belardita, Horacio; Beron, Tomás; Garcia, Hugo; Ortega, Sergio; Sandoval, Edgardo.
 
 // Consigna 1
-
 interface Animal {
   nombre: string;
   gritar(): string;
 }
 
 // Consigna 2
-
 class Perro implements Animal {
   private _nombre: string;
 
@@ -59,45 +57,79 @@ class Vaca implements Animal {
 }
 
 // Consigna 3
-
 function describirAnimal(animal: Animal): void {
-    console.log(`El animal ${animal.nombre} hace: ${animal.gritar()}`);
+  console.log(`El animal ${animal.nombre} hace ${animal.gritar()}`);
 }
 
 // Consigna 4
-
-const perro: Animal = new Perro("Perro");
-const gato: Animal = new Gato("Gato");
-const vaca: Animal = new Vaca("Vaca");
-console.log(vaca.nombre);
-console.log(vaca.gritar());
+const perro: Perro = new Perro("Firulais");
+const gato: Gato = new Gato("Apollo");
+const vaca: Vaca = new Vaca("Lola");
 
 // Consigna 5
-
 describirAnimal(perro);
 describirAnimal(gato);
 describirAnimal(vaca);
 
 // Consigna 6
-
 enum DiasSemana {
-  Lun = "Lunes",
-  Mar = "Martes",
-  Mie = "Miércoles",
-  Jue = "Jueves",
-  Vie = "Viernes",
-  Sab = "Sábado",
-  Dom = "Domingo"
+  Lunes = "Lunes",
+  Martes = "Martes",
+  Miercoles = "Miercoles",
+  Jueves = "Jueves",
+  Viernes = "Viernes",
+  Sabado = "Sabado",
+  Domingo = "Domingo",
 }
 
-console.log(DiasSemana.Lun);
+const dia: DiasSemana = DiasSemana.Lunes
+console.log(dia);
 
 // Consigna 7
+let valor: number | string;
+valor = "Messi";
+valor = 10;
 
-let variable: string | number;
-variable = "Messi";
-console.log(variable);
-variable = 10;
-console.log(variable);
+console.log(valor);
 
+// Consigna 8
+interface Fila<T> {
+  agregar(elemento: T): void;
+  remover(): T | undefined;
+}
 
+class Cola<T> implements Fila<T> {
+  private elementos: Array<T> = [];
+  agregar(elemento: T): void {
+    this.elementos.push(elemento);
+  }
+  remover(): T | undefined {
+    return this.elementos.shift();
+  }
+}
+
+// Consigna 9
+const filaNumeros: Fila<number> = new Cola<number>();
+const filaStrings: Fila<string> = new Cola<string>();
+const filaAnimales: Fila<Animal> = new Cola<Animal>();
+
+// Consigna 10
+filaAnimales.agregar(perro);
+filaAnimales.agregar(gato);
+filaAnimales.agregar(vaca);
+
+filaNumeros.agregar(1);
+filaNumeros.agregar(2);
+filaNumeros.agregar(3);
+
+filaStrings.agregar("uno");
+filaStrings.agregar("dos");
+filaStrings.agregar("tres");
+
+filaAnimales.remover();
+filaNumeros.remover();
+filaStrings.remover();
+
+console.log(filaStrings);
+console.log(filaNumeros);
+console.log(filaAnimales);

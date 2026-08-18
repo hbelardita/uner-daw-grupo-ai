@@ -82,15 +82,12 @@ enum DiasSemana {
   Domingo = "Domingo",
 }
 
-const dia: DiasSemana = DiasSemana.Lunes
-console.log(dia);
 
 // Consigna 7
 let valor: number | string;
 valor = "Messi";
 valor = 10;
 
-console.log(valor);
 
 // Consigna 8
 interface Fila<T> {
@@ -129,7 +126,3 @@ filaStrings.agregar("tres");
 filaAnimales.remover();
 filaNumeros.remover();
 filaStrings.remover();
-
-console.log(filaStrings);
-console.log(filaNumeros);
-console.log(filaAnimales);

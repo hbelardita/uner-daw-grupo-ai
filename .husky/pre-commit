@@ -1,0 +1,5 @@
+npx lint-staged
+
+# Validar sintaxis en el backend (Oxlint)
+echo "Ejecutando linter en backend..."
+npm --prefix tp-final-integrador/backend run lint

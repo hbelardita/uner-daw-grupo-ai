@@ -1,12 +1,17 @@
-
 # Node.js
 node_modules/
 dist/
+*.tsbuildinfo
+
 # Archivos de Sistema Operativo
 .DS_Store
 Thumbs.db
+
 # Editores / IDEs
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
+
 # Variables de entorno globales (Secretos)
 .env

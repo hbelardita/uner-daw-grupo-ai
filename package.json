@@ -5,7 +5,11 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "dev:backend": "npm --prefix tp-final-integrador/backend run start:dev",
+    "build:backend": "npm --prefix tp-final-integrador/backend run build",
+    "lint:backend": "npm --prefix tp-final-integrador/backend run lint",
+    "test:backend": "npm --prefix tp-final-integrador/backend run test"
   },
   "repository": {
     "type": "git",

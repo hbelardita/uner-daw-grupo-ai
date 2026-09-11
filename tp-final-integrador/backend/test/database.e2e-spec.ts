@@ -4,7 +4,7 @@ import { DataSource } from 'typeorm';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 
-describe('Database (e2e)', () => {
+describe('Base de datos (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
 
@@ -25,13 +25,50 @@ describe('Database (e2e)', () => {
     }
   });
 
-  it('should establish an active DataSource connection', () => {
-    expect(dataSource).toBeDefined();
-    expect(dataSource.isInitialized).toBe(true);
+  describe('Casos de éxito', () => {
+    it('debe inicializar el DataSource y mantener una conexión activa', () => {
+      expect(dataSource).toBeDefined();
+      expect(dataSource.isInitialized).toBe(true);
+    });
+
+    it('debe ejecutar una consulta simple de verificación de conectividad', async () => {
+      const result = await dataSource.query('SELECT 1 AS alive');
+      expect(result).toEqual([{ alive: 1 }]);
+    });
+
+    it('debe verificar la existencia de las tablas del esquema inicial (usuarios y medicos)', async () => {
+      const tables: Array<{ table_name: string }> = await dataSource.query(
+        `SELECT table_name
+         FROM information_schema.tables
+         WHERE table_schema = 'public'
+           AND table_name IN ('usuarios', 'medicos')
+         ORDER BY table_name ASC`,
+      );
+      const tableNames = tables.map((row) => row.table_name);
+      expect(tableNames).toContain('usuarios');
+      expect(tableNames).toContain('medicos');
+    });
   });
 
-  it('should execute a query over the PostgreSQL wire protocol', async () => {
-    const result = await dataSource.query('SELECT 1 AS alive');
-    expect(result).toEqual([{ alive: 1 }]);
+  describe('Errores esperados', () => {
+    it('debe rechazar con error al ejecutar una sentencia SQL con sintaxis inválida', async () => {
+      await expect(dataSource.query('SELECT FROM WHERE')).rejects.toThrow();
+    });
+
+    it('debe rechazar con error de relación no encontrada al consultar una tabla inexistente', async () => {
+      await expect(
+        dataSource.query('SELECT * FROM tabla_inexistente'),
+      ).rejects.toThrow(/relation "tabla_inexistente" does not exist/);
+    });
+  });
+
+  describe('Casos borde', () => {
+    it('debe retornar un arreglo vacío al ejecutar una consulta parametrizada sin coincidencias', async () => {
+      const result = await dataSource.query(
+        'SELECT * FROM usuarios WHERE documento = $1',
+        ['DOCUMENTO_INEXISTENTE_99999999'],
+      );
+      expect(result).toEqual([]);
+    });
   });
 });

@@ -70,8 +70,7 @@ export class HealthService {
         },
       };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = this.extractErrorMessage(error);
       return {
         status: 'error',
         message: 'Error al verificar el estado de los servicios',
@@ -83,5 +82,34 @@ export class HealthService {
         error: errorMessage,
       };
     }
+  }
+
+  protected extractErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      if (error.message && error.message.trim().length > 0) {
+        return error.message;
+      }
+      if (
+        'errors' in error &&
+        Array.isArray((error as AggregateError).errors) &&
+        (error as AggregateError).errors.length > 0
+      ) {
+        return (error as AggregateError).errors
+          .map((subError: unknown) =>
+            subError instanceof Error ? subError.message : String(subError),
+          )
+          .join('; ');
+      }
+      if ('code' in error && error.code) {
+        return String(error.code);
+      }
+      return error.name || 'Error de conexión';
+    }
+
+    if (typeof error === 'string' && error.trim().length > 0) {
+      return error;
+    }
+
+    return 'Error desconocido de base de datos';
   }
 }

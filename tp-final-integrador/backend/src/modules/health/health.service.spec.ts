@@ -122,6 +122,29 @@ describe('HealthService', () => {
       expect(result.database.error).toBe('Fatal socket closed by peer');
       expect(result.error).toBe('Fatal socket closed by peer');
     });
+
+    it('debe extraer los mensajes internos cuando la excepción es un AggregateError con mensaje vacío (típico de ECONNREFUSED en Node.js)', async () => {
+      const aggregateError = new AggregateError(
+        [
+          new Error('connect ECONNREFUSED ::1:5432'),
+          new Error('connect ECONNREFUSED 127.0.0.1:5432'),
+        ],
+        '',
+      );
+
+      dataSourceMock.query.mockRejectedValue(aggregateError);
+
+      const result = await service.check();
+
+      expect(result.status).toBe('error');
+      expect(result.database.status).toBe('disconnected');
+      expect(result.database.error).toBe(
+        'connect ECONNREFUSED ::1:5432; connect ECONNREFUSED 127.0.0.1:5432',
+      );
+      expect(result.error).toBe(
+        'connect ECONNREFUSED ::1:5432; connect ECONNREFUSED 127.0.0.1:5432',
+      );
+    });
   });
 
   describe('Casos borde (edge cases)', () => {

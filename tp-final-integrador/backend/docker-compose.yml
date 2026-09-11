@@ -22,12 +22,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    networks:
-      - clinic_network
 
 volumes:
   postgres_data:
-
-networks:
-  clinic_network:
-    driver: bridge

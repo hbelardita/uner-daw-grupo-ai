@@ -9,7 +9,12 @@
     "dev:backend": "npm --prefix tp-final-integrador/backend run start:dev",
     "build:backend": "npm --prefix tp-final-integrador/backend run build",
     "lint:backend": "npm --prefix tp-final-integrador/backend run lint",
-    "test:backend": "npm --prefix tp-final-integrador/backend run test"
+    "test:backend": "npm --prefix tp-final-integrador/backend run test",
+    "db:up": "npm --prefix tp-final-integrador/backend run db:up",
+    "db:down": "npm --prefix tp-final-integrador/backend run db:down",
+    "db:status": "npm --prefix tp-final-integrador/backend run db:status",
+    "db:logs": "npm --prefix tp-final-integrador/backend run db:logs",
+    "db:reset": "npm --prefix tp-final-integrador/backend run db:reset"
   },
   "repository": {
     "type": "git",

@@ -28,6 +28,7 @@ export class HealthController {
         status: 'success',
         message: 'La API de DAW está funcionando correctamente',
         version: '0.0.1',
+        timestamp: '2026-09-11T18:00:00.000Z',
         database: {
           status: 'connected',
           version: '16.15 (Debian 16.15-1.pgdg13+2)',
@@ -46,6 +47,7 @@ export class HealthController {
         status: 'error',
         message: 'Error al verificar el estado de los servicios',
         version: '0.0.1',
+        timestamp: '2026-09-11T18:00:00.000Z',
         database: {
           status: 'disconnected',
           error: 'Connection terminated unexpectedly',

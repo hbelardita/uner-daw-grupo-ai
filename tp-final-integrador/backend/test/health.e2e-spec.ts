@@ -39,6 +39,7 @@ describe('Módulo de Healthcheck (e2e)', () => {
           status: 'success',
           message: 'La API de DAW está funcionando correctamente',
           version: '1.0',
+          timestamp: expect.any(String),
           database: expect.objectContaining({
             status: 'connected',
             version: expect.any(String),
@@ -77,6 +78,7 @@ describe('Módulo de Healthcheck (e2e)', () => {
           status: 'error',
           message: 'Error al verificar el estado de los servicios',
           version: '1.0',
+          timestamp: expect.any(String),
           database: expect.objectContaining({
             status: 'disconnected',
             error: 'No se pudo establecer conexión con la base de datos',

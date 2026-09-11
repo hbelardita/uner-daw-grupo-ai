@@ -14,6 +14,7 @@ export interface HealthResponse {
   status: 'success' | 'error';
   message: string;
   version: string;
+  timestamp: string;
   database: HealthDatabaseDetails;
   error?: string;
 }
@@ -29,6 +30,7 @@ export class HealthService {
   ) {}
 
   async check(): Promise<HealthResponse> {
+    const timestamp = new Date().toISOString();
     try {
       const [versionResult, maxConnResult, activeConnResult] =
         await Promise.all([
@@ -40,29 +42,18 @@ export class HealthService {
         ]);
 
       const version = versionResult?.[0]?.server_version ?? 'unknown';
-
-      const maxConnRaw = maxConnResult?.[0]?.max_connections;
-      const parsedMaxConnections =
-        maxConnRaw !== undefined && maxConnRaw !== null
-          ? Number.parseInt(String(maxConnRaw), 10)
-          : Number.NaN;
-      const maxConnections = Number.isNaN(parsedMaxConnections)
-        ? 0
-        : parsedMaxConnections;
-
-      const activeConnRaw = activeConnResult?.[0]?.count;
-      const parsedActiveConnections =
-        activeConnRaw !== undefined && activeConnRaw !== null
-          ? Number.parseInt(String(activeConnRaw), 10)
-          : Number.NaN;
-      const activeConnections = Number.isNaN(parsedActiveConnections)
-        ? 0
-        : parsedActiveConnections;
+      const maxConnections = this.parseConnectionMetric(
+        maxConnResult?.[0]?.max_connections,
+      );
+      const activeConnections = this.parseConnectionMetric(
+        activeConnResult?.[0]?.count,
+      );
 
       return {
         status: 'success',
         message: 'La API de DAW está funcionando correctamente',
         version: this.apiVersion,
+        timestamp,
         database: {
           status: 'connected',
           version,
@@ -84,13 +75,21 @@ export class HealthService {
         status: 'error',
         message: 'Error al verificar el estado de los servicios',
         version: this.apiVersion,
+        timestamp,
         database: {
           status: 'disconnected',
           error: clientErrorMessage,
         },
-        error: clientErrorMessage,
       };
     }
+  }
+
+  protected parseConnectionMetric(raw: unknown): number {
+    if (raw === undefined || raw === null) {
+      return 0;
+    }
+    const parsed = Number.parseInt(String(raw), 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
   }
 
   protected extractErrorMessage(error: unknown): string {

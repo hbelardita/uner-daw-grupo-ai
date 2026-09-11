@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DataSource } from 'typeorm';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getDataSourceToken } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { HealthService } from './health.service.js';
 
 describe('HealthService', () => {
@@ -52,6 +52,8 @@ describe('HealthService', () => {
         'La API de DAW está funcionando correctamente',
       );
       expect(result.version).toBe('1.0');
+      expect(result.timestamp).toBeDefined();
+      expect(Number.isNaN(Date.parse(result.timestamp))).toBe(false);
       expect(result.database).toEqual({
         status: 'connected',
         version: '16.15 (Debian 16.15-1.pgdg13+2)',
@@ -107,11 +109,10 @@ describe('HealthService', () => {
         'Error al verificar el estado de los servicios',
       );
       expect(result.version).toBe('1.0');
+      expect(result.timestamp).toBeDefined();
+      expect(Number.isNaN(Date.parse(result.timestamp))).toBe(false);
       expect(result.database.status).toBe('disconnected');
       expect(result.database.error).toBe(
-        'No se pudo establecer conexión con la base de datos',
-      );
-      expect(result.error).toBe(
         'No se pudo establecer conexión con la base de datos',
       );
     });
@@ -122,11 +123,10 @@ describe('HealthService', () => {
       const result = await service.check();
 
       expect(result.status).toBe('error');
+      expect(result.timestamp).toBeDefined();
+      expect(Number.isNaN(Date.parse(result.timestamp))).toBe(false);
       expect(result.database.status).toBe('disconnected');
       expect(result.database.error).toBe(
-        'No se pudo establecer conexión con la base de datos',
-      );
-      expect(result.error).toBe(
         'No se pudo establecer conexión con la base de datos',
       );
     });
@@ -206,6 +206,29 @@ describe('HealthService', () => {
 
     it('debe exponer la versión de la API configurada en 1.0', () => {
       expect(service['apiVersion']).toBe('1.0');
+    });
+
+    it('debe incluir un timestamp en formato ISO 8601 válido tanto en éxito como en error', async () => {
+      dataSourceMock.query.mockResolvedValue([]);
+      const successResult = await service.check();
+      expect(new Date(successResult.timestamp).toISOString()).toBe(
+        successResult.timestamp,
+      );
+
+      dataSourceMock.query.mockRejectedValue(new Error('DB failure'));
+      const errorResult = await service.check();
+      expect(new Date(errorResult.timestamp).toISOString()).toBe(
+        errorResult.timestamp,
+      );
+    });
+
+    it('debe parsear métricas de conexión manejando valores inválidos o nulos mediante parseConnectionMetric', () => {
+      expect(service['parseConnectionMetric']('100')).toBe(100);
+      expect(service['parseConnectionMetric'](50)).toBe(50);
+      expect(service['parseConnectionMetric'](null)).toBe(0);
+      expect(service['parseConnectionMetric'](undefined)).toBe(0);
+      expect(service['parseConnectionMetric']('invalid')).toBe(0);
+      expect(service['parseConnectionMetric']('')).toBe(0);
     });
   });
 });

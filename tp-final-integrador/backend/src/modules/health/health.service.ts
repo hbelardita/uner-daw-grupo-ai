@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
@@ -20,6 +20,7 @@ export interface HealthResponse {
 
 @Injectable()
 export class HealthService {
+  private readonly logger = new Logger(HealthService.name);
   private readonly apiVersion = '1.0';
 
   constructor(
@@ -70,16 +71,24 @@ export class HealthService {
         },
       };
     } catch (error) {
-      const errorMessage = this.extractErrorMessage(error);
+      const detailedError = this.extractErrorMessage(error);
+      this.logger.error(
+        `Fallo en la verificación de base de datos: ${detailedError}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      const clientErrorMessage =
+        'No se pudo establecer conexión con la base de datos';
+
       return {
         status: 'error',
         message: 'Error al verificar el estado de los servicios',
         version: this.apiVersion,
         database: {
           status: 'disconnected',
-          error: errorMessage,
+          error: clientErrorMessage,
         },
-        error: errorMessage,
+        error: clientErrorMessage,
       };
     }
   }

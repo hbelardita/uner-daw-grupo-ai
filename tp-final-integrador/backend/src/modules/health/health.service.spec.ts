@@ -95,7 +95,7 @@ describe('HealthService', () => {
   });
 
   describe('Errores esperados', () => {
-    it('debe retornar status error y database disconnected cuando la base de datos arroja un Error', async () => {
+    it('debe retornar status error y mensaje genérico seguro cuando la base de datos arroja un Error', async () => {
       dataSourceMock.query.mockRejectedValue(
         new Error('Connection timeout to PostgreSQL'),
       );
@@ -108,22 +108,30 @@ describe('HealthService', () => {
       );
       expect(result.version).toBe('1.0');
       expect(result.database.status).toBe('disconnected');
-      expect(result.database.error).toBe('Connection timeout to PostgreSQL');
-      expect(result.error).toBe('Connection timeout to PostgreSQL');
+      expect(result.database.error).toBe(
+        'No se pudo establecer conexión con la base de datos',
+      );
+      expect(result.error).toBe(
+        'No se pudo establecer conexión con la base de datos',
+      );
     });
 
-    it('debe manejar excepciones no convencionales que no heredan de Error estándar', async () => {
+    it('debe manejar excepciones no convencionales y retornar mensaje genérico seguro', async () => {
       dataSourceMock.query.mockRejectedValue('Fatal socket closed by peer');
 
       const result = await service.check();
 
       expect(result.status).toBe('error');
       expect(result.database.status).toBe('disconnected');
-      expect(result.database.error).toBe('Fatal socket closed by peer');
-      expect(result.error).toBe('Fatal socket closed by peer');
+      expect(result.database.error).toBe(
+        'No se pudo establecer conexión con la base de datos',
+      );
+      expect(result.error).toBe(
+        'No se pudo establecer conexión con la base de datos',
+      );
     });
 
-    it('debe extraer los mensajes internos cuando la excepción es un AggregateError con mensaje vacío (típico de ECONNREFUSED en Node.js)', async () => {
+    it('debe desempaquetar mensajes internos en extractErrorMessage ante un AggregateError con mensaje vacío', () => {
       const aggregateError = new AggregateError(
         [
           new Error('connect ECONNREFUSED ::1:5432'),
@@ -132,16 +140,9 @@ describe('HealthService', () => {
         '',
       );
 
-      dataSourceMock.query.mockRejectedValue(aggregateError);
+      const extracted = service['extractErrorMessage'](aggregateError);
 
-      const result = await service.check();
-
-      expect(result.status).toBe('error');
-      expect(result.database.status).toBe('disconnected');
-      expect(result.database.error).toBe(
-        'connect ECONNREFUSED ::1:5432; connect ECONNREFUSED 127.0.0.1:5432',
-      );
-      expect(result.error).toBe(
+      expect(extracted).toBe(
         'connect ECONNREFUSED ::1:5432; connect ECONNREFUSED 127.0.0.1:5432',
       );
     });

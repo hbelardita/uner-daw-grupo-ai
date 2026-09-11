@@ -79,7 +79,7 @@ describe('Módulo de Healthcheck (e2e)', () => {
           version: '1.0',
           database: expect.objectContaining({
             status: 'disconnected',
-            error: 'Simulated database connection loss',
+            error: 'No se pudo establecer conexión con la base de datos',
           }),
         }),
       );

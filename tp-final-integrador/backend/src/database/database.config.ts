@@ -7,5 +7,5 @@ export default registerAs('database', () => ({
   username: process.env.POSTGRES_USER ?? 'postgres',
   password: process.env.POSTGRES_PASSWORD ?? 'postgres',
   database: process.env.POSTGRES_DB ?? 'tp-integrador',
-  logging: process.env.DB_LOGGING === 'true' ? true : false,
+  logging: process.env.DB_LOGGING === 'true',
 }));

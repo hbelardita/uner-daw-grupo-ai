@@ -111,5 +111,60 @@ describe('databaseConfig', () => {
 
       expect(config.port).toBe(5432);
     });
+
+    it.each([
+      ['abc', 'el valor es no numérico'],
+      ['', 'el valor es una cadena vacía'],
+    ])(
+      'debe retornar NaN cuando POSTGRES_PORT="%s" (%s; la validación Joi lo rechaza en el arranque)',
+      (portValue) => {
+        process.env.POSTGRES_PORT = portValue;
+
+        const config = databaseConfig();
+
+        expect(config.port).toBeNaN();
+      },
+    );
+  });
+
+  describe('Coerción post-Joi (env ya validado)', () => {
+    it('debe aceptar DB_LOGGING como booleano true ya coercionado', () => {
+      process.env.DB_LOGGING = true as unknown as string;
+
+      const config = databaseConfig();
+
+      expect(config.logging).toBe(true);
+    });
+
+    it('debe aceptar POSTGRES_PORT como número ya coercionado', () => {
+      process.env.POSTGRES_PORT = 5434 as unknown as string;
+
+      const config = databaseConfig();
+
+      expect(config.port).toBe(5434);
+    });
+  });
+
+  describe('Logging según entorno (NODE_ENV)', () => {
+    it.each([[true], ['true']])(
+      'debe forzar logging en false en producción aunque DB_LOGGING sea %s',
+      (dbLoggingValue) => {
+        process.env.NODE_ENV = 'production';
+        process.env.DB_LOGGING = dbLoggingValue as unknown as string;
+
+        const config = databaseConfig();
+
+        expect(config.logging).toBe(false);
+      },
+    );
+
+    it('debe respetar DB_LOGGING=true fuera de producción', () => {
+      process.env.NODE_ENV = 'development';
+      process.env.DB_LOGGING = 'true';
+
+      const config = databaseConfig();
+
+      expect(config.logging).toBe(true);
+    });
   });
 });

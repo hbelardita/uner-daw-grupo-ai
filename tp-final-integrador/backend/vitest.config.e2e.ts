@@ -1,11 +1,22 @@
+import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig({
-  plugins: [tsconfigPaths()],
-  test: {
-    globals: true,
-    root: './',
-    include: ['**/*.e2e-spec.ts'],
-  },
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    resolve: {
+      tsconfigPaths: true,
+    },
+    test: {
+      globals: true,
+      root: './',
+      include: ['**/*.e2e-spec.ts'],
+      env: {
+        NODE_ENV: 'test',
+        POSTGRES_DB: env.POSTGRES_DB_TEST || 'tp-integrador-test',
+        DB_LOGGING: 'false',
+      },
+    },
+  };
 });

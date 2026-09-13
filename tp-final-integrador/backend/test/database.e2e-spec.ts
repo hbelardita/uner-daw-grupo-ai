@@ -60,7 +60,9 @@ describe('Base de datos (e2e)', () => {
 
   describe('Errores esperados', () => {
     it('debe rechazar con error al ejecutar una sentencia SQL con sintaxis inválida', async () => {
-      await expect(dataSource.query('SELECT FROM WHERE')).rejects.toThrow();
+      await expect(dataSource.query('SELECT FROM WHERE')).rejects.toThrow(
+        /syntax error/i,
+      );
     });
 
     it('debe rechazar con error de relación no encontrada al consultar una tabla inexistente', async () => {

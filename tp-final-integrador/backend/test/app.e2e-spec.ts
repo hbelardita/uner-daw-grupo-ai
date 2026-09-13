@@ -64,15 +64,20 @@ describe('Bootstrap de la Aplicación y Ruteo Global (e2e)', () => {
 
   describe('Errores esperados', () => {
     it('debe responder 404 en la raíz / al requerirse el prefijo global /api', async () => {
-      await request(app.getHttpServer()).get('/').expect(404);
+      const response = await request(app.getHttpServer()).get('/');
+      expect(response.status).toBe(404);
     });
 
     it('debe responder 404 en /api/v1 al no existir un controlador raíz en la API', async () => {
-      await request(app.getHttpServer()).get('/api/v1').expect(404);
+      const response = await request(app.getHttpServer()).get('/api/v1');
+      expect(response.status).toBe(404);
     });
 
     it('debe responder 404 ante rutas inexistentes bajo el prefijo global /api/v1/no-existe', async () => {
-      await request(app.getHttpServer()).get('/api/v1/no-existe').expect(404);
+      const response = await request(app.getHttpServer()).get(
+        '/api/v1/no-existe',
+      );
+      expect(response.status).toBe(404);
     });
   });
 

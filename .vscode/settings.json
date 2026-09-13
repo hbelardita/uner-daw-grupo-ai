@@ -6,4 +6,5 @@
     "source.organizeImports": "explicit",
     "source.removeUnusedImports": "explicit"
   },
+  "oxc.enable.oxlint": true
 }

@@ -56,10 +56,14 @@ describe('Módulo de Healthcheck (e2e)', () => {
     });
 
     it('debe responder sin requerir el prefijo de versionado v1 respetando el prefijo global /api', async () => {
-      await request(app.getHttpServer()).get('/api/health').expect(200);
+      const response = await request(app.getHttpServer()).get('/api/health');
+      expect(response.status).toBe(200);
 
       // Al estar configurado con VERSION_NEUTRAL, no debe responder en /api/v1/health
-      await request(app.getHttpServer()).get('/api/v1/health').expect(404);
+      const versionedResponse = await request(app.getHttpServer()).get(
+        '/api/v1/health',
+      );
+      expect(versionedResponse.status).toBe(404);
     });
   });
 
@@ -92,10 +96,10 @@ describe('Módulo de Healthcheck (e2e)', () => {
 
   describe('Casos borde (edge cases)', () => {
     it('debe rechazar métodos HTTP no configurados como POST /api/health con 404 Not Found', async () => {
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .post('/api/health')
-        .send({})
-        .expect(404);
+        .send({});
+      expect(response.status).toBe(404);
     });
 
     it('debe incluir las cabeceras de seguridad Helmet en la respuesta del healthcheck', async () => {

@@ -1,0 +1,30 @@
+{
+  "name": "uner-daw-grupo-ai",
+  "version": "1.0.0",
+  "description": "Repositorio de trabajos prácticos de la cátedra **Desarrollo de Aplicaciones Web** — Tecnicatura Universitaria en Desarrollo Web (Facultad de Ciencias de la Administración, UNER).",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "dev:backend": "npm --prefix tp-final-integrador/backend run start:dev",
+    "build:backend": "npm --prefix tp-final-integrador/backend run build",
+    "lint:backend": "npm --prefix tp-final-integrador/backend run lint",
+    "test:backend": "npm --prefix tp-final-integrador/backend run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hbelardita/uner-daw-grupo-ai-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hbelardita/uner-daw-grupo-ai-/issues"
+  },
+  "homepage": "https://github.com/hbelardita/uner-daw-grupo-ai-#readme",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.4.1",
+    "prettier": "^3.9.6"
+  }
+}

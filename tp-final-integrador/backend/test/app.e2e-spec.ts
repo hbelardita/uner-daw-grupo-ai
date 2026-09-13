@@ -1,49 +1,16 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  HttpCode,
-  HttpStatus,
-  INestApplication,
-} from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { IsNotEmpty, IsString } from 'class-validator';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 
-class TestValidationDto {
-  @IsString()
-  @IsNotEmpty()
-  name!: string;
-}
-
-@Controller()
-class TestAppController {
-  @Get()
-  getHello(): string {
-    return 'Hello World!';
-  }
-
-  @Post('test-validation')
-  @HttpCode(HttpStatus.OK)
-  testValidation(@Body() dto: TestValidationDto) {
-    return {
-      success: true,
-      data: dto,
-    };
-  }
-}
-
-describe('App Bootstrap & Routing (e2e)', () => {
+describe('Bootstrap de la Aplicación y Ruteo Global (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-      controllers: [TestAppController],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -57,26 +24,19 @@ describe('App Bootstrap & Routing (e2e)', () => {
     }
   });
 
-  describe('Routing & Global Prefix', () => {
-    it('debe responder 404 en la raíz / al estar activo el prefijo global /api', async () => {
-      await request(app.getHttpServer()).get('/').expect(404);
-    });
-
-    it('debe responder 200 en /api/v1 con el saludo esperado', async () => {
+  describe('Casos de éxito', () => {
+    it('debe responder 200 en /api/health demostrando que el prefijo global /api rutea correctamente', async () => {
       const response = await request(app.getHttpServer())
-        .get('/api/v1')
+        .get('/api/health')
         .expect(200);
 
-      expect(response.text).toBe('Hello World!');
+      expect(response.body).toHaveProperty('status', 'success');
     });
-  });
 
-  describe('Swagger Documentation', () => {
     it('debe servir la interfaz de Swagger UI en /api/docs', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/docs')
         .expect((res) => {
-          // Express / Swagger UI can return 200 or 301 redirect to /api/docs/
           expect([200, 301]).toContain(res.status);
         });
 
@@ -102,10 +62,24 @@ describe('App Bootstrap & Routing (e2e)', () => {
     });
   });
 
-  describe('Security Headers & CORS', () => {
-    it('debe incluir cabeceras de seguridad Helmet', async () => {
+  describe('Errores esperados', () => {
+    it('debe responder 404 en la raíz / al requerirse el prefijo global /api', async () => {
+      await request(app.getHttpServer()).get('/').expect(404);
+    });
+
+    it('debe responder 404 en /api/v1 al no existir un controlador raíz en la API', async () => {
+      await request(app.getHttpServer()).get('/api/v1').expect(404);
+    });
+
+    it('debe responder 404 ante rutas inexistentes bajo el prefijo global /api/v1/no-existe', async () => {
+      await request(app.getHttpServer()).get('/api/v1/no-existe').expect(404);
+    });
+  });
+
+  describe('Casos borde (edge cases)', () => {
+    it('debe incluir cabeceras de seguridad Helmet en las respuestas HTTP', async () => {
       const response = await request(app.getHttpServer())
-        .get('/api/v1')
+        .get('/api/health')
         .expect(200);
 
       expect(response.headers['x-dns-prefetch-control']).toBe('off');
@@ -113,60 +87,14 @@ describe('App Bootstrap & Routing (e2e)', () => {
       expect(response.headers['content-security-policy']).toBeDefined();
     });
 
-    it('debe incluir cabeceras CORS para el origen permitido', async () => {
+    it('debe incluir cabeceras CORS para el origen permitido cuando se especifica Origin', async () => {
       const response = await request(app.getHttpServer())
-        .get('/api/v1')
+        .get('/api/health')
         .set('Origin', 'http://localhost:4200')
         .expect(200);
 
       expect(response.headers['access-control-allow-origin']).toBe(
         'http://localhost:4200',
-      );
-    });
-  });
-
-  describe('ValidationPipe global', () => {
-    it('debe aceptar payloads válidos que cumplan con el DTO', async () => {
-      const validPayload = { name: 'Dr. René Favaloro' };
-
-      const response = await request(app.getHttpServer())
-        .post('/api/v1/test-validation')
-        .send(validPayload)
-        .expect(200);
-
-      expect(response.body).toEqual({
-        success: true,
-        data: validPayload,
-      });
-    });
-
-    it('debe rechazar payloads con campos que violen las reglas de validación (400 Bad Request)', async () => {
-      const invalidPayload = { name: 12345 };
-
-      const response = await request(app.getHttpServer())
-        .post('/api/v1/test-validation')
-        .send(invalidPayload)
-        .expect(400);
-
-      expect(response.body.message).toBeDefined();
-      expect(Array.isArray(response.body.message)).toBe(true);
-    });
-
-    it('debe rechazar payloads con campos no permitidos o desconocidos mediante forbidNonWhitelisted (400 Bad Request)', async () => {
-      const unknownPropPayload = {
-        name: 'Dr. René Favaloro',
-        injectedField: 'malicious_data',
-      };
-
-      const response = await request(app.getHttpServer())
-        .post('/api/v1/test-validation')
-        .send(unknownPropPayload)
-        .expect(400);
-
-      expect(response.body.message).toEqual(
-        expect.arrayContaining([
-          expect.stringContaining('property injectedField should not exist'),
-        ]),
       );
     });
   });

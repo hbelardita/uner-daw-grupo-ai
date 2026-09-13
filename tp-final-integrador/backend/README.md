@@ -31,6 +31,26 @@
 $ npm install
 ```
 
+## Base de datos (PostgreSQL + pgAdmin)
+
+```bash
+# desde la raíz del repositorio
+$ npm run db:up      # inicia PostgreSQL + pgAdmin
+$ npm run db:status  # verifica los contenedores
+$ npm run db:logs    # muestra los logs de postgres
+$ npm run db:down    # detiene los contenedores
+$ npm run db:reset   # detiene, elimina los volúmenes y vuelve a iniciar
+```
+
+### Acceder a pgAdmin (cliente gráfico de la base de datos)
+
+1. Inicia la infraestructura: `npm run db:up` (desde la raíz del repositorio).
+2. Abre `http://localhost:5050` (o el valor de `PGADMIN_PORT`).
+3. Inicia sesión con `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` (valores por defecto: `admin@admin.com` / `admin`, ver `.env.example`).
+4. Registra un servidor: **Add New Server → Connection** con host `postgres`, puerto `5432` y las credenciales `POSTGRES_USER` / `POSTGRES_PASSWORD` (valores por defecto: `postgres` / `postgres`).
+
+> Usa como host `postgres` (el nombre del servicio en compose) porque pgAdmin corre dentro de la misma red Docker. Desde tu máquina local (psql, DBeaver, etc.) usa `localhost` en su lugar.
+
 ## Compile and run the project
 
 ```bash

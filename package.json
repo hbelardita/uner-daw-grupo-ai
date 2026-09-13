@@ -10,6 +10,7 @@
     "build:backend": "npm --prefix tp-final-integrador/backend run build",
     "lint:backend": "npm --prefix tp-final-integrador/backend run lint",
     "test:backend": "npm --prefix tp-final-integrador/backend run test",
+    "test:backend:e2e": "npm --prefix tp-final-integrador/backend run test:e2e",
     "db:up": "npm --prefix tp-final-integrador/backend run db:up",
     "db:down": "npm --prefix tp-final-integrador/backend run db:down",
     "db:status": "npm --prefix tp-final-integrador/backend run db:status",

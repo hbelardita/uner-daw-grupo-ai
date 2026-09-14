@@ -31,6 +31,14 @@ describe('Base de datos (e2e)', () => {
       expect(dataSource.isInitialized).toBe(true);
     });
 
+    it('debe conectarse a la base de datos configurada para pruebas', async () => {
+      const expectedDb = process.env.POSTGRES_DB || 'tp-integrador-test';
+      const result: Array<{ db: string }> = await dataSource.query(
+        'SELECT current_database() as db',
+      );
+      expect(result).toEqual([{ db: expectedDb }]);
+    });
+
     it('debe ejecutar una consulta simple de verificación de conectividad', async () => {
       const result = await dataSource.query('SELECT 1 AS alive');
       expect(result).toEqual([{ alive: 1 }]);
@@ -52,7 +60,9 @@ describe('Base de datos (e2e)', () => {
 
   describe('Errores esperados', () => {
     it('debe rechazar con error al ejecutar una sentencia SQL con sintaxis inválida', async () => {
-      await expect(dataSource.query('SELECT FROM WHERE')).rejects.toThrow();
+      await expect(dataSource.query('SELECT FROM WHERE')).rejects.toThrow(
+        /syntax error/i,
+      );
     });
 
     it('debe rechazar con error de relación no encontrada al consultar una tabla inexistente', async () => {

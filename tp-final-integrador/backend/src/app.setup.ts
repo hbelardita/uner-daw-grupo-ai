@@ -7,9 +7,11 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 
+export const DEFAULT_API_VERSION = '1';
+const GLOBAL_PREFIX = 'api';
+
 export function configureApp(app: INestApplication): void {
   const configService = app.get(ConfigService);
-  const globalPrefix = 'api';
 
   app.use(helmet());
 
@@ -22,12 +24,12 @@ export function configureApp(app: INestApplication): void {
     credentials: true,
   });
 
-  app.setGlobalPrefix(globalPrefix);
+  app.setGlobalPrefix(GLOBAL_PREFIX);
 
   // URI versioning  default '1' -> /api/v1/...
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: '1',
+    defaultVersion: DEFAULT_API_VERSION,
   });
 
   // Global ValidationPipe
@@ -49,6 +51,6 @@ export function configureApp(app: INestApplication): void {
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup(`${globalPrefix}/docs`, app, document);
+    SwaggerModule.setup(`${GLOBAL_PREFIX}/docs`, app, document);
   }
 }

@@ -6,6 +6,8 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
+    "setup:env": "node -e \"const fs=require('fs'), p='tp-final-integrador/backend/.env'; if(!fs.existsSync(p)){ fs.copyFileSync(p+'.example', p); console.log('✓ .env creado desde .env.example'); } else { console.log('ℹ .env ya existe'); }\"",
+    "postinstall": "npm run setup:env && npm --prefix tp-final-integrador/backend install",
     "dev:backend": "npm --prefix tp-final-integrador/backend run start:dev",
     "build:backend": "npm --prefix tp-final-integrador/backend run build",
     "lint:backend": "npm --prefix tp-final-integrador/backend run lint",

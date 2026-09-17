@@ -21,114 +21,148 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## Descripción
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+API REST para el **Sistema de Gestión de Turnos Médicos**, desarrollada con [NestJS](https://nestjs.com/), [TypeORM](https://typeorm.io/) y [PostgreSQL](https://www.postgresql.org/).
+Cátedra **Desarrollo de Aplicaciones Web (DAW 2026)** — UNER.
 
-## Project setup
+---
+
+## 🚀 Puesta en Marcha Inicial
+
+### Opción A: Desde la raíz del repositorio (Recomendado)
+
+El repositorio cuenta con scripts automatizados en el `package.json` principal:
+
+1. **Instalar dependencias y generar `.env`:**
+
+   ```bash
+   npm install
+   ```
+
+   > ℹ️ **Automatización:** Al ejecutar `npm install` en la raíz, el hook `postinstall` ejecuta `npm run setup:env`, el cual copia automáticamente `.env.example` a `.env` (si aún no existe, sin sobreescribir tus cambios) e instala todas las dependencias del backend.
+
+2. **Levantar la base de datos con Docker (Opcional):**
+
+   ```bash
+   npm run db:up
+   ```
+
+3. **Iniciar el backend en modo desarrollo:**
+   ```bash
+   npm run dev:backend
+   ```
+
+---
+
+### Opción B: Directo desde el directorio `backend`
+
+Si trabajás situado dentro de `tp-final-integrador/backend`:
+
+1. **Configurar las variables de entorno:**
+   Copiá el archivo de plantilla a `.env`:
+   - **Linux / macOS:**
+     ```bash
+     cp .env.example .env
+     ```
+   - **Windows (PowerShell):**
+     ```powershell
+     Copy-Item .env.example .env
+     ```
+   - **Windows (CMD):**
+     ```cmd
+     copy .env.example .env
+     ```
+
+2. **Instalar dependencias:**
+
+   ```bash
+   npm install
+   ```
+
+3. **Levantar la base de datos:**
+
+   ```bash
+   npm run db:up
+   ```
+
+4. **Iniciar en modo desarrollo (hot-reload):**
+   ```bash
+   npm run start:dev
+   ```
+
+---
+
+## ⚙️ Variables de Entorno (`.env`)
+
+| Variable             | Valor por Defecto       | Descripción                                                |
+| :------------------- | :---------------------- | :--------------------------------------------------------- |
+| `NODE_ENV`           | `development`           | Entorno de ejecución (`development`, `production`, `test`) |
+| `PORT`               | `3000`                  | Puerto HTTP donde corre la API                             |
+| `POSTGRES_HOST`      | `localhost`             | Host de la base de datos                                   |
+| `POSTGRES_PORT`      | `5432`                  | Puerto expuesto de PostgreSQL                              |
+| `POSTGRES_USER`      | `postgres`              | Usuario de PostgreSQL                                      |
+| `POSTGRES_PASSWORD`  | `postgres`              | Contraseña de PostgreSQL                                   |
+| `POSTGRES_DB`        | `tp-integrador`         | Nombre de la base de datos principal                       |
+| `POSTGRES_DB_TEST`   | `tp-integrador-test`    | Nombre de la base de datos de tests                        |
+| `DB_LOGGING`         | `false`                 | Habilita logs de consultas SQL de TypeORM                  |
+| `CORS_ORIGIN`        | `http://localhost:4200` | Origen permitido para solicitudes CORS (Frontend)          |
+| `SWAGGER_HABILITADO` | `true`                  | Habilita la documentación OpenAPI/Swagger en `/api/docs`   |
+| `PGADMIN_PORT`       | `5050`                  | Puerto del panel web pgAdmin                               |
+| `PGADMIN_EMAIL`      | `admin@admin.com`       | Email de inicio de sesión de pgAdmin                       |
+| `PGADMIN_PASSWORD`   | `admin`                 | Clave de inicio de sesión de pgAdmin                       |
+
+---
+
+## 🌐 Enlaces y Servicios Locales
+
+Una vez levantados los servicios, podés acceder a:
+
+- **API Base:** [http://localhost:3000/api/v1](http://localhost:3000/api/v1)
+- **Health Check:** [http://localhost:3000/api/health](http://localhost:3000/api/health)
+- **Documentación Swagger UI:** [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
+- **Especificación OpenAPI (JSON):** [http://localhost:3000/api/docs-json](http://localhost:3000/api/docs-json)
+- **pgAdmin 4:** [http://localhost:5050](http://localhost:5050)
+
+---
+
+## 🐘 Base de Datos (PostgreSQL + pgAdmin)
+
+Los siguientes scripts pueden ejecutarse tanto desde la raíz como dentro de `tp-final-integrador/backend`:
 
 ```bash
-$ npm install
+npm run db:up      # Inicia PostgreSQL + pgAdmin en segundo plano
+npm run db:status  # Verifica el estado y healthcheck de los contenedores
+npm run db:logs    # Muestra los logs en tiempo real de PostgreSQL
+npm run db:down    # Detiene los contenedores sin borrar datos
+npm run db:reset   # Detiene, elimina volúmenes (datos) y vuelve a crear la base
 ```
 
-## Base de datos (PostgreSQL + pgAdmin)
+### Conexión en pgAdmin (Cliente Web)
+
+1. Ingresá a [http://localhost:5050](http://localhost:5050).
+2. Iniciá sesión con las credenciales de `PGADMIN_EMAIL` y `PGADMIN_PASSWORD` (`admin@admin.com` / `admin`).
+3. Creá una nueva conexión de servidor (**Add New Server**):
+   - **General → Name:** `PostgreSQL Local`
+   - **Connection → Host name/address:** `postgres` (nombre del contenedor dentro de la red Docker).
+   - **Connection → Port:** `5432`
+   - **Connection → Maintenance database:** `tp-integrador`
+   - **Connection → Username:** `postgres`
+   - **Connection → Password:** `postgres`
+
+> 💡 **Nota:** Si te conectás desde tu máquina host mediante DBeaver, DataGrip o `psql`, usá `localhost` como host. Dentro de pgAdmin usá `postgres` porque ambos contenedores comparten la red de Docker.
+
+---
+
+## 💻 Comandos de Ejecución y Desarrollo
 
 ```bash
-# desde la raíz del repositorio
-$ npm run db:up      # inicia PostgreSQL + pgAdmin
-$ npm run db:status  # verifica los contenedores
-$ npm run db:logs    # muestra los logs de postgres
-$ npm run db:down    # detiene los contenedores
-$ npm run db:reset   # detiene, elimina los volúmenes y vuelve a iniciar
+# Desarrollo con recarga automática (watch mode)
+npm run start:dev
+
+# Compilar para producción
+npm run build
+
+# Iniciar build de producción
+npm run start:prod
 ```
-
-### Acceder a pgAdmin (cliente gráfico de la base de datos)
-
-1. Inicia la infraestructura: `npm run db:up` (desde la raíz del repositorio).
-2. Abre `http://localhost:5050` (o el valor de `PGADMIN_PORT`).
-3. Inicia sesión con `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` (valores por defecto: `admin@admin.com` / `admin`, ver `.env.example`).
-4. Registra un servidor: **Add New Server → Connection** con host `postgres`, puerto `5432` y las credenciales `POSTGRES_USER` / `POSTGRES_PASSWORD` (valores por defecto: `postgres` / `postgres`).
-
-> Usa como host `postgres` (el nombre del servicio en compose) porque pgAdmin corre dentro de la misma red Docker. Desde tu máquina local (psql, DBeaver, etc.) usa `localhost` en su lugar.
-
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

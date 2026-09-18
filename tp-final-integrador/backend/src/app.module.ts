@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from './config/env.validation.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
+import { MedicosModule } from './modules/medicos/medicos.module.js';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { HealthModule } from './modules/health/health.module.js';
     }),
     DatabaseModule,
     HealthModule,
+    UsuariosModule,
+    MedicosModule,
   ],
   controllers: [],
   providers: [],

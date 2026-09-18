@@ -13,6 +13,8 @@ export default defineConfig(({ mode }) => {
       root: './',
       include: ['**/*.e2e-spec.ts'],
       fileParallelism: false,
+      hookTimeout: 30000,
+      testTimeout: 30000,
       env: {
         NODE_ENV: 'test',
         POSTGRES_DB: env.POSTGRES_DB_TEST || 'tp-integrador-test',

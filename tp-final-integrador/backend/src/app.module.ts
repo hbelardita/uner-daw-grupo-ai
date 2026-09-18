@@ -5,6 +5,7 @@ import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
 import { MedicosModule } from './modules/medicos/medicos.module.js';
+import { ReservasModule } from './modules/reservas/reservas.module.js';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { MedicosModule } from './modules/medicos/medicos.module.js';
     HealthModule,
     UsuariosModule,
     MedicosModule,
+    ReservasModule,
   ],
   controllers: [],
   providers: [],

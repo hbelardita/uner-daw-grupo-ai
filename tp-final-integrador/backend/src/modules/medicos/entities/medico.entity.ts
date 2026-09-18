@@ -3,10 +3,12 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToOne,
+  OneToMany,
   JoinColumn,
   type Relation,
 } from 'typeorm';
 import { Usuario } from '../../usuarios/entities/usuario.entity.js';
+import { Reserva } from '../../reservas/entities/reserva.entity.js';
 
 @Entity('medicos')
 export class Medico {
@@ -25,4 +27,7 @@ export class Medico {
   @OneToOne(() => Usuario, (usuario) => usuario.medico)
   @JoinColumn({ name: 'id_usuario', referencedColumnName: 'id' })
   usuario: Relation<Usuario>;
+
+  @OneToMany(() => Reserva, (reserva) => reserva.medico)
+  reservas?: Relation<Reserva[]>;
 }

@@ -42,11 +42,11 @@ export class Reserva {
   @Column({ name: 'valor_consulta', type: 'int' })
   valorConsulta: number;
 
-  @ManyToOne(() => Medico)
+  @ManyToOne(() => Medico, (medico) => medico.reservas)
   @JoinColumn({ name: 'id_medico', referencedColumnName: 'id' })
   medico: Relation<Medico>;
 
-  @ManyToOne(() => Usuario)
+  @ManyToOne(() => Usuario, (usuario) => usuario.reservas)
   @JoinColumn({ name: 'id_paciente', referencedColumnName: 'id' })
   paciente: Relation<Usuario>;
 }

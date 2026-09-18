@@ -3,10 +3,12 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToOne,
+  OneToMany,
   type Relation,
 } from 'typeorm';
 import { EstadoUsuario, RolUsuario } from '../enums/index.js';
 import { Medico } from '../../medicos/entities/medico.entity.js';
+import { Reserva } from '../../reservas/entities/reserva.entity.js';
 
 @Entity('usuarios')
 export class Usuario {
@@ -45,4 +47,7 @@ export class Usuario {
 
   @OneToOne(() => Medico, (medico) => medico.usuario)
   medico?: Relation<Medico>;
+
+  @OneToMany(() => Reserva, (reserva) => reserva.paciente)
+  reservas?: Relation<Reserva[]>;
 }

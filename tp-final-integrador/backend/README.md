@@ -5,22 +5,6 @@
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
 ## Descripción
 
 API REST para el **Sistema de Gestión de Turnos Médicos**, desarrollada con [NestJS](https://nestjs.com/), [TypeORM](https://typeorm.io/) y [PostgreSQL](https://www.postgresql.org/).
@@ -151,6 +135,53 @@ npm run db:reset   # Detiene, elimina volúmenes (datos) y vuelve a crear la bas
    - **Connection → Password:** `postgres`
 
 > 💡 **Nota:** Si te conectás desde tu máquina host mediante DBeaver, DataGrip o `psql`, usá `localhost` como host. Dentro de pgAdmin usá `postgres` porque ambos contenedores comparten la red de Docker.
+
+---
+
+### Alternativa: Configuración Manual con pgAdmin (Sin Docker)
+
+Si disponés de una instalación local de PostgreSQL y pgAdmin en tu máquina:
+
+#### 1. Conexión al servidor local
+
+1. Abrí pgAdmin y conectate a tu servidor local de PostgreSQL en el panel izquierdo (**Object Explorer**). Por defecto suele estar en `localhost:5432` con usuario `postgres`.
+
+#### 2. Creación de la base de datos
+
+1. En el árbol de navegación, hacé clic derecho en **Databases** → **Create** → **Database...**.
+2. En la pestaña **General**, ingresá el nombre de la base de datos: `tp-integrador` (o el configurado en tu `.env` como `POSTGRES_DB`).
+3. Hacé clic en **Save**.
+4. _(Opcional para tests)_: Repetí el proceso creando la base `tp-integrador-test` si tenés previsto correr los tests end-to-end (`npm run test:e2e`).
+
+#### 3. Importación y ejecución de scripts (`init/`)
+
+Los scripts deben ejecutarse en la base de datos `tp-integrador` en orden secuencial:
+
+1. Desplegá el nodo **Databases** y seleccioná `tp-integrador`.
+2. Hacé clic derecho sobre `tp-integrador` y seleccioná **Query Tool** (o menú superior: _Tools_ → _Query Tool_).
+3. **Estructura y esquemas (`01-init.sql`):**
+   - En la barra de herramientas del Query Tool, hacé clic en el ícono de carpeta (**Open File** o `Ctrl + O`).
+   - Navegá hasta [`init/01-init.sql`](./init/01-init.sql) y abrilo (o copiá y pegá su contenido en el editor).
+   - Presioná el botón de ejecución (**Execute / Refresh** o `F5`).
+   - Verificá en la pestaña _Messages_ que la consulta haya finalizado exitosamente (`Query returned successfully`). Esto creará los tipos `ENUM`, las tablas (`usuarios`, `medicos`, `reservas`) e índices.
+4. **Carga de datos iniciales (`02-seed.sql`):**
+   - Hacé clic nuevamente en **Open File**, seleccioná [`init/02-seed.sql`](./init/02-seed.sql) y presiona **Execute** (`F5`).
+   - Esto insertará los usuarios base (médicos, pacientes, administrador con contraseñas encriptadas en bcrypt), registros de médicos y turnos de ejemplo.
+
+> 💡 **Nota para la base de tests:** Si creaste `tp-integrador-test`, abrí un **Query Tool** sobre ella y ejecutá también `01-init.sql` y `02-seed.sql` para dejarla lista para las pruebas automatizadas.
+
+#### 4. Ajuste de variables de entorno (`.env`)
+
+Verificá que el archivo `.env` en `tp-final-integrador/backend/.env` apunte a tu instalación local:
+
+```env
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=tu_contraseña_local
+POSTGRES_DB=tp-integrador
+POSTGRES_DB_TEST=tp-integrador-test
+```
 
 ---
 

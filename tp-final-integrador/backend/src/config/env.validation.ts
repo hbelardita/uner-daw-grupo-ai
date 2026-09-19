@@ -16,5 +16,5 @@ export const envValidationSchema = Joi.object({
   JWT_SECRET: Joi.string()
     .min(16)
     .default('clave_secreta_jwt_para_desarrollo_y_tests'),
-  JWT_EXPIRES_IN: Joi.string().default('1h'),
+  JWT_EXPIRES_IN: Joi.string().default('8h'),
 });

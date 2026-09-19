@@ -38,6 +38,7 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: usuario.id,
       rol: usuario.rol,
+      email: usuario.email,
       ...(usuario.rol === RolUsuario.MEDICO && usuario.medico?.id
         ? { idMedico: usuario.medico.id }
         : {}),
@@ -56,7 +57,7 @@ export class AuthService {
     try {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
 
-      if (!payload.sub || !payload.rol) {
+      if (!payload.sub || !payload.rol || !payload.email) {
         throw new UnauthorizedException(
           'Token de sesión con claims requeridos ausentes.',
         );

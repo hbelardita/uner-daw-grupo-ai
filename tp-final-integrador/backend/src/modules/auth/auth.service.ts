@@ -49,7 +49,7 @@ export class AuthService {
     return { token };
   }
 
-  async verificarToken(token: string): Promise<JwtPayload> {
+  async verificarToken(token: string | undefined): Promise<JwtPayload> {
     if (!token || typeof token !== 'string') {
       throw new UnauthorizedException('Token de sesión no proporcionado.');
     }

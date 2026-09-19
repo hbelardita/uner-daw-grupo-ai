@@ -95,6 +95,13 @@ export class AuthService {
         );
       }
 
+      const usuario = await this.usuariosService.buscarPorId(payload.sub);
+      if (!usuario || usuario.estado !== EstadoUsuario.ACTIVO) {
+        throw new UnauthorizedException(
+          'Usuario no encontrado o dado de baja.',
+        );
+      }
+
       return payload;
     } catch (error: unknown) {
       if (error instanceof UnauthorizedException) {

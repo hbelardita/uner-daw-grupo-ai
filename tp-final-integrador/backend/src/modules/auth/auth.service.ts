@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
+import { Usuario } from '../usuarios/entities/usuario.entity.js';
 import { EstadoUsuario } from '../usuarios/enums/estado-usuario.enum.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import { UsuariosService } from '../usuarios/usuarios.service.js';
@@ -56,9 +57,7 @@ export class AuthService {
   async obtenerPerfil(idUsuario: number): Promise<CurrentUserResponseDto> {
     const usuario = await this.usuariosService.buscarPorId(idUsuario);
 
-    if (!usuario || usuario.estado !== EstadoUsuario.ACTIVO) {
-      throw new UnauthorizedException('Usuario no encontrado o dado de baja.');
-    }
+    this.validarUsuarioActivo(usuario);
 
     const respuesta: CurrentUserResponseDto = {
       id: usuario.id,
@@ -95,13 +94,6 @@ export class AuthService {
         );
       }
 
-      const usuario = await this.usuariosService.buscarPorId(payload.sub);
-      if (!usuario || usuario.estado !== EstadoUsuario.ACTIVO) {
-        throw new UnauthorizedException(
-          'Usuario no encontrado o dado de baja.',
-        );
-      }
-
       return payload;
     } catch (error: unknown) {
       if (error instanceof UnauthorizedException) {
@@ -109,5 +101,18 @@ export class AuthService {
       }
       throw new UnauthorizedException('Token de sesión inválido o expirado.');
     }
+  }
+
+  validarUsuarioActivo(usuario: Usuario | null): asserts usuario is Usuario {
+    if (!usuario || usuario.estado !== EstadoUsuario.ACTIVO) {
+      throw new UnauthorizedException('Usuario no encontrado o dado de baja.');
+    }
+  }
+
+  async validarSesion(token: string | undefined): Promise<JwtPayload> {
+    const payload = await this.verificarToken(token);
+    const usuario = await this.usuariosService.buscarPorId(payload.sub);
+    this.validarUsuarioActivo(usuario);
+    return payload;
   }
 }

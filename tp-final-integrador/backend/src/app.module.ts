@@ -6,6 +6,7 @@ import { HealthModule } from './modules/health/health.module.js';
 import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
 import { MedicosModule } from './modules/medicos/medicos.module.js';
 import { ReservasModule } from './modules/reservas/reservas.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ReservasModule } from './modules/reservas/reservas.module.js';
     UsuariosModule,
     MedicosModule,
     ReservasModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],

@@ -1,5 +1,25 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { RolUsuario } from '../../usuarios/enums/rol-usuario.enum.js';
+import { EstadoUsuario, RolUsuario } from '../../usuarios/enums/index.js';
+
+export class MedicoProfileDto {
+  @ApiProperty({
+    description: 'Identificador único del registro médico en base de datos',
+    example: 1,
+  })
+  id: number;
+
+  @ApiProperty({
+    description: 'Número de matrícula profesional',
+    example: 1001,
+  })
+  matricula: number;
+
+  @ApiProperty({
+    description: 'Valor de la consulta médica',
+    example: 5000,
+  })
+  valorConsulta: number;
+}
 
 export class CurrentUserResponseDto {
   @ApiProperty({
@@ -7,7 +27,31 @@ export class CurrentUserResponseDto {
       'Identificador único del usuario autenticado (ID en base de datos)',
     example: 1,
   })
-  sub: number;
+  id: number;
+
+  @ApiProperty({
+    description: 'Número de documento de identidad del usuario',
+    example: '20111111',
+  })
+  documento: string;
+
+  @ApiProperty({
+    description: 'Apellidos del usuario',
+    example: 'Gomez',
+  })
+  apellidos: string;
+
+  @ApiProperty({
+    description: 'Nombres del usuario',
+    example: 'Ana',
+  })
+  nombres: string;
+
+  @ApiProperty({
+    description: 'Correo electrónico institucional o personal del usuario',
+    example: 'ana.gomez@clinica.test',
+  })
+  email: string;
 
   @ApiProperty({
     description: 'Rol del usuario en la plataforma',
@@ -17,27 +61,16 @@ export class CurrentUserResponseDto {
   rol: RolUsuario;
 
   @ApiProperty({
-    description: 'Correo electrónico institucional o personal del usuario',
-    example: 'ana.gomez@clinica.test',
+    description: 'Estado actual de la cuenta de usuario',
+    enum: EstadoUsuario,
+    example: EstadoUsuario.ACTIVO,
   })
-  email: string;
+  estado: EstadoUsuario;
 
   @ApiPropertyOptional({
     description:
-      'Identificador de la entidad médico asociada (únicamente presente si el rol es MEDICO)',
-    example: 1,
+      'Datos del perfil médico (únicamente presente si el rol es MEDICO)',
+    type: () => MedicoProfileDto,
   })
-  idMedico?: number;
-
-  @ApiPropertyOptional({
-    description: 'Timestamp de emisión del token JWT (issued at)',
-    example: 1726750000,
-  })
-  iat?: number;
-
-  @ApiPropertyOptional({
-    description: 'Timestamp de expiración del token JWT',
-    example: 1726753600,
-  })
-  exp?: number;
+  medico?: MedicoProfileDto;
 }

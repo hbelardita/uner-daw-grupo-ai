@@ -4,7 +4,11 @@ import bcrypt from 'bcrypt';
 import { EstadoUsuario } from '../usuarios/enums/estado-usuario.enum.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import { UsuariosService } from '../usuarios/usuarios.service.js';
-import { LoginRequestDto, LoginResponseDto } from './dto/index.js';
+import {
+  CurrentUserResponseDto,
+  LoginRequestDto,
+  LoginResponseDto,
+} from './dto/index.js';
 import { JwtPayload } from './interfaces/index.js';
 
 @Injectable()
@@ -47,6 +51,34 @@ export class AuthService {
     const token = await this.jwtService.signAsync(payload);
 
     return { token };
+  }
+
+  async obtenerPerfil(idUsuario: number): Promise<CurrentUserResponseDto> {
+    const usuario = await this.usuariosService.buscarPorId(idUsuario);
+
+    if (!usuario || usuario.estado !== EstadoUsuario.ACTIVO) {
+      throw new UnauthorizedException('Usuario no encontrado o dado de baja.');
+    }
+
+    const respuesta: CurrentUserResponseDto = {
+      id: usuario.id,
+      documento: usuario.documento,
+      apellidos: usuario.apellidos,
+      nombres: usuario.nombres,
+      email: usuario.email,
+      rol: usuario.rol,
+      estado: usuario.estado,
+    };
+
+    if (usuario.rol === RolUsuario.MEDICO && usuario.medico) {
+      respuesta.medico = {
+        id: usuario.medico.id,
+        matricula: usuario.medico.matricula,
+        valorConsulta: usuario.medico.valorConsulta,
+      };
+    }
+
+    return respuesta;
   }
 
   async verificarToken(token: string | undefined): Promise<JwtPayload> {

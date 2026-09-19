@@ -5,6 +5,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
+import { UsuariosService } from '../src/modules/usuarios/usuarios.service.js';
 
 describe('Autenticación - AuthGuard y Decorador @CurrentUser (e2e)', () => {
   let app: INestApplication;
@@ -60,52 +61,62 @@ describe('Autenticación - AuthGuard y Decorador @CurrentUser (e2e)', () => {
   });
 
   describe('Casos de éxito (happy path)', () => {
-    it('debe responder 200 OK con los datos del médico autenticado (sub: 1, rol: MEDICO, idMedico: 1) en GET /api/v1/auth/me', async () => {
+    it('debe responder 200 OK con el perfil completo del médico autenticado (Ana Gómez con datos médicos) en GET /api/v1/auth/me', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${doctorToken}`)
         .expect(200);
 
       expect(response.body).toEqual({
-        sub: 1,
-        rol: 'MEDICO',
+        id: expect.any(Number),
+        documento: '20111111',
+        apellidos: 'Gomez',
+        nombres: 'Ana',
         email: 'ana.gomez@clinica.test',
-        idMedico: 1,
-        iat: expect.any(Number),
-        exp: expect.any(Number),
+        rol: 'MEDICO',
+        estado: 'ACTIVO',
+        medico: {
+          id: expect.any(Number),
+          matricula: 1001,
+          valorConsulta: 5000,
+        },
       });
     });
 
-    it('debe responder 200 OK con los datos del paciente autenticado (sub: 5, rol: PACIENTE, sin idMedico) en GET /api/v1/auth/me', async () => {
+    it('debe responder 200 OK con el perfil completo de la paciente autenticada (Julia Fernández sin datos médicos) en GET /api/v1/auth/me', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${pacienteToken}`)
         .expect(200);
 
       expect(response.body).toEqual({
-        sub: 5,
-        rol: 'PACIENTE',
+        id: expect.any(Number),
+        documento: '30111111',
+        apellidos: 'Fernandez',
+        nombres: 'Julia',
         email: 'julia.fernandez@mail.test',
-        iat: expect.any(Number),
-        exp: expect.any(Number),
+        rol: 'PACIENTE',
+        estado: 'ACTIVO',
       });
-      expect(response.body.idMedico).toBeUndefined();
+      expect(response.body.medico).toBeUndefined();
     });
 
-    it('debe responder 200 OK con los datos del administrador autenticado (sub: 10, rol: ADMINISTRADOR) en GET /api/v1/auth/me', async () => {
+    it('debe responder 200 OK con el perfil completo de la administradora autenticada (Valeria Acosta sin datos médicos) en GET /api/v1/auth/me', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
       expect(response.body).toEqual({
-        sub: 10,
-        rol: 'ADMINISTRADOR',
+        id: expect.any(Number),
+        documento: '40111111',
+        apellidos: 'Acosta',
+        nombres: 'Valeria',
         email: 'valeria.acosta@clinica.test',
-        iat: expect.any(Number),
-        exp: expect.any(Number),
+        rol: 'ADMINISTRADOR',
+        estado: 'ACTIVO',
       });
-      expect(response.body.idMedico).toBeUndefined();
+      expect(response.body.medico).toBeUndefined();
     });
   });
 
@@ -186,6 +197,47 @@ describe('Autenticación - AuthGuard y Decorador @CurrentUser (e2e)', () => {
       expect(response.body).toHaveProperty('message');
       expect(response.body.message).toContain('Token de sesión');
     });
+
+    it('debe rechazar con 401 Unauthorized cuando el token JWT es válido pero corresponde a un usuario inexistente', async () => {
+      const tokenUsuarioInexistente = await jwtService.signAsync({
+        sub: 999999,
+        rol: 'PACIENTE',
+        email: 'inexistente@clinica.test',
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/auth/me')
+        .set('Authorization', `Bearer ${tokenUsuarioInexistente}`)
+        .expect(401);
+
+      expect(response.body).toHaveProperty('message');
+      expect(response.body.message).toContain(
+        'Usuario no encontrado o dado de baja',
+      );
+    });
+
+    it('debe rechazar con 401 Unauthorized cuando el token JWT es válido pero el usuario está dado de baja (estado BAJA)', async () => {
+      const usuariosService = app.get(UsuariosService);
+      const usuarioBaja = await usuariosService.buscarPorDocumento('30555555');
+      expect(usuarioBaja).toBeDefined();
+      expect(usuarioBaja?.estado).toBe('BAJA');
+
+      const tokenUsuarioBaja = await jwtService.signAsync({
+        sub: usuarioBaja!.id,
+        rol: usuarioBaja!.rol,
+        email: usuarioBaja!.email,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/auth/me')
+        .set('Authorization', `Bearer ${tokenUsuarioBaja}`)
+        .expect(401);
+
+      expect(response.body).toHaveProperty('message');
+      expect(response.body.message).toContain(
+        'Usuario no encontrado o dado de baja',
+      );
+    });
   });
 
   describe('Casos borde (edge cases)', () => {
@@ -195,8 +247,9 @@ describe('Autenticación - AuthGuard y Decorador @CurrentUser (e2e)', () => {
         .set('Authorization', `Bearer    ${doctorToken}`)
         .expect(200);
 
-      expect(response.body).toHaveProperty('sub', 1);
+      expect(response.body).toHaveProperty('id');
       expect(response.body).toHaveProperty('rol', 'MEDICO');
+      expect(response.body).toHaveProperty('documento', '20111111');
     });
 
     it('debe rechazar con 401 Unauthorized si se usa minúscula en "bearer" (esquema estricto Bearer)', async () => {

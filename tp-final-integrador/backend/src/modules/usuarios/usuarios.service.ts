@@ -28,4 +28,22 @@ export class UsuariosService {
       },
     });
   }
+
+  buscarPorId(id: number): Promise<Usuario | null> {
+    return this.usuariosRepository.findOne({
+      where: { id },
+      select: {
+        id: true,
+        documento: true,
+        apellidos: true,
+        nombres: true,
+        email: true,
+        estado: true,
+        rol: true,
+      },
+      relations: {
+        medico: true,
+      },
+    });
+  }
 }

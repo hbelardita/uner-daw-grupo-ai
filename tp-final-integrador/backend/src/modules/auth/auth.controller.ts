@@ -59,18 +59,21 @@ export class AuthController {
   @ApiOperation({
     summary: 'Obtener información del usuario autenticado actual',
     description:
-      'Retorna el payload del token JWT verificado para el usuario en sesión activa.',
+      'Retorna el perfil del usuario autenticado en sesión activa (con datos médicos anidados si corresponde).',
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Información del usuario autenticado obtenida con éxito.',
+    description: 'Perfil del usuario autenticado obtenido con éxito.',
     type: CurrentUserResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
-    description: 'Token de sesión no proporcionado, inválido o expirado.',
+    description:
+      'Token de sesión no proporcionado, inválido, expirado o usuario dado de baja.',
   })
-  async me(@CurrentUser() usuario: JwtPayload): Promise<JwtPayload> {
-    return usuario;
+  async me(
+    @CurrentUser() usuario: JwtPayload,
+  ): Promise<CurrentUserResponseDto> {
+    return this.authService.obtenerPerfil(usuario.sub);
   }
 }

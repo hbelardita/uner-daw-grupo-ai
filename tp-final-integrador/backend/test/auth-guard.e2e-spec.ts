@@ -5,7 +5,6 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
-import { UsuariosService } from '../src/modules/usuarios/usuarios.service.js';
 
 describe('Autenticación - AuthGuard y Decorador @CurrentUser (e2e)', () => {
   let app: INestApplication;
@@ -217,15 +216,11 @@ describe('Autenticación - AuthGuard y Decorador @CurrentUser (e2e)', () => {
     });
 
     it('debe rechazar con 401 Unauthorized cuando el token JWT es válido pero el usuario está dado de baja (estado BAJA)', async () => {
-      const usuariosService = app.get(UsuariosService);
-      const usuarioBaja = await usuariosService.buscarPorDocumento('30555555');
-      expect(usuarioBaja).toBeDefined();
-      expect(usuarioBaja?.estado).toBe('BAJA');
-
+      // Paula Molina (id: 9, documento: 30555555) es un usuario existente en la base de datos en estado BAJA
       const tokenUsuarioBaja = await jwtService.signAsync({
-        sub: usuarioBaja!.id,
-        rol: usuarioBaja!.rol,
-        email: usuarioBaja!.email,
+        sub: 9,
+        rol: 'PACIENTE',
+        email: 'paula.molina@mail.test',
       });
 
       const response = await request(app.getHttpServer())

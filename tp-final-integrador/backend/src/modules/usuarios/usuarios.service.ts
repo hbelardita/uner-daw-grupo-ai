@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { Usuario } from './entities/usuario.entity.js';
 
 @Injectable()
@@ -10,16 +10,19 @@ export class UsuariosService {
     private readonly usuariosRepository: Repository<Usuario>,
   ) {}
 
-  buscarPorDocumento(documento: string): Promise<Usuario | null> {
+  private buscarUno(
+    where: FindOptionsWhere<Usuario>,
+    incluirClave: boolean,
+  ): Promise<Usuario | null> {
     return this.usuariosRepository.findOne({
-      where: { documento },
+      where,
       select: {
         id: true,
         documento: true,
         apellidos: true,
         nombres: true,
         email: true,
-        clave: true,
+        ...(incluirClave ? { clave: true } : {}),
         estado: true,
         rol: true,
       },
@@ -29,21 +32,11 @@ export class UsuariosService {
     });
   }
 
+  buscarPorDocumento(documento: string): Promise<Usuario | null> {
+    return this.buscarUno({ documento }, true);
+  }
+
   buscarPorId(id: number): Promise<Usuario | null> {
-    return this.usuariosRepository.findOne({
-      where: { id },
-      select: {
-        id: true,
-        documento: true,
-        apellidos: true,
-        nombres: true,
-        email: true,
-        estado: true,
-        rol: true,
-      },
-      relations: {
-        medico: true,
-      },
-    });
+    return this.buscarUno({ id }, false);
   }
 }

@@ -81,24 +81,13 @@ export class AuthService {
   }
 
   async verificarToken(token: string | undefined): Promise<JwtPayload> {
-    if (!token || typeof token !== 'string') {
+    if (!token) {
       throw new UnauthorizedException('Token de sesión no proporcionado.');
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
-
-      if (!payload.sub || !payload.rol || !payload.email) {
-        throw new UnauthorizedException(
-          'Token de sesión con claims requeridos ausentes.',
-        );
-      }
-
-      return payload;
-    } catch (error: unknown) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
+      return await this.jwtService.verifyAsync<JwtPayload>(token);
+    } catch {
       throw new UnauthorizedException('Token de sesión inválido o expirado.');
     }
   }

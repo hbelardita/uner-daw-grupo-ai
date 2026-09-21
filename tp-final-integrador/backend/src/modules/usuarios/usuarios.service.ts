@@ -12,8 +12,9 @@ export class UsuariosService {
 
   private buscarUno(
     where: FindOptionsWhere<Usuario>,
-    incluirClave: boolean,
+    opciones: { incluirClave?: boolean; incluirRelaciones?: boolean } = {},
   ): Promise<Usuario | null> {
+    const { incluirClave = false, incluirRelaciones = false } = opciones;
     return this.usuariosRepository.findOne({
       where,
       select: {
@@ -26,9 +27,7 @@ export class UsuariosService {
         estado: true,
         rol: true,
       },
-      relations: {
-        medico: true,
-      },
+      relations: incluirRelaciones ? { medico: true } : {},
     });
   }
 
@@ -37,10 +36,16 @@ export class UsuariosService {
     if (!documentoLimpio) {
       return null;
     }
-    return this.buscarUno({ documento: documentoLimpio }, true);
+    return this.buscarUno(
+      { documento: documentoLimpio },
+      { incluirClave: true, incluirRelaciones: true },
+    );
   }
 
-  buscarPorId(id: number): Promise<Usuario | null> {
-    return this.buscarUno({ id }, false);
+  buscarPorId(
+    id: number,
+    opciones: { incluirRelaciones?: boolean } = {},
+  ): Promise<Usuario | null> {
+    return this.buscarUno({ id }, opciones);
   }
 }

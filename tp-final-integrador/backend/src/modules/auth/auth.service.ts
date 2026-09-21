@@ -55,7 +55,9 @@ export class AuthService {
   }
 
   async obtenerPerfil(idUsuario: number): Promise<CurrentUserResponseDto> {
-    const usuario = await this.usuariosService.buscarPorId(idUsuario);
+    const usuario = await this.usuariosService.buscarPorId(idUsuario, {
+      incluirRelaciones: true,
+    });
 
     this.validarUsuarioActivo(usuario);
 

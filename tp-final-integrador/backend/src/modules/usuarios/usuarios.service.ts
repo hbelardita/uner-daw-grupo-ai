@@ -32,8 +32,12 @@ export class UsuariosService {
     });
   }
 
-  buscarPorDocumento(documento: string): Promise<Usuario | null> {
-    return this.buscarUno({ documento }, true);
+  async buscarPorDocumento(documento: string): Promise<Usuario | null> {
+    const documentoLimpio = documento.trim();
+    if (!documentoLimpio) {
+      return null;
+    }
+    return this.buscarUno({ documento: documentoLimpio }, true);
   }
 
   buscarPorId(id: number): Promise<Usuario | null> {

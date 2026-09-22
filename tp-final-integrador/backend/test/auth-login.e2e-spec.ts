@@ -25,7 +25,7 @@ describe('Autenticación - Endpoint de Login (e2e)', () => {
   });
 
   describe('Casos de éxito', () => {
-    it('debe iniciar sesión con credenciales válidas de médico (20111111) y retornar 200 OK con únicamente el token', async () => {
+    it('debe iniciar sesión con credenciales válidas de médico (20111111) y retornar 200 OK con token JWT conteniendo sub, rol e idMedico', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
         .send({
@@ -38,10 +38,20 @@ describe('Autenticación - Endpoint de Login (e2e)', () => {
         token: expect.any(String),
       });
       expect(typeof response.body.token).toBe('string');
-      expect(response.body.token.length).toBeGreaterThan(0);
+      expect(response.body.token.split('.')).toHaveLength(3);
+
+      const payload = JSON.parse(
+        Buffer.from(response.body.token.split('.')[1], 'base64url').toString(
+          'utf8',
+        ),
+      );
+      expect(payload).toHaveProperty('sub', 1);
+      expect(payload).toHaveProperty('rol', 'MEDICO');
+      expect(payload).toHaveProperty('email', 'ana.gomez@clinica.test');
+      expect(payload).toHaveProperty('idMedico', 1);
     });
 
-    it('debe iniciar sesión con credenciales válidas de paciente (30111111) y retornar 200 OK con el token', async () => {
+    it('debe iniciar sesión con credenciales válidas de paciente (30111111) y retornar 200 OK con token JWT sin idMedico', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
         .send({
@@ -53,9 +63,21 @@ describe('Autenticación - Endpoint de Login (e2e)', () => {
       expect(response.body).toEqual({
         token: expect.any(String),
       });
+      expect(typeof response.body.token).toBe('string');
+      expect(response.body.token.split('.')).toHaveLength(3);
+
+      const payload = JSON.parse(
+        Buffer.from(response.body.token.split('.')[1], 'base64url').toString(
+          'utf8',
+        ),
+      );
+      expect(payload).toHaveProperty('sub', 5);
+      expect(payload).toHaveProperty('rol', 'PACIENTE');
+      expect(payload).toHaveProperty('email', 'julia.fernandez@mail.test');
+      expect(payload.idMedico).toBeUndefined();
     });
 
-    it('debe iniciar sesión con credenciales válidas de administrador (40111111) y retornar 200 OK con el token', async () => {
+    it('debe iniciar sesión con credenciales válidas de administrador (40111111) y retornar 200 OK con token JWT sin idMedico', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
         .send({
@@ -67,6 +89,18 @@ describe('Autenticación - Endpoint de Login (e2e)', () => {
       expect(response.body).toEqual({
         token: expect.any(String),
       });
+      expect(typeof response.body.token).toBe('string');
+      expect(response.body.token.split('.')).toHaveLength(3);
+
+      const payload = JSON.parse(
+        Buffer.from(response.body.token.split('.')[1], 'base64url').toString(
+          'utf8',
+        ),
+      );
+      expect(payload).toHaveProperty('sub', 10);
+      expect(payload).toHaveProperty('rol', 'ADMINISTRADOR');
+      expect(payload).toHaveProperty('email', 'valeria.acosta@clinica.test');
+      expect(payload.idMedico).toBeUndefined();
     });
   });
 

@@ -1,12 +1,18 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
 import { EstadoUsuario } from '../usuarios/enums/estado-usuario.enum.js';
+import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import { UsuariosService } from '../usuarios/usuarios.service.js';
 import { LoginRequestDto, LoginResponseDto } from './dto/index.js';
+import { JwtPayload } from './interfaces/index.js';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usuariosService: UsuariosService) {}
+  constructor(
+    private readonly usuariosService: UsuariosService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async login(dto: LoginRequestDto): Promise<LoginResponseDto> {
     const errorCredencialesInvalidas = new UnauthorizedException(
@@ -29,13 +35,40 @@ export class AuthService {
       throw errorCredencialesInvalidas;
     }
 
-    // Generación de token provisional luego firmado formal con @nestjs/jwt
-    const payload = {
+    const payload: JwtPayload = {
       sub: usuario.id,
-      nombre: usuario.nombres,
+      rol: usuario.rol,
+      email: usuario.email,
+      ...(usuario.rol === RolUsuario.MEDICO && usuario.medico?.id
+        ? { idMedico: usuario.medico.id }
+        : {}),
     };
-    const token = Buffer.from(JSON.stringify(payload)).toString('base64url');
+
+    const token = await this.jwtService.signAsync(payload);
 
     return { token };
+  }
+
+  async verificarToken(token: string): Promise<JwtPayload> {
+    if (!token || typeof token !== 'string') {
+      throw new UnauthorizedException('Token de sesión no proporcionado.');
+    }
+
+    try {
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
+
+      if (!payload.sub || !payload.rol || !payload.email) {
+        throw new UnauthorizedException(
+          'Token de sesión con claims requeridos ausentes.',
+        );
+      }
+
+      return payload;
+    } catch (error: unknown) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Token de sesión inválido o expirado.');
+    }
   }
 }

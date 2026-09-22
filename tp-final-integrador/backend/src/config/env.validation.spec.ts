@@ -20,6 +20,8 @@ describe('envValidationSchema', () => {
       DB_LOGGING: false,
       CORS_ORIGIN: 'http://localhost:4200',
       SWAGGER_HABILITADO: true,
+      JWT_SECRET: 'clave_secreta_jwt_para_desarrollo_y_tests',
+      JWT_EXPIRES_IN: '1h',
     });
   });
 
@@ -35,6 +37,8 @@ describe('envValidationSchema', () => {
       DB_LOGGING: true,
       CORS_ORIGIN: 'https://clinic.example.com',
       SWAGGER_HABILITADO: false,
+      JWT_SECRET: 'custom_secret_key_with_at_least_16_chars',
+      JWT_EXPIRES_IN: '2h',
     };
 
     const { error, value } = envValidationSchema.validate(input);

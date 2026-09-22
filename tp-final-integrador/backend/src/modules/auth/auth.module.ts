@@ -4,7 +4,7 @@ import { JwtModule, type JwtModuleOptions } from '@nestjs/jwt';
 import { UsuariosModule } from '../usuarios/usuarios.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
-import { AuthGuard } from './guards/index.js';
+import { AuthGuard, RolesGuard } from './guards/index.js';
 
 @Global()
 @Module({
@@ -22,7 +22,7 @@ import { AuthGuard } from './guards/index.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard],
-  exports: [AuthService, AuthGuard],
+  providers: [AuthService, AuthGuard, RolesGuard],
+  exports: [AuthService, AuthGuard, RolesGuard],
 })
 export class AuthModule {}

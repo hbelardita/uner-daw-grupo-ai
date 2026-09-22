@@ -17,7 +17,8 @@
     "db:down": "npm --prefix tp-final-integrador/backend run db:down",
     "db:status": "npm --prefix tp-final-integrador/backend run db:status",
     "db:logs": "npm --prefix tp-final-integrador/backend run db:logs",
-    "db:reset": "npm --prefix tp-final-integrador/backend run db:reset"
+    "db:reset": "npm --prefix tp-final-integrador/backend run db:reset",
+    "db:reset:test": "npm --prefix tp-final-integrador/backend run db:reset:test"
   },
   "repository": {
     "type": "git",

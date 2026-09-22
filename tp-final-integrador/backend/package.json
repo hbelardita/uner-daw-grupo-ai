@@ -24,7 +24,8 @@
     "db:down": "docker compose down",
     "db:status": "docker compose ps",
     "db:logs": "docker compose logs -f postgres",
-    "db:reset": "docker compose down -v && docker compose up -d"
+    "db:reset": "docker compose down -v && docker compose up -d",
+    "db:reset:test": "node test/setup/global-setup.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

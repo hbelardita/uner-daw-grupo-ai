@@ -1,7 +1,27 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
-import { LoginRequestDto, LoginResponseDto } from './dto/index.js';
+import { CurrentUser } from './decorators/index.js';
+import {
+  CurrentUserResponseDto,
+  LoginRequestDto,
+  LoginResponseDto,
+} from './dto/index.js';
+import { AuthGuard } from './guards/index.js';
+import type { JwtPayload } from './interfaces/index.js';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -31,5 +51,29 @@ export class AuthController {
   })
   async login(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
     return this.authService.login(loginDto);
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Obtener información del usuario autenticado actual',
+    description:
+      'Retorna el perfil del usuario autenticado en sesión activa (con datos médicos anidados si corresponde).',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Perfil del usuario autenticado obtenido con éxito.',
+    type: CurrentUserResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description:
+      'Token de sesión no proporcionado, inválido, expirado o usuario dado de baja.',
+  })
+  async me(
+    @CurrentUser() usuario: JwtPayload,
+  ): Promise<CurrentUserResponseDto> {
+    return this.authService.obtenerPerfil(usuario.sub);
   }
 }

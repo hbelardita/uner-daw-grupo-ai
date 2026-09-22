@@ -1,10 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
+import { Usuario } from '../usuarios/entities/usuario.entity.js';
 import { EstadoUsuario } from '../usuarios/enums/estado-usuario.enum.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import { UsuariosService } from '../usuarios/usuarios.service.js';
-import { LoginRequestDto, LoginResponseDto } from './dto/index.js';
+import {
+  CurrentUserResponseDto,
+  LoginRequestDto,
+  LoginResponseDto,
+} from './dto/index.js';
 import { JwtPayload } from './interfaces/index.js';
 
 @Injectable()
@@ -49,26 +54,56 @@ export class AuthService {
     return { token };
   }
 
-  async verificarToken(token: string): Promise<JwtPayload> {
-    if (!token || typeof token !== 'string') {
+  async obtenerPerfil(idUsuario: number): Promise<CurrentUserResponseDto> {
+    const usuario = await this.usuariosService.buscarPorId(idUsuario, {
+      incluirRelaciones: true,
+    });
+
+    this.validarUsuarioActivo(usuario);
+
+    const respuesta: CurrentUserResponseDto = {
+      id: usuario.id,
+      documento: usuario.documento,
+      apellidos: usuario.apellidos,
+      nombres: usuario.nombres,
+      email: usuario.email,
+      rol: usuario.rol,
+      estado: usuario.estado,
+    };
+
+    if (usuario.rol === RolUsuario.MEDICO && usuario.medico) {
+      respuesta.medico = {
+        id: usuario.medico.id,
+        matricula: usuario.medico.matricula,
+        valorConsulta: usuario.medico.valorConsulta,
+      };
+    }
+
+    return respuesta;
+  }
+
+  async verificarToken(token: string | undefined): Promise<JwtPayload> {
+    if (!token) {
       throw new UnauthorizedException('Token de sesión no proporcionado.');
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
-
-      if (!payload.sub || !payload.rol || !payload.email) {
-        throw new UnauthorizedException(
-          'Token de sesión con claims requeridos ausentes.',
-        );
-      }
-
-      return payload;
-    } catch (error: unknown) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
+      return await this.jwtService.verifyAsync<JwtPayload>(token);
+    } catch {
       throw new UnauthorizedException('Token de sesión inválido o expirado.');
     }
+  }
+
+  validarUsuarioActivo(usuario: Usuario | null): asserts usuario is Usuario {
+    if (!usuario || usuario.estado !== EstadoUsuario.ACTIVO) {
+      throw new UnauthorizedException('Usuario no encontrado o dado de baja.');
+    }
+  }
+
+  async validarSesion(token: string | undefined): Promise<JwtPayload> {
+    const payload = await this.verificarToken(token);
+    const usuario = await this.usuariosService.buscarPorId(payload.sub);
+    this.validarUsuarioActivo(usuario);
+    return payload;
   }
 }

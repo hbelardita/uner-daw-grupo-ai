@@ -21,7 +21,7 @@ describe('envValidationSchema', () => {
       CORS_ORIGIN: 'http://localhost:4200',
       SWAGGER_HABILITADO: true,
       JWT_SECRET: 'clave_secreta_jwt_para_desarrollo_y_tests',
-      JWT_EXPIRES_IN: '1h',
+      JWT_EXPIRES_IN: '8h',
     });
   });
 

@@ -47,7 +47,6 @@ describe('Autenticación - Endpoint de Login (e2e)', () => {
       );
       expect(payload).toHaveProperty('sub', 1);
       expect(payload).toHaveProperty('rol', 'MEDICO');
-      expect(payload).toHaveProperty('email', 'ana.gomez@clinica.test');
       expect(payload).toHaveProperty('idMedico', 1);
     });
 
@@ -73,7 +72,6 @@ describe('Autenticación - Endpoint de Login (e2e)', () => {
       );
       expect(payload).toHaveProperty('sub', 5);
       expect(payload).toHaveProperty('rol', 'PACIENTE');
-      expect(payload).toHaveProperty('email', 'julia.fernandez@mail.test');
       expect(payload.idMedico).toBeUndefined();
     });
 
@@ -99,7 +97,6 @@ describe('Autenticación - Endpoint de Login (e2e)', () => {
       );
       expect(payload).toHaveProperty('sub', 10);
       expect(payload).toHaveProperty('rol', 'ADMINISTRADOR');
-      expect(payload).toHaveProperty('email', 'valeria.acosta@clinica.test');
       expect(payload.idMedico).toBeUndefined();
     });
   });

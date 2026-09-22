@@ -43,7 +43,6 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: usuario.id,
       rol: usuario.rol,
-      email: usuario.email,
       ...(usuario.rol === RolUsuario.MEDICO && usuario.medico?.id
         ? { idMedico: usuario.medico.id }
         : {}),

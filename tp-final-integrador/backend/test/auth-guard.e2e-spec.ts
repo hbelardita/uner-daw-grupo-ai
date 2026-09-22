@@ -171,7 +171,6 @@ describe('Autenticación - AuthGuard y Decorador @CurrentUser (e2e)', () => {
         {
           sub: 1,
           rol: 'MEDICO',
-          email: 'ana.gomez@clinica.test',
         },
         {
           expiresIn: -10,
@@ -201,7 +200,6 @@ describe('Autenticación - AuthGuard y Decorador @CurrentUser (e2e)', () => {
       const tokenUsuarioInexistente = await jwtService.signAsync({
         sub: 999999,
         rol: 'PACIENTE',
-        email: 'inexistente@clinica.test',
       });
 
       const response = await request(app.getHttpServer())
@@ -220,7 +218,6 @@ describe('Autenticación - AuthGuard y Decorador @CurrentUser (e2e)', () => {
       const tokenUsuarioBaja = await jwtService.signAsync({
         sub: 9,
         rol: 'PACIENTE',
-        email: 'paula.molina@mail.test',
       });
 
       const response = await request(app.getHttpServer())

@@ -49,13 +49,15 @@ CREATE TABLE IF NOT EXISTS reservas (
     estado estados_reservas NOT NULL DEFAULT 'ACTIVO',
     valor_consulta INTEGER NOT NULL,
     CONSTRAINT chk_reservas_valor_consulta CHECK (valor_consulta > 0),
-    CONSTRAINT chk_reservas_horario_atencion CHECK (
-        EXTRACT(HOUR FROM fecha_hora) BETWEEN 8 AND 15
-        AND EXTRACT(MINUTE FROM fecha_hora) = 0
-        AND EXTRACT(SECOND FROM fecha_hora) = 0
-    ),
     CONSTRAINT fk_reservas_medico FOREIGN KEY (id_medico) REFERENCES medicos(id) ON DELETE RESTRICT,
-    CONSTRAINT fk_reservas_paciente FOREIGN KEY (id_paciente) REFERENCES usuarios(id) ON DELETE RESTRICT
+    CONSTRAINT fk_reservas_paciente FOREIGN KEY (id_paciente) REFERENCES usuarios(id) ON DELETE RESTRICT,
+    CONSTRAINT chk_reservas_horario_atencion
+    CHECK (
+        "fecha_hora"::time IN (
+            '08:00:00', '09:00:00', '10:00:00', '11:00:00',
+            '12:00:00', '13:00:00', '14:00:00', '15:00:00'
+        )
+    )
 );
 
 

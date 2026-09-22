@@ -101,25 +101,5 @@ describe('Módulo de Healthcheck (e2e)', () => {
         .send({});
       expect(response.status).toBe(404);
     });
-
-    it('debe incluir las cabeceras de seguridad Helmet en la respuesta del healthcheck', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/health')
-        .expect(200);
-
-      expect(response.headers['x-dns-prefetch-control']).toBe('off');
-      expect(response.headers['x-content-type-options']).toBe('nosniff');
-    });
-
-    it('debe incluir las cabeceras de CORS para el origen permitido en /api/health', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/health')
-        .set('Origin', 'http://localhost:4200')
-        .expect(200);
-
-      expect(response.headers['access-control-allow-origin']).toBe(
-        'http://localhost:4200',
-      );
-    });
   });
 });

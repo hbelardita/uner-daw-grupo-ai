@@ -1,0 +1,365 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>backend documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="./images/favicon.ico">
+	   <link rel="stylesheet" href="./styles/style.css">
+        <link rel="stylesheet" href="./styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+          <script>
+              // --- Iframe navigation tracking for Template Playground ---
+              function sendCurrentUrlToParent() {
+                  if (window.parent && window.parent !== window) {
+                      window.parent.postMessage({
+                          type: 'compodoc-iframe-navigate',
+                          url: window.location.pathname + window.location.hash
+                      }, '*');
+                  }
+              }
+              window.addEventListener('hashchange', sendCurrentUrlToParent, false);
+              window.addEventListener('popstate', sendCurrentUrlToParent, false);
+              window.addEventListener('DOMContentLoaded', sendCurrentUrlToParent, false);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="./" class="navbar-brand">backend documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search">
+    <button type="button"
+        class="search-input-clear"
+        aria-label="Clear search"
+        data-search-input-clear>&times;</button>
+</div>
+            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content readme">
+                   <div class="content-data">
+
+
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p><h2>Descripción</h2>
+<p>API REST para el <strong>Sistema de Gestión de Turnos Médicos</strong>, desarrollada con <a href="https://nestjs.com/">NestJS</a>, <a href="https://typeorm.io/">TypeORM</a> y <a href="https://www.postgresql.org/">PostgreSQL</a>.
+Cátedra <strong>Desarrollo de Aplicaciones Web (DAW 2026)</strong> — UNER.</p>
+<hr>
+<h2>🚀 Puesta en Marcha Inicial</h2>
+<h3>Opción A: Desde la raíz del repositorio (Recomendado)</h3>
+<p>El repositorio cuenta con scripts automatizados en el <code>package.json</code> principal:</p>
+<ol>
+<li><p><strong>Instalar dependencias y generar <code>.env</code>:</strong></p>
+<b>Example :</b><div><pre class="line-numbers"><code class="language-bash">npm install</code></pre></div><blockquote>
+<p>ℹ️ <strong>Automatización:</strong> Al ejecutar <code>npm install</code> en la raíz, el hook <code>postinstall</code> ejecuta <code>npm run setup:env</code>, el cual copia automáticamente <code>.env.example</code> a <code>.env</code> (si aún no existe, sin sobreescribir tus cambios) e instala todas las dependencias del backend.</p>
+</blockquote>
+</li>
+<li><p><strong>Levantar la base de datos con Docker (Opcional):</strong></p>
+<b>Example :</b><div><pre class="line-numbers"><code class="language-bash">npm run db:up</code></pre></div></li>
+<li><p><strong>Iniciar el backend en modo desarrollo:</strong></p>
+<b>Example :</b><div><pre class="line-numbers"><code class="language-bash">npm run dev:backend</code></pre></div></li>
+</ol>
+<hr>
+<h3>Opción B: Directo desde el directorio <code>backend</code></h3>
+<p>Si trabajás situado dentro de <code>tp-final-integrador/backend</code>:</p>
+<ol>
+<li><p><strong>Configurar las variables de entorno:</strong>
+Copiá el archivo de plantilla a <code>.env</code>:</p>
+<ul>
+<li><strong>Linux / macOS:</strong><b>Example :</b><div><pre class="line-numbers"><code class="language-bash">cp .env.example .env</code></pre></div></li>
+<li><strong>Windows (PowerShell):</strong><b>Example :</b><div><pre class="line-numbers"><code class="language-powershell">Copy-Item .env.example .env</code></pre></div></li>
+<li><strong>Windows (CMD):</strong><b>Example :</b><div><pre class="line-numbers"><code class="language-cmd">copy .env.example .env</code></pre></div></li>
+</ul>
+</li>
+<li><p><strong>Instalar dependencias:</strong></p>
+<b>Example :</b><div><pre class="line-numbers"><code class="language-bash">npm install</code></pre></div></li>
+<li><p><strong>Levantar la base de datos:</strong></p>
+<b>Example :</b><div><pre class="line-numbers"><code class="language-bash">npm run db:up</code></pre></div></li>
+<li><p><strong>Iniciar en modo desarrollo (hot-reload):</strong></p>
+<b>Example :</b><div><pre class="line-numbers"><code class="language-bash">npm run start:dev</code></pre></div></li>
+</ol>
+<hr>
+<h2>⚙️ Variables de Entorno (<code>.env</code>)</h2>
+<table class="table table-bordered compodoc-table">
+<thead>
+<tr><th style="text-align: left">Variable</th><th style="text-align: left">Valor por Defecto</th><th style="text-align: left">Descripción</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left"><code>NODE_ENV</code></td><td style="text-align: left"><code>development</code></td><td style="text-align: left">Entorno de ejecución (<code>development</code>, <code>production</code>, <code>test</code>)</td></tr>
+<tr><td style="text-align: left"><code>PORT</code></td><td style="text-align: left"><code>3000</code></td><td style="text-align: left">Puerto HTTP donde corre la API</td></tr>
+<tr><td style="text-align: left"><code>POSTGRES_HOST</code></td><td style="text-align: left"><code>localhost</code></td><td style="text-align: left">Host de la base de datos</td></tr>
+<tr><td style="text-align: left"><code>POSTGRES_PORT</code></td><td style="text-align: left"><code>5432</code></td><td style="text-align: left">Puerto expuesto de PostgreSQL</td></tr>
+<tr><td style="text-align: left"><code>POSTGRES_USER</code></td><td style="text-align: left"><code>postgres</code></td><td style="text-align: left">Usuario de PostgreSQL</td></tr>
+<tr><td style="text-align: left"><code>POSTGRES_PASSWORD</code></td><td style="text-align: left"><code>postgres</code></td><td style="text-align: left">Contraseña de PostgreSQL</td></tr>
+<tr><td style="text-align: left"><code>POSTGRES_DB</code></td><td style="text-align: left"><code>tp-integrador</code></td><td style="text-align: left">Nombre de la base de datos principal</td></tr>
+<tr><td style="text-align: left"><code>POSTGRES_DB_TEST</code></td><td style="text-align: left"><code>tp-integrador-test</code></td><td style="text-align: left">Nombre de la base de datos de tests</td></tr>
+<tr><td style="text-align: left"><code>DB_LOGGING</code></td><td style="text-align: left"><code>false</code></td><td style="text-align: left">Habilita logs de consultas SQL de TypeORM</td></tr>
+<tr><td style="text-align: left"><code>CORS_ORIGIN</code></td><td style="text-align: left"><code>http://localhost:4200</code></td><td style="text-align: left">Origen permitido para solicitudes CORS (Frontend)</td></tr>
+<tr><td style="text-align: left"><code>SWAGGER_HABILITADO</code></td><td style="text-align: left"><code>true</code></td><td style="text-align: left">Habilita la documentación OpenAPI/Swagger en <code>/api/docs</code></td></tr>
+<tr><td style="text-align: left"><code>PGADMIN_PORT</code></td><td style="text-align: left"><code>5050</code></td><td style="text-align: left">Puerto del panel web pgAdmin</td></tr>
+<tr><td style="text-align: left"><code>PGADMIN_EMAIL</code></td><td style="text-align: left"><code>admin@admin.com</code></td><td style="text-align: left">Email de inicio de sesión de pgAdmin</td></tr>
+<tr><td style="text-align: left"><code>PGADMIN_PASSWORD</code></td><td style="text-align: left"><code>admin</code></td><td style="text-align: left">Clave de inicio de sesión de pgAdmin</td></tr>
+</tbody>
+</table>
+<hr>
+<h2>🌐 Enlaces y Servicios Locales</h2>
+<p>Una vez levantados los servicios, podés acceder a:</p>
+<ul>
+<li><strong>API Base:</strong> <a href="http://localhost:3000/api/v1">http://localhost:3000/api/v1</a></li>
+<li><strong>Health Check:</strong> <a href="http://localhost:3000/api/health">http://localhost:3000/api/health</a></li>
+<li><strong>Documentación Swagger UI:</strong> <a href="http://localhost:3000/api/docs">http://localhost:3000/api/docs</a></li>
+<li><strong>Especificación OpenAPI (JSON):</strong> <a href="http://localhost:3000/api/docs-json">http://localhost:3000/api/docs-json</a></li>
+<li><strong>pgAdmin 4:</strong> <a href="http://localhost:5050">http://localhost:5050</a></li>
+</ul>
+<hr>
+<h2>🐘 Base de Datos (PostgreSQL + pgAdmin)</h2>
+<p>Los siguientes scripts pueden ejecutarse tanto desde la raíz como dentro de <code>tp-final-integrador/backend</code>:</p>
+<b>Example :</b><div><pre class="line-numbers"><code class="language-bash">npm run db:up      # Inicia PostgreSQL + pgAdmin en segundo plano
+npm run db:status  # Verifica el estado y healthcheck de los contenedores
+npm run db:logs    # Muestra los logs en tiempo real de PostgreSQL
+npm run db:down    # Detiene los contenedores sin borrar datos
+npm run db:reset   # Detiene, elimina volúmenes (datos) y vuelve a crear la base</code></pre></div><h3>Conexión en pgAdmin (Cliente Web)</h3>
+<ol>
+<li>Ingresá a <a href="http://localhost:5050">http://localhost:5050</a>.</li>
+<li>Iniciá sesión con las credenciales de <code>PGADMIN_EMAIL</code> y <code>PGADMIN_PASSWORD</code> (<code>admin@admin.com</code> / <code>admin</code>).</li>
+<li>Creá una nueva conexión de servidor (<strong>Add New Server</strong>):<ul>
+<li><strong>General → Name:</strong> <code>PostgreSQL Local</code></li>
+<li><strong>Connection → Host name/address:</strong> <code>postgres</code> (nombre del contenedor dentro de la red Docker).</li>
+<li><strong>Connection → Port:</strong> <code>5432</code></li>
+<li><strong>Connection → Maintenance database:</strong> <code>tp-integrador</code></li>
+<li><strong>Connection → Username:</strong> <code>postgres</code></li>
+<li><strong>Connection → Password:</strong> <code>postgres</code></li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>💡 <strong>Nota:</strong> Si te conectás desde tu máquina host mediante DBeaver, DataGrip o <code>psql</code>, usá <code>localhost</code> como host. Dentro de pgAdmin usá <code>postgres</code> porque ambos contenedores comparten la red de Docker.</p>
+</blockquote>
+<hr>
+<h3>Alternativa: Configuración Manual con pgAdmin (Sin Docker)</h3>
+<p>Si disponés de una instalación local de PostgreSQL y pgAdmin en tu máquina:</p>
+<h4>1. Conexión al servidor local</h4>
+<ol>
+<li>Abrí pgAdmin y conectate a tu servidor local de PostgreSQL en el panel izquierdo (<strong>Object Explorer</strong>). Por defecto suele estar en <code>localhost:5432</code> con usuario <code>postgres</code>.</li>
+</ol>
+<h4>2. Creación de la base de datos</h4>
+<ol>
+<li>En el árbol de navegación, hacé clic derecho en <strong>Databases</strong> → <strong>Create</strong> → <strong>Database...</strong>.</li>
+<li>En la pestaña <strong>General</strong>, ingresá el nombre de la base de datos: <code>tp-integrador</code> (o el configurado en tu <code>.env</code> como <code>POSTGRES_DB</code>).</li>
+<li>Hacé clic en <strong>Save</strong>.</li>
+<li><em>(Opcional para tests)</em>: Repetí el proceso creando la base <code>tp-integrador-test</code> si tenés previsto correr los tests end-to-end (<code>npm run test:e2e</code>).</li>
+</ol>
+<h4>3. Importación y ejecución de scripts (<code>init/</code>)</h4>
+<p>Los scripts deben ejecutarse en la base de datos <code>tp-integrador</code> en orden secuencial:</p>
+<ol>
+<li>Desplegá el nodo <strong>Databases</strong> y seleccioná <code>tp-integrador</code>.</li>
+<li>Hacé clic derecho sobre <code>tp-integrador</code> y seleccioná <strong>Query Tool</strong> (o menú superior: <em>Tools</em> → <em>Query Tool</em>).</li>
+<li><strong>Estructura y esquemas (<code>01-init.sql</code>):</strong><ul>
+<li>En la barra de herramientas del Query Tool, hacé clic en el ícono de carpeta (<strong>Open File</strong> o <code>Ctrl + O</code>).</li>
+<li>Navegá hasta <a href="./init/01-init.sql"><code>init/01-init.sql</code></a> y abrilo (o copiá y pegá su contenido en el editor).</li>
+<li>Presioná el botón de ejecución (<strong>Execute / Refresh</strong> o <code>F5</code>).</li>
+<li>Verificá en la pestaña <em>Messages</em> que la consulta haya finalizado exitosamente (<code>Query returned successfully</code>). Esto creará los tipos <code>ENUM</code>, las tablas (<code>usuarios</code>, <code>medicos</code>, <code>reservas</code>) e índices.</li>
+</ul>
+</li>
+<li><strong>Carga de datos iniciales (<code>02-seed.sql</code>):</strong><ul>
+<li>Hacé clic nuevamente en <strong>Open File</strong>, seleccioná <a href="./init/02-seed.sql"><code>init/02-seed.sql</code></a> y presiona <strong>Execute</strong> (<code>F5</code>).</li>
+<li>Esto insertará los usuarios base (médicos, pacientes, administrador con contraseñas encriptadas en bcrypt), registros de médicos y turnos de ejemplo.</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>💡 <strong>Nota para la base de tests:</strong> Si creaste <code>tp-integrador-test</code>, abrí un <strong>Query Tool</strong> sobre ella y ejecutá también <code>01-init.sql</code> y <code>02-seed.sql</code> para dejarla lista para las pruebas automatizadas.</p>
+</blockquote>
+<h4>4. Ajuste de variables de entorno (<code>.env</code>)</h4>
+<p>Verificá que el archivo <code>.env</code> en <code>tp-final-integrador/backend/.env</code> apunte a tu instalación local:</p>
+<b>Example :</b><div><pre class="line-numbers"><code class="language-env">POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=tu_contraseña_local
+POSTGRES_DB=tp-integrador
+POSTGRES_DB_TEST=tp-integrador-test</code></pre></div><hr>
+<h2>💻 Comandos de Ejecución y Desarrollo</h2>
+<b>Example :</b><div><pre class="line-numbers"><code class="language-bash"># Desarrollo con recarga automática (watch mode)
+npm run start:dev
+
+# Compilar para producción
+npm run build
+
+# Iniciar build de producción
+npm run start:prod</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 0;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'readme';
+            var COMPODOC_CURRENT_PAGE_URL = 'index.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var updateDarkModeSwitchOffset = function () {
+                    var content = document.querySelector('.content');
+                    var scrollbarWidth = 0;
+
+                    if (content) {
+                         scrollbarWidth = Math.max(0, content.offsetWidth - content.clientWidth);
+                    }
+
+                    document.documentElement.style.setProperty(
+                         '--content-scrollbar-width',
+                         scrollbarWidth + 'px'
+                    );
+               };
+
+               updateDarkModeSwitchOffset();
+               requestAnimationFrame(updateDarkModeSwitchOffset);
+               window.addEventListener('resize', updateDarkModeSwitchOffset);
+
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="./js/libs/custom-elements.min.js"></script>
+       <script src="./js/libs/lit-html.js"></script>
+
+       <script src="./js/menu-wc.js" defer></script>
+
+       <script src="./js/libs/bootstrap-native.js"></script>
+
+       <script src="./js/libs/es6-shim.min.js"></script>
+       <script src="./js/libs/EventDispatcher.js"></script>
+       <script src="./js/libs/promise.min.js"></script>
+
+       <script src="./js/compodoc.js"></script>
+
+       <script src="./js/tabs.js"></script>
+       <script src="./js/menu.js"></script>
+       <script src="./js/libs/clipboard.min.js"></script>
+       <script src="./js/libs/prism.js"></script>
+       <script src="./js/sourceCode.js"></script>
+          <script src="./js/search/search.js"></script>
+          <script src="./js/search/lunr.min.js"></script>
+          <script src="./js/search/search-lunr.js"></script>
+          <script src="./js/search/search_index.js"></script>
+       <script src="./js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

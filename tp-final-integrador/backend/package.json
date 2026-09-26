@@ -25,7 +25,9 @@
     "db:status": "docker compose ps",
     "db:logs": "docker compose logs -f postgres",
     "db:reset": "docker compose down -v && docker compose up -d",
-    "db:reset:test": "node test/setup/global-setup.ts"
+    "db:reset:test": "node test/setup/global-setup.ts",
+    "doc:generate": "compodoc -p tsconfig.build.json -d ./docs",
+    "doc:serve": "compodoc -s -d ./docs"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -33,7 +35,7 @@
     "@nestjs/core": "^12.0.1",
     "@nestjs/jwt": "^12.0.2",
     "@nestjs/platform-express": "^12.0.1",
-    "@nestjs/swagger": "^12.0.1",
+    "@nestjs/swagger": "^12.0.2",
     "@nestjs/typeorm": "^12.0.1",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -43,9 +45,11 @@
     "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.31"
   },
   "devDependencies": {
+    "@compodoc/compodoc": "^2.0.0",
     "@nestjs/cli": "^12.0.0",
     "@nestjs/mau": "^0.2.6",
     "@nestjs/schematics": "^12.0.0",

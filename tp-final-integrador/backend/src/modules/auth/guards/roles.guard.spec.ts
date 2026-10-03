@@ -1,29 +1,29 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ExecutionContext } from '@nestjs/common';
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RolesGuard } from './roles.guard.js';
-import { Roles } from '../decorators/roles.decorator.js';
+import { Auth } from '../decorators/auth.decorator.js';
 import { RolUsuario } from '../../usuarios/enums/rol-usuario.enum.js';
 import type { AuthenticatedRequest } from '../interfaces/authenticated-request.interface.js';
 
 class ControladorPrueba {
-  @Roles(RolUsuario.MEDICO)
+  @Auth(RolUsuario.MEDICO)
   soloMedico() {}
 
-  @Roles(RolUsuario.MEDICO, RolUsuario.ADMINISTRADOR)
+  @Auth(RolUsuario.MEDICO, RolUsuario.ADMINISTRADOR)
   medicoOAdmin() {}
 
   sinDecorador() {}
 
-  @Roles()
+  @Auth()
   rolesVacio() {}
 }
 
-@Roles(RolUsuario.ADMINISTRADOR)
+@Auth(RolUsuario.ADMINISTRADOR)
 class ControladorAdmin {
   endpointHeredado() {}
 
-  @Roles(RolUsuario.PACIENTE)
+  @Auth(RolUsuario.PACIENTE)
   overridePaciente() {}
 }
 
@@ -105,9 +105,9 @@ describe('RolesGuard (Comportamiento de Autorización)', () => {
       expect(guard.canActivate(ctx)).toBe(false);
     });
 
-    it('debe retornar false cuando no hay usuario autenticado en la solicitud', () => {
+    it('debe lanzar UnauthorizedException cuando no hay usuario autenticado en la solicitud', () => {
       const ctx = crearContexto(ControladorPrueba, 'soloMedico', undefined);
-      expect(guard.canActivate(ctx)).toBe(false);
+      expect(() => guard.canActivate(ctx)).toThrow(UnauthorizedException);
     });
 
     it('debe retornar false si el método sobreescribe la clase y el usuario no cumple el rol del método', () => {

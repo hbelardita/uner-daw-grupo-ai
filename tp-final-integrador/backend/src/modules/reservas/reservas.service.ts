@@ -1,4 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { MedicosService } from '../medicos/medicos.service.js';
+import { Reserva } from './entities/reserva.entity.js';
+import { EstadoReserva } from './enums/index.js';
+
+export interface CrearReservaParams {
+  idMedico: number;
+  idPaciente: number;
+  fechaHora: Date;
+}
 
 const ZONA_HORARIA_CLINICA = 'America/Argentina/Buenos_Aires';
 const DIAS_MAXIMOS_ANTELACION = 30;
@@ -25,6 +36,27 @@ export class ReservasService {
     hour: '2-digit',
     minute: '2-digit',
   });
+
+  constructor(
+    @InjectRepository(Reserva)
+    private readonly reservasRepository: Repository<Reserva>,
+    private readonly medicosService: MedicosService,
+  ) {}
+
+  async crearReserva(dto: CrearReservaParams): Promise<Reserva> {
+    this.validarReglasTemporales(dto.fechaHora);
+    const valorConsulta = await this.medicosService.obtenerArancelVigente(
+      dto.idMedico,
+    );
+    const reserva = this.reservasRepository.create({
+      idMedico: dto.idMedico,
+      idPaciente: dto.idPaciente,
+      fechaHora: dto.fechaHora,
+      estado: EstadoReserva.ACTIVO,
+      valorConsulta,
+    });
+    return this.reservasRepository.save(reserva);
+  }
 
   /**
    * Valida las reglas temporales de una reserva según las reglas de negocio

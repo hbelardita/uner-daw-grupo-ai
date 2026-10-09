@@ -3,3 +3,5 @@ npx lint-staged
 # Validar sintaxis en el backend (Oxlint)
 echo "Ejecutando linter en backend..."
 npm --prefix tp-final-integrador/backend run lint
+echo "Ejecutando linter en frontend..."
+npm --prefix tp-final-integrador/frontend run lint

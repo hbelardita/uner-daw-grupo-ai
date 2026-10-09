@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { IconField } from 'primeng/iconfield';
@@ -9,6 +10,7 @@ import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
 import { ResumenErrores } from '../../shared/resumen-errores/resumen-errores';
+import { obtenerRutaInicioPorRol } from '../auth-navigation';
 import { AuthService } from '../auth-service';
 
 type CampoLogin = keyof LoginPage['formulario']['controls'];
@@ -29,6 +31,7 @@ type CampoLogin = keyof LoginPage['formulario']['controls'];
 })
 export default class LoginPage {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly destructor = inject(DestroyRef);
 
   protected readonly cargando = signal(false);
@@ -78,7 +81,7 @@ export default class LoginPage {
       return null;
     }
     if (control.hasError('required')) {
-      return campo === 'documento' ? 'Ingresá tu documento.' : 'Ingresá tu contraseña.';
+      return campo === 'documento' ? 'Ingresa tu documento.' : 'Ingresa tu contraseña.';
     }
     if (control.hasError('pattern')) {
       return 'El documento debe tener 7 u 8 dígitos.';
@@ -103,7 +106,8 @@ export default class LoginPage {
           this.cargando.set(false);
           this.formulario.enable();
           this.error.set(null);
-          // TODO: navegar al destino post-login cuando exista la ruta (p. ej. '/').
+          const rutaDestino = obtenerRutaInicioPorRol(this.auth.rol());
+          this.router.navigateByUrl(rutaDestino);
         },
         error: (fallo: unknown) => {
           this.cargando.set(false);

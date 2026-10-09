@@ -4,11 +4,11 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_BASE_URL } from '../app.config';
 import type { LoginResponse, Usuario } from './auth-dto';
-import { AuthService } from './auth-service';
 import { obtenerRutaInicioPorRol, RUTA_INICIO_POR_ROL } from './auth-navigation';
+import { AuthService } from './auth-service';
 import { decodeJwtPayload } from './jwt-utils';
-import { TOKEN_KEY } from './token-storage';
 import type { RolUsuario } from './rol-usuario';
+import { TOKEN_KEY } from './token-storage';
 
 function crearTokenPrueba(payload: object): string {
   const encabezado = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));

@@ -1,5 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { catchError, map, of, switchMap, tap, type Observable } from 'rxjs';
 import { API_BASE_URL } from '../app.config';
 import type { LoginResponse, Usuario } from './auth-dto';
@@ -16,6 +17,7 @@ export class AuthService {
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly tokenStorage = inject(TokenStorage);
   private readonly currentUser = inject(CurrentUser);
+  private readonly router = inject(Router);
 
   private readonly token = signal<string | null>(this.tokenStorage.obtenerToken());
 
@@ -78,9 +80,12 @@ export class AuthService {
     );
   }
 
-  cerrarSesion(): void {
+  cerrarSesion(redirigir = true): void {
     this.tokenStorage.eliminarToken();
     this.token.set(null);
     this.currentUser.limpiar();
+    if (redirigir && this.router) {
+      this.router.navigateByUrl('/login', { replaceUrl: true });
+    }
   }
 }

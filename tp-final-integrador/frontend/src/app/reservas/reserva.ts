@@ -16,6 +16,8 @@ export interface ReservaPaciente {
 
 export interface Reserva {
   id: number;
+  idMedico: number;
+  idPaciente: number;
   fechaHora: string;
   estado: EstadoReserva;
   valorConsulta: number;
@@ -23,13 +25,13 @@ export interface Reserva {
   paciente: ReservaPaciente;
 }
 
-export interface CrearReservaRequest {
+export interface CrearReserva {
   idMedico: number;
   fechaHora: string;
   idPaciente?: number;
 }
 
-export interface ActualizarReservaEstadoRequest {
+export interface ActualizarReservaEstado {
   estado: 'ATENDIDO' | 'AUSENTE';
 }
 

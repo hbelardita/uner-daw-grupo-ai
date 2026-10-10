@@ -73,12 +73,14 @@ export const routes: Routes = [
   },
   {
     path: 'login',
+    title: 'Inicio de Sesión',
     canActivate: [guestGuard],
     loadComponent: () => import('./auth/login-page/login-page'),
   },
   {
     path: '',
     canActivate: [authGuard],
+    loadComponent: () => import('./layout/private-layout'),
     children: [
       {
         path: 'agenda',
@@ -124,7 +126,7 @@ export const routes: Routes = [
           {
             path: '',
             pathMatch: 'full',
-            title: 'Turnos Clínicos',
+            title: 'Turnos',
             canActivate: [roleGuard(['ADMINISTRADOR'])],
             component: TurnosAdminListaComponent,
           },
@@ -138,10 +140,20 @@ export const routes: Routes = [
       },
       {
         path: 'gestion',
-        title: 'Gestión de Médicos',
+        title: 'Gestión Médicos y Aranceles',
         canActivate: [roleGuard(['ADMINISTRADOR'])],
         component: GestionMedicosComponent,
       },
+      {
+        path: 'acceso-denegado',
+        title: 'Acceso Denegado',
+        loadComponent: () => import('./errors/forbidden-page'),
+      },
     ],
+  },
+  {
+    path: '**',
+    title: 'Página no encontrada',
+    loadComponent: () => import('./errors/not-found-page'),
   },
 ];

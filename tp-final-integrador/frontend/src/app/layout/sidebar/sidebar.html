@@ -1,0 +1,79 @@
+<ng-template #menuContent>
+  <!-- Encabezado de la barra lateral: [+] Clínica -->
+  <div class="h-16 flex items-center px-6 border-b border-slate-800">
+    <div class="flex items-center space-x-2.5">
+      <div
+        class="w-8 h-8 rounded-lg bg-teal-700 flex items-center justify-center text-white shadow-xs"
+      >
+        <i class="pi pi-plus text-sm font-bold"></i>
+      </div>
+      <div class="flex flex-col">
+        <span class="font-bold text-base text-white tracking-tight leading-tight">
+          Clínica DAW
+        </span>
+        <span class="text-[11px] text-teal-400 font-medium"> Gestión de Turnos </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegación principal según rol -->
+  <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Navegación principal">
+    <div class="px-3 pb-2 text-xs font-bold tracking-wider uppercase text-slate-400">Menú</div>
+
+    @for (item of itemsNavegacion(); track item.ruta) {
+      <a
+        [routerLink]="item.ruta"
+        routerLinkActive="bg-slate-800 border-l-2 border-teal-400 text-white font-medium"
+        [routerLinkActiveOptions]="{ exact: item.exacto ?? false }"
+        ariaCurrentWhenActive="page"
+        (click)="onNavegacionClick()"
+        class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800/80 hover:text-white transition-colors"
+      >
+        <i
+          [class]="item.icono"
+          class="text-base text-slate-400 group-hover:text-teal-400 transition-colors"
+        ></i>
+        <span>{{ item.etiqueta }}</span>
+      </a>
+    }
+  </nav>
+
+  <!-- Pie del Sidebar: Usuario y cerrar sesión -->
+  <div class="p-3 mt-auto border-t border-slate-800 flex flex-col gap-3">
+    <div class="lg:hidden px-1">
+      <app-user-badge tema="dark" alineacion="left" />
+    </div>
+
+    <button
+      type="button"
+      (click)="cerrarSesion()"
+      class="group min-h-11 cursor-pointer flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-l-2 border-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+    >
+      <i
+        class="pi pi-sign-out text-base text-slate-400 group-hover:text-rose-400 transition-colors"
+      ></i>
+      <span>Cerrar sesión</span>
+    </button>
+  </div>
+</ng-template>
+
+<!-- Desktop (>= 1024 px): sidebar fija w-64 bg-slate-900 -->
+<aside
+  class="hidden lg:flex w-64 bg-slate-900 text-slate-100 flex-col h-screen sticky top-0 border-r border-slate-800 shrink-0"
+  aria-label="Navegación principal"
+>
+  <ng-container *ngTemplateOutlet="menuContent" />
+</aside>
+
+<!-- Tablet y móvil (< 1024 px): p-drawer -->
+<p-drawer
+  [visible]="!esDesktop() && abierto()"
+  (visibleChange)="onVisibleChange($event)"
+  [modal]="true"
+  position="left"
+  styleClass="!w-64 !bg-slate-900 !text-slate-100 !p-0 !border-r !border-slate-800 lg:!hidden"
+>
+  <div class="flex flex-col h-full bg-slate-900 text-slate-100">
+    <ng-container *ngTemplateOutlet="menuContent" />
+  </div>
+</p-drawer>

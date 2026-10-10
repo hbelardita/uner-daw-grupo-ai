@@ -1,0 +1,54 @@
+<section class="flex flex-col gap-6">
+  <header>
+    <h1 class="text-2xl font-semibold text-slate-900">Mis turnos</h1>
+    <p class="text-sm text-slate-600 mt-1">Consultá y administrá tus turnos reservados</p>
+  </header>
+
+  <div class="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
+    <p-table
+      [value]="reservas()"
+      [loading]="cargando()"
+      [rowHover]="true"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      [tableStyle]="{ 'min-width': '48rem' }"
+    >
+      <ng-template #header>
+        <tr class="text-slate-700 text-sm">
+          <th scope="col" class="py-3 px-4 text-left">Fecha y Hora</th>
+          <th scope="col" class="py-3 px-4 text-left">Médico</th>
+          <th scope="col" class="py-3 px-4 text-right">Valor de Consulta</th>
+          <th scope="col" class="py-3 px-4 text-left">Estado</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-reserva>
+        <tr
+          class="border-b border-slate-100 text-sm text-slate-900 hover:bg-slate-50 transition-colors"
+        >
+          <td class="py-3 px-4 tabular-nums">
+            {{ reserva.fechaHora | date: 'dd/MM/yyyy HH:mm' }}
+          </td>
+          <td class="py-3 px-4 font-medium text-slate-900">
+            {{ reserva.medico.nombres }} {{ reserva.medico.apellidos }}
+          </td>
+          <td class="py-3 px-4 text-right tabular-nums font-medium">
+            {{ reserva.valorConsulta | currency: 'ARS' : 'symbol' : '1.2-2' }}
+          </td>
+          <td class="py-3 px-4">
+            <app-estado-badge [estado]="reserva.estado" />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="4" class="py-8 text-center text-slate-500 text-sm">
+            No se encontraron turnos registrados.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</section>

@@ -13,10 +13,23 @@
       [rows]="10"
       [rowsPerPageOptions]="[10, 20, 50]"
       [tableStyle]="{ 'min-width': '48rem' }"
+      [sortField]="'fechaHora'"
+      [sortOrder]="-1"
     >
+      <ng-template #caption>
+        <span class="sr-only">Mis turnos</span>
+      </ng-template>
+
       <ng-template #header>
         <tr class="text-slate-700 text-sm">
-          <th scope="col" class="py-3 px-4 text-left">Fecha y Hora</th>
+          <th
+            pSortableColumn="fechaHora"
+            scope="col"
+            class="py-3 px-4 text-left cursor-pointer select-none"
+          >
+            Fecha <p-sortIcon field="fechaHora" />
+          </th>
+          <th scope="col" class="py-3 px-4 text-left">Hora</th>
           <th scope="col" class="py-3 px-4 text-left">Médico</th>
           <th scope="col" class="py-3 px-4 text-right">Valor de Consulta</th>
           <th scope="col" class="py-3 px-4 text-left">Estado</th>
@@ -28,7 +41,10 @@
           class="border-b border-slate-100 text-sm text-slate-900 hover:bg-slate-50 transition-colors"
         >
           <td class="py-3 px-4 tabular-nums">
-            {{ reserva.fechaHora | date: 'dd/MM/yyyy HH:mm' }}
+            {{ reserva.fechaHora | date: 'dd/MM/yyyy' }}
+          </td>
+          <td class="py-3 px-4 tabular-nums">
+            {{ reserva.fechaHora | date: 'HH:mm' }}
           </td>
           <td class="py-3 px-4 font-medium text-slate-900">
             {{ reserva.medico.nombres }} {{ reserva.medico.apellidos }}
@@ -44,7 +60,7 @@
 
       <ng-template #emptymessage>
         <tr>
-          <td colspan="4" class="py-8 text-center text-slate-500 text-sm">
+          <td colspan="5" class="py-8 text-center text-slate-500 text-sm">
             No se encontraron turnos registrados.
           </td>
         </tr>

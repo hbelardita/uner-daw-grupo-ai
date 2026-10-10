@@ -23,7 +23,6 @@
     >
       @if (error()) {
         <p-message
-          tabindex="-1"
           role="alert"
           severity="error"
           icon="pi pi-exclamation-circle"
@@ -45,6 +44,7 @@
             [invalid]="esInvalido('documento')"
             autocomplete="username"
             inputmode="numeric"
+            [disabled]="cargando()"
             placeholder="12345678"
             class="w-full rounded-lg text-base tabular-nums"
             [attr.aria-describedby]="
@@ -74,6 +74,7 @@
           inputId="clave"
           [formControl]="clave"
           [feedback]="false"
+          [disabled]="cargando()"
           fluid
           [toggleMask]="true"
           autocomplete="current-password"
@@ -94,7 +95,7 @@
       <div class="pt-2">
         <p-button
           type="submit"
-          label="Ingresar"
+          [label]="cargando() ? 'Ingresando…' : 'Ingresar'"
           [disabled]="cargando()"
           [loading]="cargando()"
           styleClass="w-full rounded-lg font-medium"

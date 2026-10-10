@@ -105,10 +105,17 @@ export default class LoginPage {
         error: (fallo: unknown) => {
           this.cargando.set(false);
           this.formulario.enable();
-          const detalle =
-            fallo instanceof HttpErrorResponse && fallo.status === 0
-              ? 'No se pudo conectar con el servidor.'
-              : 'Verifique su documento y contraseña.';
+
+          let detalle = 'No pudimos conectar con el servidor. Intentá de nuevo en unos minutos.';
+          if (fallo instanceof HttpErrorResponse) {
+            if (fallo.status === 401 || fallo.status === 400) {
+              detalle = 'Documento o contraseña incorrectos.';
+              this.clave.reset('');
+            } else if (fallo.status >= 500 || fallo.status === 0) {
+              detalle = 'No pudimos conectar con el servidor. Intentá de nuevo en unos minutos.';
+            }
+          }
+
           this.error.set(detalle);
           this.messageService.add({
             severity: 'error',

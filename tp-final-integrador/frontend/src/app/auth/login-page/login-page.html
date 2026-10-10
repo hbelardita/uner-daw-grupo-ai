@@ -1,0 +1,111 @@
+<main class="min-h-dvh w-full grid place-items-center bg-slate-50 p-4">
+  <p-card class="w-full max-w-105 rounded-xl shadow-md border border-slate-200 bg-white">
+    <ng-template #title>
+      <div class="flex items-center justify-center gap-2 mb-2 text-teal-700">
+        <i class="pi pi-plus-circle text-xl" aria-hidden="true"></i>
+        <span class="text-base font-semibold tracking-wide text-slate-900 uppercase"
+          >Clínica DAW</span
+        >
+      </div>
+      <h1 class="text-center text-2xl md:text-3xl font-semibold text-slate-900">Iniciar sesión</h1>
+    </ng-template>
+
+    <ng-template #subtitle>
+      <p class="text-center text-sm text-slate-600 mt-1 mb-2">Ingresá con tu documento</p>
+    </ng-template>
+
+    <form
+      [formGroup]="formulario"
+      (ngSubmit)="enviar()"
+      aria-label="Formulario de inicio de sesión"
+      class="flex flex-col gap-5 mt-3"
+      novalidate
+    >
+      @if (error()) {
+        <p-message
+          role="alert"
+          severity="error"
+          icon="pi pi-exclamation-circle"
+          styleClass="w-full"
+        >
+          {{ error() }}
+        </p-message>
+      }
+
+      <div class="flex flex-col gap-1.5">
+        <label for="documento" class="text-sm font-medium text-slate-700"> Documento </label>
+        <p-iconfield>
+          <p-inputicon class="pi pi-id-card text-slate-400" />
+          <input
+            pInputText
+            id="documento"
+            type="text"
+            [formControl]="documento"
+            [invalid]="esInvalido('documento')"
+            autocomplete="username"
+            inputmode="numeric"
+            [disabled]="cargando()"
+            placeholder="12345678"
+            class="w-full rounded-lg text-base tabular-nums"
+            [attr.aria-describedby]="
+              esInvalido('documento') ? 'documento-error' : 'documento-ayuda'
+            "
+          />
+        </p-iconfield>
+
+        @if (esInvalido('documento')) {
+          <span
+            id="documento-error"
+            class="text-xs text-rose-700 flex items-center gap-1 font-medium"
+          >
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+            {{ obtenerMensajeError('documento') }}
+          </span>
+        } @else {
+          <span id="documento-ayuda" class="text-xs text-slate-500">
+            Ingresá 7 u 8 dígitos, sin puntos.
+          </span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="clave" class="text-sm font-medium text-slate-700"> Contraseña </label>
+        <p-password
+          inputId="clave"
+          [formControl]="clave"
+          [feedback]="false"
+          [disabled]="cargando()"
+          fluid
+          [toggleMask]="true"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          [invalid]="esInvalido('clave')"
+          inputStyleClass="w-full rounded-lg text-base"
+          [attr.aria-describedby]="esInvalido('clave') ? 'clave-error' : null"
+        />
+
+        @if (esInvalido('clave')) {
+          <span id="clave-error" class="text-xs text-rose-700 flex items-center gap-1 font-medium">
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+            {{ obtenerMensajeError('clave') }}
+          </span>
+        }
+      </div>
+
+      <div class="pt-2">
+        <p-button
+          type="submit"
+          [label]="cargando() ? 'Ingresando…' : 'Ingresar'"
+          [disabled]="cargando()"
+          [loading]="cargando()"
+          styleClass="w-full rounded-lg font-medium"
+        />
+      </div>
+
+      <div class="text-center pt-1 text-xs text-slate-500">
+        ¿Problemas para ingresar?
+        <span class="text-slate-700 font-medium">Comunicate con la clínica.</span>
+      </div>
+    </form>
+  </p-card>
+</main>

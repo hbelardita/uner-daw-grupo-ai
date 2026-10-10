@@ -5,15 +5,18 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
-import { FloatLabel } from 'primeng/floatlabel';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Password } from 'primeng/password';
 import { AuthService } from '../auth-service';
 
+type CampoLogin = keyof LoginPage['formulario']['controls'];
+
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, Card, InputText, Password, Button, FloatLabel, Message],
+  imports: [ReactiveFormsModule, Card, InputText, Password, Button, IconField, InputIcon, Message],
   templateUrl: './login-page.html',
 })
 export default class LoginPage {
@@ -21,10 +24,10 @@ export default class LoginPage {
   private readonly messageService = inject(MessageService);
   private readonly destructor = inject(DestroyRef);
 
-  readonly cargando = signal(false);
-  readonly error = signal<string | null>(null);
+  protected readonly cargando = signal(false);
+  protected readonly error = signal<string | null>(null);
 
-  readonly formulario = new FormGroup({
+  protected readonly formulario = new FormGroup({
     documento: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.pattern(/^[0-9]{7,8}$/)],
@@ -33,6 +36,15 @@ export default class LoginPage {
   });
 
   constructor() {
+    this.formulario.controls.documento.valueChanges
+      .pipe(takeUntilDestroyed(this.destructor))
+      .subscribe((val) => {
+        const saneado = val.replace(/\D/g, '');
+        if (saneado !== val) {
+          this.formulario.controls.documento.setValue(saneado, { emitEvent: false });
+        }
+      });
+
     this.formulario.valueChanges.pipe(takeUntilDestroyed(this.destructor)).subscribe(() => {
       if (this.error()) {
         this.error.set(null);
@@ -48,10 +60,23 @@ export default class LoginPage {
     return this.formulario.controls.clave;
   }
 
-  esInvalido(controlName: string) {
-    const control = this.formulario.get(controlName);
+  esInvalido(campo: CampoLogin): boolean {
+    const control = this.formulario.controls[campo];
+    return control.invalid && (control.touched || control.dirty);
+  }
 
-    return control?.invalid && (control.touched || control.dirty);
+  obtenerMensajeError(campo: CampoLogin): string | null {
+    const control = this.formulario.controls[campo];
+    if (!this.esInvalido(campo)) {
+      return null;
+    }
+    if (control.hasError('required')) {
+      return campo === 'documento' ? 'Ingresá tu documento.' : 'Ingresá tu contraseña.';
+    }
+    if (control.hasError('pattern')) {
+      return 'El documento debe tener 7 u 8 dígitos.';
+    }
+    return null;
   }
 
   enviar(): void {

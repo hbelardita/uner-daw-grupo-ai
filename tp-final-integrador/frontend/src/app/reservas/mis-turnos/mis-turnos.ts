@@ -1,6 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Card } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { EstadoBadge } from '../../shared';
 import { Reserva } from '../reserva';
@@ -8,7 +9,7 @@ import { ReservasService } from '../reservas-service';
 
 @Component({
   selector: 'app-mis-turnos',
-  imports: [DatePipe, CurrencyPipe, TableModule, EstadoBadge],
+  imports: [DatePipe, CurrencyPipe, TableModule, Card, EstadoBadge],
   templateUrl: './mis-turnos.html',
 })
 export default class MisTurnos implements OnInit {

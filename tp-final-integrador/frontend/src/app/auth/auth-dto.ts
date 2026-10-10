@@ -16,7 +16,7 @@ export interface MedicoProfile {
   valorConsulta: number;
 }
 
-export interface UserResponse {
+export interface Usuario {
   id: number;
   documento: string;
   apellidos: string;

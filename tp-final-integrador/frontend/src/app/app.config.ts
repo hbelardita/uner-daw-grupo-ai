@@ -1,16 +1,18 @@
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
+  inject,
   InjectionToken,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
-
-import { provideHttpClient } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { routes } from './app.routes';
+import { authInterceptor, AuthService } from './auth';
 
 const ClinicaPreset = definePreset(Aura, {
   semantic: {
@@ -61,8 +63,12 @@ export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL', {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
-    provideHttpClient(),
+    provideRouter(routes, withComponentInputBinding()),
+    provideHttpClient(withInterceptors([authInterceptor])),
+    provideAppInitializer(() => {
+      const authService = inject(AuthService);
+      return authService.cargarUsuarioActual();
+    }),
     providePrimeNG({
       theme: {
         preset: ClinicaPreset,

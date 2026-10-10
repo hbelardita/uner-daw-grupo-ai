@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
@@ -10,6 +11,7 @@ import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Password } from 'primeng/password';
+import { obtenerRutaInicioPorRol } from '../auth-navigation';
 import { AuthService } from '../auth-service';
 
 type CampoLogin = keyof LoginPage['formulario']['controls'];
@@ -21,6 +23,7 @@ type CampoLogin = keyof LoginPage['formulario']['controls'];
 })
 export default class LoginPage {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly destructor = inject(DestroyRef);
 
@@ -100,7 +103,8 @@ export default class LoginPage {
             summary: 'Bienvenido',
             detail: 'Inicio de sesión exitoso',
           });
-          // TODO: navegar al destino post-login cuando exista la ruta (p. ej. '/').
+          const rutaDestino = obtenerRutaInicioPorRol(this.auth.rol());
+          this.router.navigateByUrl(rutaDestino);
         },
         error: (fallo: unknown) => {
           this.cargando.set(false);

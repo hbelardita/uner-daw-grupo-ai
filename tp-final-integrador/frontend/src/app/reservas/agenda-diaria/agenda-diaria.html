@@ -1,0 +1,228 @@
+<section class="flex flex-col gap-6">
+  <header>
+    <h1 class="text-2xl md:text-3xl font-semibold text-slate-900">Mi agenda</h1>
+    <p class="text-sm text-slate-600 mt-1">Consultá los turnos programados del día</p>
+  </header>
+
+  <!-- Barra de control y navegación de fecha -->
+  <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-2 flex-wrap">
+        <p-button
+          icon="pi pi-chevron-left"
+          [text]="true"
+          severity="secondary"
+          aria-label="Día anterior"
+          (click)="diaAnterior()"
+        />
+
+        <p-datepicker
+          [ngModel]="fechaSeleccionada()"
+          (ngModelChange)="alCambiarFecha($event)"
+          [showIcon]="true"
+          dateFormat="dd/mm/yy"
+          [disabledDays]="[0, 6]"
+          placeholder="dd/mm/yyyy"
+          pInputMask="99/99/9999"
+          class="w-44 sm:w-52"
+          inputStyleClass="w-full tabular-nums text-sm font-medium"
+          aria-label="Seleccionar fecha de agenda"
+        />
+
+        <p-button
+          icon="pi pi-chevron-right"
+          [text]="true"
+          severity="secondary"
+          aria-label="Día siguiente"
+          (click)="diaSiguiente()"
+        />
+
+        <p-button
+          label="Hoy"
+          [outlined]="true"
+          severity="secondary"
+          size="small"
+          [disabled]="esFechaDeHoy()"
+          (click)="irAHoy()"
+        />
+      </div>
+
+      <!-- Resumen de turnos del día -->
+      @if (!cargando() && !error()) {
+        <div class="text-sm text-slate-600 tabular-nums" role="status">
+          @if (totalTurnos() > 0) {
+            <span class="font-medium text-slate-900">{{ totalTurnos() }}</span>
+            {{ totalTurnos() | i18nPlural: mapaPluralTurnos }}
+            <span class="text-slate-400"> &middot; </span>
+            <span
+              >{{ totalReservados() }} {{ totalReservados() | i18nPlural: mapaPluralActivos }}</span
+            >
+            <span class="text-slate-400"> &middot; </span>
+            <span
+              >{{ totalAtendidos() }} {{ totalAtendidos() | i18nPlural: mapaPluralAtendidos }}</span
+            >
+          }
+        </div>
+      }
+    </div>
+  </p-card>
+
+  <!-- Estado 1: Error de carga -->
+  @if (error()) {
+    <div
+      role="alert"
+      class="rounded-xl border border-rose-200 bg-rose-50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <div class="flex items-center gap-3 text-rose-800">
+        <i class="pi pi-exclamation-circle text-2xl"></i>
+        <div>
+          <p class="font-medium text-sm">{{ error() }}</p>
+          <p class="text-xs text-rose-600">Por favor, verificá tu conexión e intentá nuevamente.</p>
+        </div>
+      </div>
+      <p-button
+        label="Reintentar"
+        icon="pi pi-refresh"
+        severity="danger"
+        [outlined]="true"
+        [loading]="cargando()"
+        (click)="cargarReservas()"
+      />
+    </div>
+  }
+
+  <!-- Estado 2: Cargando con Skeletons -->
+  @else if (cargando()) {
+    <!-- Skeleton Desktop (>= 768px) -->
+    <div
+      class="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden hidden md:block"
+      aria-busy="true"
+    >
+      <table class="w-full text-left text-sm border-collapse">
+        <caption class="sr-only">
+          Cargando turnos de la agenda
+        </caption>
+        <thead class="text-slate-700 bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th scope="col" class="py-3 px-4">Hora</th>
+            <th scope="col" class="py-3 px-4">Paciente</th>
+            <th scope="col" class="py-3 px-4">Documento</th>
+            <th scope="col" class="py-3 px-4">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of [1, 2, 3, 4, 5]; track item) {
+            <tr class="border-b border-slate-100">
+              <td class="py-4 px-4"><p-skeleton width="4rem" height="1.25rem" /></td>
+              <td class="py-4 px-4"><p-skeleton width="10rem" height="1.25rem" /></td>
+              <td class="py-4 px-4"><p-skeleton width="7rem" height="1.25rem" /></td>
+              <td class="py-4 px-4">
+                <p-skeleton width="5.5rem" height="1.5rem" borderRadius="0.5rem" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Skeleton Mobile (< 768px) -->
+    <div class="flex flex-col gap-3 md:hidden" aria-busy="true">
+      @for (item of [1, 2, 3]; track item) {
+        <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
+          <div class="flex flex-col gap-3">
+            <p-skeleton width="8rem" height="1rem" />
+            <p-skeleton width="12rem" height="1.25rem" />
+            <p-skeleton width="6rem" height="1rem" />
+            <div class="flex items-center justify-end pt-2 border-t border-slate-100">
+              <p-skeleton width="5rem" height="1.5rem" borderRadius="0.5rem" />
+            </div>
+          </div>
+        </p-card>
+      }
+    </div>
+  }
+
+  <!-- Estado 3: Lista vacía sin turnos para la fecha -->
+  @else if (reservas().length === 0) {
+    <app-empty-state
+      icono="pi pi-calendar"
+      [titulo]="
+        'No hay turnos reservados para el ' + (fechaSeleccionada() | date: 'EEEE dd/MM/yyyy')
+      "
+    />
+  }
+
+  <!-- Estado 4: Datos cargados exitosamente -->
+  @else {
+    <!-- Vista Desktop (>= 768px): Tabla PrimeNG -->
+    <div
+      class="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden hidden md:block"
+    >
+      <p-table
+        [value]="reservas()"
+        [rowHover]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [tableStyle]="{ 'min-width': '48rem' }"
+        [sortField]="'fechaHora'"
+        [sortOrder]="1"
+      >
+        <ng-template #header>
+          <tr class="text-slate-700 text-sm">
+            <th
+              pSortableColumn="fechaHora"
+              scope="col"
+              class="py-3 px-4 text-left cursor-pointer select-none"
+            >
+              Hora <p-sortIcon field="fechaHora" />
+            </th>
+            <th scope="col" class="py-3 px-4 text-left">Paciente</th>
+            <th scope="col" class="py-3 px-4 text-left">Documento</th>
+            <th scope="col" class="py-3 px-4 text-left">Estado</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-reserva>
+          <tr
+            class="border-b border-slate-100 text-sm text-slate-900 hover:bg-slate-50 transition-colors"
+          >
+            <td class="py-3 px-4 tabular-nums font-medium">
+              {{ reserva.fechaHora | date: 'HH:mm' }}
+            </td>
+            <td class="py-3 px-4 font-medium text-slate-900">
+              {{ reserva.paciente.nombres }} {{ reserva.paciente.apellidos }}
+            </td>
+            <td class="py-3 px-4 tabular-nums text-slate-600">
+              {{ reserva.paciente.documento | documento }}
+            </td>
+            <td class="py-3 px-4">
+              <app-estado-badge [estado]="reserva.estado" />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- Vista Mobile (< 768px): Lista de Tarjetas -->
+    <div class="flex flex-col gap-3 md:hidden">
+      @for (reserva of reservas(); track reserva.id) {
+        <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between">
+              <span class="tabular-nums font-semibold text-lg text-slate-900">
+                {{ reserva.fechaHora | date: 'HH:mm' }}
+              </span>
+              <app-estado-badge [estado]="reserva.estado" />
+            </div>
+
+            <p>{{ reserva.paciente.nombres }} {{ reserva.paciente.apellidos }}</p>
+
+            <div class="text-sm text-slate-600 tabular-nums">
+              DNI {{ reserva.paciente.documento | documento }}
+            </div>
+          </div>
+        </p-card>
+      }
+    </div>
+  }
+</section>

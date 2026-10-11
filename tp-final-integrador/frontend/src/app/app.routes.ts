@@ -6,13 +6,6 @@ import { AuthService } from './auth/auth-service';
 import { SEGMENTOS_RUTA } from './constantes/rutas';
 
 @Component({
-  selector: 'app-agenda-diaria',
-  imports: [],
-  template: '<p>Agenda del Médico</p>',
-})
-export class AgendaDiariaComponent {}
-
-@Component({
   selector: 'app-turno-medico-detalle',
   imports: [],
   template: '<p>Detalle de Turno Médico</p>',
@@ -83,7 +76,7 @@ export const routes: Routes = [
         children: [
           {
             path: '',
-            component: AgendaDiariaComponent,
+            loadComponent: () => import('./reservas/agenda-diaria/agenda-diaria'),
           },
           {
             path: `${SEGMENTOS_RUTA.TURNOS}/:id`,

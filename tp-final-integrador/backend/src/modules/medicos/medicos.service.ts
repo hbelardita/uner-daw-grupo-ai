@@ -3,12 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { And, LessThan, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { Reserva } from '../reservas/entities/reserva.entity.js';
 import { EstadoReserva } from '../reservas/enums/estado-reserva.enum.js';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { Medico } from './entities/medico.entity.js';
 
 @Injectable()
 export class MedicosService {
   constructor(
     @InjectRepository(Reserva)
     private readonly reservasRepository: Repository<Reserva>,
+    @InjectRepository(Medico)
+    private readonly medicosRepository: Repository<Medico>,
   ) {}
 
   async buscarTurnosPorFecha(
@@ -36,5 +41,21 @@ export class MedicosService {
       relations: { paciente: true },
       order: { fechaHora: 'ASC' },
     });
+  
+  }
+
+  async obtenerArancelVigente(idMedico: number): Promise<number> {
+    const medico = await this.medicosRepository.findOne({
+      where: { id: idMedico },
+      select: { id: true, valorConsulta: true },
+    });
+
+    if (!medico) {
+      throw new NotFoundException(
+        `No se encontró el médico con id ${idMedico}.`,
+      );
+    }
+
+    return medico.valorConsulta;
   }
 }

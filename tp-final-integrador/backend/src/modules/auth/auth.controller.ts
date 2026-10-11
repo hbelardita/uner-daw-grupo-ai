@@ -5,7 +5,6 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -14,13 +13,12 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
-import { CurrentUser } from './decorators/index.js';
+import { Auth, CurrentUser } from './decorators/index.js';
 import {
   CurrentUserResponseDto,
   LoginRequestDto,
   LoginResponseDto,
 } from './dto/index.js';
-import { AuthGuard } from './guards/index.js';
 import type { JwtPayload } from './interfaces/index.js';
 
 @ApiTags('Auth')
@@ -54,7 +52,7 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(AuthGuard)
+  @Auth()
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Obtener información del usuario autenticado actual',

@@ -9,6 +9,6 @@ import { MedicosService } from './medicos.service.js';
   imports: [TypeOrmModule.forFeature([Medico, Reserva])],
   controllers: [MedicosController],
   providers: [MedicosService],
-  exports: [TypeOrmModule],
+  exports: [MedicosService],
 })
 export class MedicosModule {}

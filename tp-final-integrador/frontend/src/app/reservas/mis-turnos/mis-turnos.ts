@@ -1,22 +1,43 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
+import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
+import { Tooltip } from 'primeng/tooltip';
+import { AuthService } from '../../auth/auth-service';
 import { EmptyState, EstadoBadge } from '../../shared';
+import { debeMostrarCancelacionDeshabilitada, puedeCancelar } from '../regla-cancelacion';
 import { Reserva } from '../reserva';
 import { ReservasService } from '../reservas-service';
 
 @Component({
   selector: 'app-mis-turnos',
-  imports: [DatePipe, CurrencyPipe, TableModule, Card, Skeleton, Button, EstadoBadge, EmptyState],
+  imports: [
+    DatePipe,
+    CurrencyPipe,
+    TableModule,
+    Card,
+    Skeleton,
+    Button,
+    Tooltip,
+    ConfirmDialog,
+    EstadoBadge,
+    EmptyState,
+  ],
+  providers: [ConfirmationService, DatePipe],
   templateUrl: './mis-turnos.html',
 })
 export default class MisTurnos implements OnInit {
   private readonly reservasService = inject(ReservasService);
+  private readonly authService = inject(AuthService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly datePipe = inject(DatePipe);
 
   protected readonly reservas = signal<Reserva[]>([]);
   protected readonly cargando = signal<boolean>(true);
@@ -24,6 +45,10 @@ export default class MisTurnos implements OnInit {
 
   ngOnInit(): void {
     this.cargarReservas();
+  }
+
+  protected motivoCancelacion(): string {
+    return 'Solo podés cancelar hasta el día anterior a la consulta.';
   }
 
   cargarReservas(): void {
@@ -42,5 +67,60 @@ export default class MisTurnos implements OnInit {
           this.cargando.set(false);
         },
       });
+  }
+
+  protected puedeCancelarReserva(reserva: Reserva): boolean {
+    const rol = this.authService.rol() ?? 'PACIENTE';
+    return puedeCancelar(reserva, rol, new Date());
+  }
+
+  protected debeMostrarCancelacionDeshabilitada(reserva: Reserva): boolean {
+    const rol = this.authService.rol() ?? 'PACIENTE';
+    return debeMostrarCancelacionDeshabilitada(reserva, rol, new Date());
+  }
+
+  protected confirmarCancelacion(reserva: Reserva): void {
+    const fecha = this.datePipe.transform(reserva.fechaHora, 'dd/MM/yyyy') ?? '';
+    const hora = this.datePipe.transform(reserva.fechaHora, 'HH:mm') ?? '';
+    const medico = `${reserva.medico.nombres} ${reserva.medico.apellidos}`;
+
+    this.confirmationService.confirm({
+      message: `¿Cancelar tu turno del ${fecha} a las ${hora} con ${medico}? Esta acción no se puede deshacer.`,
+      header: 'Confirmar cancelación',
+      icon: 'pi pi-exclamation-triangle',
+      rejectButtonProps: {
+        label: 'Volver',
+        severity: 'secondary',
+        text: true,
+      },
+      acceptButtonProps: {
+        label: 'Cancelar turno',
+        severity: 'danger',
+      },
+      accept: () => {
+        this.reservasService
+          .cancelarReserva(reserva.id)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (reservaActualizada) => {
+              this.reservas.update((actuales) =>
+                actuales.map((r) => (r.id === reserva.id ? reservaActualizada : r)),
+              );
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Turno cancelado',
+                detail: `Tu turno del ${fecha} fue cancelado exitosamente.`,
+              });
+            },
+            error: () => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'No pudimos cancelar tu turno. Por favor, intentá nuevamente.',
+              });
+            },
+          });
+      },
+    });
   }
 }

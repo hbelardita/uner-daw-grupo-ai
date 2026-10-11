@@ -5,7 +5,6 @@ import {
   Param,
   ParseIntPipe,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -15,10 +14,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
-import { Roles } from '../auth/decorators/roles.decorator.js';
-import { AuthGuard, RolesGuard } from '../auth/guards/index.js';
-import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
+import { Auth, CurrentUser, type JwtPayload } from '../auth/index.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import { ConsultarAgendaQueryDto } from './dto/consultar-agenda-query.dto.js';
 import { ReservaResponseDto } from './dto/reserva-response.dto.js';
@@ -26,8 +22,7 @@ import { MedicosService } from './medicos.service.js';
 
 @ApiTags('Médicos')
 @Controller('medicos')
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(RolUsuario.MEDICO)
+@Auth(RolUsuario.MEDICO)
 @ApiBearerAuth()
 export class MedicosController {
   constructor(private readonly medicosService: MedicosService) {}

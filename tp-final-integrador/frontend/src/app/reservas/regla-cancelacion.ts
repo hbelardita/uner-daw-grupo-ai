@@ -7,6 +7,9 @@ const ZONA_HORARIA_ARGENTINA = 'America/Argentina/Buenos_Aires';
  * Obtiene la representación de fecha local 'YYYY-MM-DD' en la zona horaria de Argentina (UTC-3).
  */
 export function obtenerFechaLocalIso(fecha: Date): string {
+  if (Number.isNaN(fecha.getTime())) {
+    return '';
+  }
   const formateador = new Intl.DateTimeFormat('en-CA', {
     timeZone: ZONA_HORARIA_ARGENTINA,
     year: 'numeric',

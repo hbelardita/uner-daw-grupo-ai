@@ -1,8 +1,11 @@
+import { registerLocaleData } from '@angular/common';
+import localeEsAr from '@angular/common/locales/es-AR';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
   inject,
   InjectionToken,
+  LOCALE_ID,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
@@ -13,6 +16,8 @@ import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { routes } from './app.routes';
 import { authInterceptor, AuthService } from './auth';
+
+registerLocaleData(localeEsAr, 'es-AR');
 
 const ClinicaPreset = definePreset(Aura, {
   semantic: {
@@ -83,5 +88,6 @@ export const appConfig: ApplicationConfig = {
       ripple: true,
     }),
     MessageService,
+    { provide: LOCALE_ID, useValue: 'es-AR' },
   ],
 };

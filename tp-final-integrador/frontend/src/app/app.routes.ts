@@ -19,13 +19,6 @@ export class AgendaDiariaComponent {}
 export class TurnoMedicoDetalleComponent {}
 
 @Component({
-  selector: 'app-mis-turnos-lista',
-  imports: [],
-  template: '<p>Mis Turnos (Paciente)</p>',
-})
-export class MisTurnosListaComponent {}
-
-@Component({
   selector: 'app-mi-turno-detalle',
   imports: [],
   template: '<p>Detalle Mi Turno</p>',
@@ -105,7 +98,7 @@ export const routes: Routes = [
         children: [
           {
             path: '',
-            component: MisTurnosListaComponent,
+            loadComponent: () => import('./reservas/mis-turnos/mis-turnos'),
           },
           {
             path: ':id',

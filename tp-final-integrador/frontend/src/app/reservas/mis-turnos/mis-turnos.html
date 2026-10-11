@@ -1,0 +1,177 @@
+<section class="flex flex-col gap-6">
+  <header>
+    <h1 class="text-2xl md:text-3xl font-semibold text-slate-900">Mis turnos</h1>
+    <p class="text-sm text-slate-600 mt-1">Consultá y administrá tus turnos reservados</p>
+  </header>
+
+  <!-- Estado 1: Error de carga -->
+  @if (error()) {
+    <div
+      role="alert"
+      class="rounded-xl border border-rose-200 bg-rose-50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <div class="flex items-center gap-3 text-rose-800">
+        <i class="pi pi-exclamation-circle text-2xl"></i>
+        <div>
+          <p class="font-medium text-sm">{{ error() }}</p>
+          <p class="text-xs text-rose-600">Por favor, verificá tu conexión e intentá nuevamente.</p>
+        </div>
+      </div>
+      <p-button
+        label="Reintentar"
+        icon="pi pi-refresh"
+        severity="danger"
+        [outlined]="true"
+        [loading]="cargando()"
+        (click)="cargarReservas()"
+      />
+    </div>
+  }
+
+  <!-- Estado 2: Cargando con Skeletons -->
+  @else if (cargando()) {
+    <!-- Skeleton Desktop (>= 768px) -->
+    <div
+      class="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden hidden md:block"
+      aria-busy="true"
+    >
+      <table class="w-full text-left text-sm border-collapse">
+        <caption class="sr-only">
+          Cargando mis turnos
+        </caption>
+        <thead class="text-slate-700 bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th scope="col" class="py-3 px-4">Fecha</th>
+            <th scope="col" class="py-3 px-4">Hora</th>
+            <th scope="col" class="py-3 px-4">Médico</th>
+            <th scope="col" class="py-3 px-4 text-right">Valor de Consulta</th>
+            <th scope="col" class="py-3 px-4">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of [1, 2, 3, 4, 5]; track item) {
+            <tr class="border-b border-slate-100">
+              <td class="py-4 px-4"><p-skeleton width="6rem" height="1.25rem" /></td>
+              <td class="py-4 px-4"><p-skeleton width="4rem" height="1.25rem" /></td>
+              <td class="py-4 px-4"><p-skeleton width="10rem" height="1.25rem" /></td>
+              <td class="py-4 px-4 flex justify-end">
+                <p-skeleton width="6rem" height="1.25rem" />
+              </td>
+              <td class="py-4 px-4">
+                <p-skeleton width="5.5rem" height="1.5rem" borderRadius="0.5rem" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Skeleton Mobile (< 768px) -->
+    <div class="flex flex-col gap-3 md:hidden" aria-busy="true">
+      @for (item of [1, 2, 3]; track item) {
+        <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
+          <div class="flex flex-col gap-3">
+            <p-skeleton width="8rem" height="1rem" />
+            <p-skeleton width="12rem" height="1.25rem" />
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+              <p-skeleton width="5rem" height="1.25rem" />
+              <p-skeleton width="5rem" height="1.5rem" borderRadius="0.5rem" />
+            </div>
+          </div>
+        </p-card>
+      }
+    </div>
+  }
+
+  <!-- Estado 3: Lista vacía sin turnos -->
+  @else if (reservas().length === 0) {
+    <app-empty-state
+      icono="pi pi-calendar-plus"
+      titulo="Todavía no reservaste turnos"
+      descripcion="Cuando reserves una consulta médica con un profesional de la clínica, vas a poder consultarla y gestionarla desde acá."
+    />
+  }
+
+  <!-- Estado 4: Datos cargados exitosamente -->
+  @else {
+    <!-- Vista Desktop (>= 768px): Tabla PrimeNG -->
+    <div
+      class="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden hidden md:block"
+    >
+      <p-table
+        [value]="reservas()"
+        [rowHover]="true"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [tableStyle]="{ 'min-width': '48rem' }"
+        [sortField]="'fechaHora'"
+        [sortOrder]="-1"
+      >
+        <ng-template #header>
+          <tr class="text-slate-700 text-sm">
+            <th
+              pSortableColumn="fechaHora"
+              scope="col"
+              class="py-3 px-4 text-left cursor-pointer select-none"
+            >
+              Fecha <p-sortIcon field="fechaHora" />
+            </th>
+            <th scope="col" class="py-3 px-4 text-left">Hora</th>
+            <th scope="col" class="py-3 px-4 text-left">Médico</th>
+            <th scope="col" class="py-3 px-4 text-right">Valor de Consulta</th>
+            <th scope="col" class="py-3 px-4 text-left">Estado</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-reserva>
+          <tr
+            class="border-b border-slate-100 text-sm text-slate-900 hover:bg-slate-50 transition-colors"
+          >
+            <td class="py-3 px-4 tabular-nums">
+              {{ reserva.fechaHora | date: 'dd/MM/yyyy' }}
+            </td>
+            <td class="py-3 px-4 tabular-nums">
+              {{ reserva.fechaHora | date: 'HH:mm' }}
+            </td>
+            <td class="py-3 px-4 font-medium text-slate-900">
+              {{ reserva.medico.nombres }} {{ reserva.medico.apellidos }}
+            </td>
+            <td class="py-3 px-4 text-right tabular-nums font-medium">
+              {{ reserva.valorConsulta | currency: 'ARS' : 'symbol' : '1.2-2' }}
+            </td>
+            <td class="py-3 px-4">
+              <app-estado-badge [estado]="reserva.estado" />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- Vista Mobile (< 768px): Lista de Tarjetas -->
+    <div class="flex flex-col gap-3 md:hidden">
+      @for (reserva of reservas(); track reserva.id) {
+        <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
+          <div class="flex flex-col gap-2">
+            <div class="tabular-nums font-semibold">
+              {{ reserva.fechaHora | date: 'dd/MM/yyyy' }} &middot;
+              {{ reserva.fechaHora | date: 'HH:mm' }}
+            </div>
+            <div class="text-slate-600 text-sm">
+              {{ reserva.medico.nombres }} {{ reserva.medico.apellidos }}
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100 mt-1">
+              <div class="flex gap-1 flex-col">
+                <span class="text-xs text-slate-600"> Valor de consulta</span>
+                <span class="text-sm font-semibold tabular-nums text-slate-800">
+                  {{ reserva.valorConsulta | currency: 'ARS' : 'symbol' : '1.2-2' }}
+                </span>
+              </div>
+              <app-estado-badge [estado]="reserva.estado" />
+            </div>
+          </div>
+        </p-card>
+      }
+    </div>
+  }
+</section>

@@ -46,6 +46,7 @@
             <th scope="col" class="py-3 px-4">Médico</th>
             <th scope="col" class="py-3 px-4 text-right">Valor de Consulta</th>
             <th scope="col" class="py-3 px-4">Estado</th>
+            <th scope="col" class="py-3 px-4 text-right">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -59,6 +60,11 @@
               </td>
               <td class="py-4 px-4">
                 <p-skeleton width="5.5rem" height="1.5rem" borderRadius="0.5rem" />
+              </td>
+              <td class="py-4 px-4">
+                <div class="flex items-center justify-end">
+                  <p-skeleton width="5.5rem" height="2rem" borderRadius="0.5rem" />
+                </div>
               </td>
             </tr>
           }
@@ -76,6 +82,9 @@
             <div class="flex items-center justify-between pt-2 border-t border-slate-100">
               <p-skeleton width="5rem" height="1.25rem" />
               <p-skeleton width="5rem" height="1.5rem" borderRadius="0.5rem" />
+            </div>
+            <div class="pt-2 border-t border-slate-100">
+              <p-skeleton height="2.25rem" borderRadius="0.5rem" />
             </div>
           </div>
         </p-card>
@@ -121,6 +130,7 @@
             <th scope="col" class="py-3 px-4 text-left">Médico</th>
             <th scope="col" class="py-3 px-4 text-right">Valor de Consulta</th>
             <th scope="col" class="py-3 px-4 text-left">Estado</th>
+            <th scope="col" class="py-3 px-4 text-right">Acciones</th>
           </tr>
         </ng-template>
 
@@ -142,6 +152,44 @@
             </td>
             <td class="py-3 px-4">
               <app-estado-badge [estado]="reserva.estado" />
+            </td>
+            <td class="py-3 px-4 text-right">
+              <div class="flex items-center justify-end">
+                @if (puedeCancelarReserva(reserva)) {
+                  <p-button
+                    severity="danger"
+                    [outlined]="true"
+                    icon="pi pi-times"
+                    size="small"
+                    label="Cancelar"
+                    [attr.aria-label]="
+                      'Cancelar turno del ' +
+                      (reserva.fechaHora | date: 'dd/MM/yyyy') +
+                      ' a las ' +
+                      (reserva.fechaHora | date: 'HH:mm')
+                    "
+                    (click)="confirmarCancelacion(reserva)"
+                  />
+                } @else if (debeMostrarCancelacionDeshabilitada(reserva)) {
+                  <span
+                    [pTooltip]="motivoCancelacion()"
+                    tooltipPosition="left"
+                    class="inline-block"
+                    tabindex="0"
+                  >
+                    <p-button
+                      class="text-rose-700 border-rose-700"
+                      severity="danger"
+                      [outlined]="true"
+                      icon="pi pi-times"
+                      size="small"
+                      label="Cancelar"
+                      [disabled]="true"
+                      [attr.aria-label]="'Cancelar turno deshabilitado. Solo podés cancelar hasta el día anterior a la consulta.'"
+                    />
+                  </span>
+                }
+              </div>
             </td>
           </tr>
         </ng-template>
@@ -169,9 +217,60 @@
               </div>
               <app-estado-badge [estado]="reserva.estado" />
             </div>
+
+            <!-- Acciones en pie de tarjeta -->
+            @if (puedeCancelarReserva(reserva)) {
+              <div class="pt-3 border-t border-slate-100 mt-2">
+                <p-button
+                  severity="danger"
+                  class="text-rose-700 border-rose-700"
+                  [outlined]="true"
+                  icon="pi pi-times"
+                  label="Cancelar"
+                  styleClass="w-full"
+                  [attr.aria-label]="
+                    'Cancelar turno del ' +
+                    (reserva.fechaHora | date: 'dd/MM/yyyy') +
+                    ' a las ' +
+                    (reserva.fechaHora | date: 'HH:mm')
+                  "
+                  (click)="confirmarCancelacion(reserva)"
+                />
+              </div>
+            } @else if (debeMostrarCancelacionDeshabilitada(reserva)) {
+              <div class="pt-3 border-t border-slate-100 mt-2">
+                <span
+                  [pTooltip]="motivoCancelacion()"
+                  tooltipPosition="left"
+                  class="w-full"
+                  tabindex="0"
+                >
+                  <p-button
+                    severity="danger"
+                    [outlined]="true"
+                    icon="pi pi-times"
+                    label="Cancelar"
+                    styleClass="w-full"
+                    [disabled]="true"
+                    [attr.aria-describedby]="'motivo-' + reserva.id"
+                  />
+                </span>
+                <span
+                  class="inline-block mt-2 text-xs text-slate-600"
+                  [attr.id]="'motivo-' + reserva.id"
+                >
+                  {{ motivoCancelacion() }}
+                </span>
+                <span [attr.id]="'motivo-' + reserva.id" class="sr-only">
+                  {{ motivoCancelacion() }}
+                </span>
+              </div>
+            }
           </div>
         </p-card>
       }
     </div>
   }
+
+  <p-confirmdialog />
 </section>

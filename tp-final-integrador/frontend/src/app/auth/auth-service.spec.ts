@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_BASE_URL } from '../app.config';
 import type { LoginResponse, Usuario } from './auth-dto';
@@ -26,6 +27,7 @@ describe('AuthService y utilidades de autenticación', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([{ path: 'login', children: [] }]),
         {
           provide: API_BASE_URL,
           useValue: baseUrl,

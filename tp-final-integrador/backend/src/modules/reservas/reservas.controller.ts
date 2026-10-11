@@ -42,7 +42,8 @@ export class ReservasController {
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'El turno no está activo.',
+    description:
+      'El turno no está activo o no transcurrieron 10 minutos de la hora de inicio.',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,

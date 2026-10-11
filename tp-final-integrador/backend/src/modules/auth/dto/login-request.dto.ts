@@ -4,7 +4,7 @@ import { IsNotEmpty, IsString } from 'class-validator';
 export class LoginRequestDto {
   @ApiProperty({
     description: 'Documento nacional de identidad del usuario',
-    example: '12345678',
+    example: '20111111',
   })
   @IsString()
   @IsNotEmpty()
@@ -12,7 +12,7 @@ export class LoginRequestDto {
 
   @ApiProperty({
     description: 'Clave o contraseña de acceso del usuario',
-    example: 'passwordSeguro123',
+    example: 'clave_ficticia_1',
   })
   @IsString()
   @IsNotEmpty()

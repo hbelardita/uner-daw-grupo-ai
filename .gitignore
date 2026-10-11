@@ -15,3 +15,4 @@ Thumbs.db
 
 # Variables de entorno globales (Secretos)
 .env
+.oldenv.example

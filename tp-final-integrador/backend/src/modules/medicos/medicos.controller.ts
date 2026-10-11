@@ -19,8 +19,9 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { AuthGuard, RolesGuard } from '../auth/guards/index.js';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
-import { Reserva } from '../reservas/entities/reserva.entity.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
+import { ConsultarAgendaQueryDto } from './dto/consultar-agenda-query.dto.js';
+import { ReservaResponseDto } from './dto/reserva-response.dto.js';
 import { MedicosService } from './medicos.service.js';
 
 @ApiTags('Médicos')
@@ -41,9 +42,8 @@ export class MedicosController {
     required: true,
     type: String,
     example: '2026-09-26',
-    description: 'Fecha de la agenda en formato AAAA-MM-DD.',
   })
-  @ApiResponse({ status: HttpStatus.OK, type: [Reserva] })
+  @ApiResponse({ status: HttpStatus.OK, type: [ReservaResponseDto] })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'El médico intenta consultar la agenda de otro profesional.',
@@ -54,13 +54,15 @@ export class MedicosController {
   })
   async obtenerTurnos(
     @Param('idMedico', ParseIntPipe) idMedico: number,
-    @Query('fecha') fecha: string,
+    @Query() query: ConsultarAgendaQueryDto,
     @CurrentUser() usuario: JwtPayload,
-  ): Promise<Reserva[]> {
-    return this.medicosService.buscarTurnosPorFecha(
+  ): Promise<ReservaResponseDto[]> {
+    const reservas = await this.medicosService.buscarTurnosPorFecha(
       idMedico,
       usuario.idMedico,
-      fecha,
+      query.fecha,
     );
+
+    return reservas.map(ReservaResponseDto.fromEntity);
   }
 }

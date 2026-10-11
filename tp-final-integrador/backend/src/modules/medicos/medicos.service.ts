@@ -1,10 +1,6 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Not, Repository } from 'typeorm';
+import { And, LessThan, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { Reserva } from '../reservas/entities/reserva.entity.js';
 import { EstadoReserva } from '../reservas/enums/estado-reserva.enum.js';
 
@@ -26,21 +22,7 @@ export class MedicosService {
       );
     }
 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-      throw new BadRequestException(
-        'El parámetro fecha debe tener el formato AAAA-MM-DD.',
-      );
-    }
-
     const inicio = new Date(`${fecha}T00:00:00.000Z`);
-    if (
-      Number.isNaN(inicio.getTime()) ||
-      inicio.toISOString().slice(0, 10) !== fecha
-    ) {
-      throw new BadRequestException(
-        'El parámetro fecha debe contener una fecha válida.',
-      );
-    }
 
     const fin = new Date(inicio);
     fin.setUTCDate(fin.getUTCDate() + 1);
@@ -48,9 +30,10 @@ export class MedicosService {
     return this.reservasRepository.find({
       where: {
         idMedico,
-        fechaHora: Between(inicio, fin),
+        fechaHora: And(MoreThanOrEqual(inicio), LessThan(fin)),
         estado: Not(EstadoReserva.CANCELADO),
       },
+      relations: { paciente: true },
       order: { fechaHora: 'ASC' },
     });
   }

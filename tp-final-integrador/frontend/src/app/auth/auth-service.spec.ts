@@ -1,16 +1,14 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_BASE_URL } from '../app.config';
 import type { LoginResponse, Usuario } from './auth-dto';
-import {
-  AuthService,
-  decodeJwtPayload,
-  obtenerRutaInicioPorRol,
-  RUTA_INICIO_POR_ROL,
-  TOKEN_KEY,
-} from './auth-service';
+import { AuthService } from './auth-service';
+import { decodeJwtPayload } from './jwt-utils';
+import { obtenerRutaInicioPorRol, RUTA_INICIO_POR_ROL } from './auth-navigation';
+import { TOKEN_KEY } from './token-storage';
 import type { RolUsuario } from './rol-usuario';
 
 function crearTokenPrueba(payload: object): string {
@@ -29,6 +27,7 @@ describe('AuthService y utilidades de autenticación', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([{ path: 'login', children: [] }]),
         {
           provide: API_BASE_URL,
           useValue: baseUrl,

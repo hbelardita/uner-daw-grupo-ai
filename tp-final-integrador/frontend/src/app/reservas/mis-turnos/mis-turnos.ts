@@ -71,7 +71,11 @@ function formatearFechaHoraTurno(fechaIso: string): string {
 })
 export default class MisTurnos implements OnInit {
   private readonly reservasService = inject(ReservasService);
+  private readonly authService = inject(AuthService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly datePipe = inject(DatePipe);
 
   protected readonly rutaReservar = RUTAS.TURNOS_NUEVO;
   protected readonly reservas = signal<Reserva[]>([]);
@@ -106,6 +110,10 @@ export default class MisTurnos implements OnInit {
 
   ngOnInit(): void {
     this.cargarReservas();
+  }
+
+  protected motivoCancelacion(): string {
+    return 'Solo podés cancelar hasta el día anterior a la consulta.';
   }
 
   cargarReservas(): void {

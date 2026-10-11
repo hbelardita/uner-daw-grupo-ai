@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MedicosService } from '../medicos/medicos.service.js';
@@ -16,6 +21,7 @@ const DIAS_MAXIMOS_ANTELACION = 30;
 const PRIMERA_HORA_ATENCION = 8;
 const ULTIMA_HORA_ATENCION = 15;
 const MILISEGUNDOS_POR_DIA = 86_400_000;
+const MILISEGUNDOS_PARA_MARCAR_ATENDIDO = 10 * 60 * 1000;
 
 interface PartesLocales {
   anio: number;
@@ -55,6 +61,45 @@ export class ReservasService {
       estado: EstadoReserva.ACTIVO,
       valorConsulta,
     });
+    return this.reservasRepository.save(reserva);
+  }
+
+  async marcarComoAtendido(
+    idReserva: number,
+    idMedicoAutenticado: number | undefined,
+    ahora: Date = new Date(),
+  ): Promise<Reserva> {
+    const reserva = await this.reservasRepository.findOne({
+      where: { id: idReserva },
+    });
+
+    if (!reserva) {
+      throw new NotFoundException(
+        `No se encontró la reserva con id ${idReserva}.`,
+      );
+    }
+
+    if (reserva.idMedico !== idMedicoAutenticado) {
+      throw new ForbiddenException(
+        'Solo puede marcar como atendido un turno del médico autenticado.',
+      );
+    }
+
+    if (reserva.estado !== EstadoReserva.ACTIVO) {
+      throw new BadRequestException(
+        'Solo se puede marcar como atendido un turno activo.',
+      );
+    }
+
+    const momentoPermitido =
+      reserva.fechaHora.getTime() + MILISEGUNDOS_PARA_MARCAR_ATENDIDO;
+    if (ahora.getTime() < momentoPermitido) {
+      throw new BadRequestException(
+        'El turno solo puede marcarse como atendido diez minutos después de su fecha y hora.',
+      );
+    }
+
+    reserva.estado = EstadoReserva.ATENDIDO;
     return this.reservasRepository.save(reserva);
   }
 

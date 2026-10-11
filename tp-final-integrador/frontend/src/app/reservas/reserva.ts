@@ -41,3 +41,10 @@ export interface PacienteAutocompleteItem {
   nombres: string;
   apellidos: string;
 }
+
+export interface FiltroReservas {
+  fecha?: Date | string;
+  idMedico?: number;
+  idPaciente?: number;
+  estado?: EstadoReserva;
+}

@@ -1,10 +1,12 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { And, LessThan, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { Reserva } from '../reservas/entities/reserva.entity.js';
 import { EstadoReserva } from '../reservas/enums/estado-reserva.enum.js';
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
 import { Medico } from './entities/medico.entity.js';
 
 @Injectable()
@@ -41,7 +43,6 @@ export class MedicosService {
       relations: { paciente: true },
       order: { fechaHora: 'ASC' },
     });
-  
   }
 
   async obtenerArancelVigente(idMedico: number): Promise<number> {

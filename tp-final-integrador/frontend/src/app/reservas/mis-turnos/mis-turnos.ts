@@ -28,12 +28,12 @@ export default class MisTurnos implements OnInit {
 
   cargarReservas(): void {
     this.cargando.set(true);
-    this.error.set(null);
     this.reservasService
       .obtenerMisReservas()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
+          this.error.set(null);
           this.reservas.set(data);
           this.cargando.set(false);
         },

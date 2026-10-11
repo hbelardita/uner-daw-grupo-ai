@@ -1,6 +1,6 @@
 <section class="flex flex-col gap-6">
   <header>
-    <h1 class="text-2xl font-semibold text-slate-900">Mis turnos</h1>
+    <h1 class="text-2xl md:text-3xl font-semibold text-slate-900">Mis turnos</h1>
     <p class="text-sm text-slate-600 mt-1">Consultá y administrá tus turnos reservados</p>
   </header>
 
@@ -22,6 +22,7 @@
         icon="pi pi-refresh"
         severity="danger"
         [outlined]="true"
+        [loading]="cargando()"
         (click)="cargarReservas()"
       />
     </div>
@@ -68,7 +69,7 @@
     <!-- Skeleton Mobile (< 768px) -->
     <div class="flex flex-col gap-3 md:hidden" aria-busy="true">
       @for (item of [1, 2, 3]; track item) {
-        <p-card styleClass="!rounded-xl border border-slate-200 bg-white shadow-xs">
+        <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
           <div class="flex flex-col gap-3">
             <p-skeleton width="8rem" height="1rem" />
             <p-skeleton width="12rem" height="1.25rem" />
@@ -107,10 +108,6 @@
         [sortField]="'fechaHora'"
         [sortOrder]="-1"
       >
-        <ng-template #caption>
-          <span class="sr-only">Mis turnos</span>
-        </ng-template>
-
         <ng-template #header>
           <tr class="text-slate-700 text-sm">
             <th
@@ -154,19 +151,22 @@
     <!-- Vista Mobile (< 768px): Lista de Tarjetas -->
     <div class="flex flex-col gap-3 md:hidden">
       @for (reserva of reservas(); track reserva.id) {
-        <p-card styleClass="!rounded-xl border border-slate-200 bg-white shadow-xs">
+        <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
           <div class="flex flex-col gap-2">
-            <div class="text-xs text-slate-500 tabular-nums font-medium">
+            <div class="tabular-nums font-semibold">
               {{ reserva.fechaHora | date: 'dd/MM/yyyy' }} &middot;
               {{ reserva.fechaHora | date: 'HH:mm' }}
             </div>
-            <div class="font-medium text-slate-900 text-sm">
+            <div class="text-slate-600 text-sm">
               {{ reserva.medico.nombres }} {{ reserva.medico.apellidos }}
             </div>
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 mt-1">
-              <span class="text-sm font-semibold tabular-nums text-slate-900">
-                {{ reserva.valorConsulta | currency: 'ARS' : 'symbol' : '1.2-2' }}
-              </span>
+              <div class="flex gap-1 flex-col">
+                <span class="text-xs text-slate-600"> Valor de consulta</span>
+                <span class="text-sm font-semibold tabular-nums text-slate-800">
+                  {{ reserva.valorConsulta | currency: 'ARS' : 'symbol' : '1.2-2' }}
+                </span>
+              </div>
               <app-estado-badge [estado]="reserva.estado" />
             </div>
           </div>

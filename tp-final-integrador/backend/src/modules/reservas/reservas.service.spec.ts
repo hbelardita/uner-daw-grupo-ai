@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
@@ -282,49 +283,77 @@ function crearServicio(reserva: Reserva | null): ReservasService {
   return new ReservasService(repository as never, undefined as never);
 }
 
-describe('ReservasService - Marcar turno como atendido', () => {
-  it('debe cambiar a ATENDIDO un turno activo del médico autenticado', async () => {
-    const resultado = await crearServicio(reservaActiva).marcarComoAtendido(
+describe('ReservasService - Actualizar estado del turno (asistencia)', () => {
+  it('debe cambiar a ATENDIDO un turno activo del médico autenticado llegada la hora del turno', async () => {
+    const resultado = await crearServicio(reservaActiva).actualizarEstado(
       1,
       10,
-      new Date('2026-10-12T11:10:00.000Z'),
+      EstadoReserva.ATENDIDO,
+      new Date('2026-10-12T11:00:00.000Z'),
     );
 
     expect(resultado.estado).toBe(EstadoReserva.ATENDIDO);
   });
 
-  it('debe rechazar el turno antes de cumplirse diez minutos', async () => {
+  it('debe cambiar a AUSENTE un turno activo del médico autenticado llegada la hora del turno', async () => {
+    const resultado = await crearServicio(reservaActiva).actualizarEstado(
+      1,
+      10,
+      EstadoReserva.AUSENTE,
+      new Date('2026-10-12T11:00:00.000Z'),
+    );
+
+    expect(resultado.estado).toBe(EstadoReserva.AUSENTE);
+  });
+
+  it('debe rechazar el registro de asistencia antes de la hora de inicio del turno', async () => {
     await expect(
-      crearServicio(reservaActiva).marcarComoAtendido(
+      crearServicio(reservaActiva).actualizarEstado(
         1,
         10,
-        new Date('2026-10-12T11:09:59.999Z'),
+        EstadoReserva.ATENDIDO,
+        new Date('2026-10-12T10:59:59.999Z'),
       ),
     ).rejects.toThrow(
-      'El turno solo puede marcarse como atendido diez minutos después de su fecha y hora.',
+      'Solo se puede registrar la asistencia una vez llegada la hora del turno.',
     );
   });
 
   it('debe rechazar un turno perteneciente a otro médico', async () => {
     await expect(
-      crearServicio(reservaActiva).marcarComoAtendido(1, 99),
+      crearServicio(reservaActiva).actualizarEstado(
+        1,
+        99,
+        EstadoReserva.ATENDIDO,
+        new Date('2026-10-12T11:00:00.000Z'),
+      ),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it('debe rechazar un turno que no está activo', async () => {
+  it('debe rechazar con ConflictException si el turno no está en estado ACTIVO', async () => {
     const reservaAtendida = {
       ...reservaActiva,
       estado: EstadoReserva.ATENDIDO,
     };
 
     await expect(
-      crearServicio(reservaAtendida).marcarComoAtendido(1, 10),
-    ).rejects.toBeInstanceOf(BadRequestException);
+      crearServicio(reservaAtendida).actualizarEstado(
+        1,
+        10,
+        EstadoReserva.ATENDIDO,
+        new Date('2026-10-12T11:00:00.000Z'),
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('debe rechazar una reserva inexistente', async () => {
     await expect(
-      crearServicio(null).marcarComoAtendido(999, 10),
+      crearServicio(null).actualizarEstado(
+        999,
+        10,
+        EstadoReserva.ATENDIDO,
+        new Date('2026-10-12T11:00:00.000Z'),
+      ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

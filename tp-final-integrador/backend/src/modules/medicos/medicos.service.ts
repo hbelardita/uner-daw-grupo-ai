@@ -77,4 +77,23 @@ export class MedicosService {
       },
     });
   }
+
+  async actualizarValorConsulta(
+    idMedico: number,
+    nuevoValorConsulta: number,
+  ): Promise<Medico> {
+    const medico = await this.medicosRepository.findOne({
+      where: { id: idMedico },
+      relations: { usuario: true },
+    });
+
+    if (!medico) {
+      throw new NotFoundException(
+        `No se encontró el médico con id ${idMedico}.`,
+      );
+    }
+
+    medico.valorConsulta = nuevoValorConsulta;
+    return this.medicosRepository.save(medico);
+  }
 }

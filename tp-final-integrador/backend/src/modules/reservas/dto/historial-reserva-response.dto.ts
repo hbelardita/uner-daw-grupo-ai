@@ -28,32 +28,6 @@ export class MedicoHistorialResponseDto {
   matricula: number;
 }
 
-export class PacienteHistorialResponseDto {
-  @ApiProperty({
-    description: 'Identificador único del paciente',
-    example: 5,
-  })
-  id: number;
-
-  @ApiProperty({
-    description: 'Nombres del paciente',
-    example: 'Julia',
-  })
-  nombres: string;
-
-  @ApiProperty({
-    description: 'Apellidos del paciente',
-    example: 'Fernandez',
-  })
-  apellidos: string;
-
-  @ApiProperty({
-    description: 'Documento nacional de identidad del paciente',
-    example: '30111111',
-  })
-  documento: string;
-}
-
 export class HistorialReservaResponseDto {
   @ApiProperty({
     description: 'Identificador único de la reserva',
@@ -88,12 +62,6 @@ export class HistorialReservaResponseDto {
   })
   medico: MedicoHistorialResponseDto;
 
-  @ApiProperty({
-    description: 'Datos del paciente asignado a la consulta',
-    type: PacienteHistorialResponseDto,
-  })
-  paciente: PacienteHistorialResponseDto;
-
   static fromEntity(reserva: Reserva): HistorialReservaResponseDto {
     const dto = new HistorialReservaResponseDto();
     dto.id = reserva.id;
@@ -108,12 +76,6 @@ export class HistorialReservaResponseDto {
       nombres: reserva.medico.usuario.nombres,
       apellidos: reserva.medico.usuario.apellidos,
       matricula: reserva.medico.matricula,
-    };
-    dto.paciente = {
-      id: reserva.paciente.id,
-      nombres: reserva.paciente.nombres,
-      apellidos: reserva.paciente.apellidos,
-      documento: reserva.paciente.documento,
     };
     return dto;
   }

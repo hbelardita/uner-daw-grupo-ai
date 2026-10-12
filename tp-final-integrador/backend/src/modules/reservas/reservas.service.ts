@@ -68,8 +68,9 @@ export class ReservasService {
     return this.reservasRepository.find({
       where: { idPaciente },
       relations: {
-        medico: { usuario: true },
-        paciente: true,
+        medico: {
+          usuario: true,
+        },
       },
       order: { fechaHora: 'DESC' },
     });

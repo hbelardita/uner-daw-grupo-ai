@@ -1,6 +1,6 @@
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, Observable, of, throwError } from 'rxjs';
+import { map, Observable, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../app.config';
 import { obtenerFechaLocalIso } from './regla-cancelacion';
 import type { ActualizarReservaEstado, Reserva } from './reserva';
@@ -38,16 +38,10 @@ export class ReservasService {
     reservaId: number,
     payload: ActualizarReservaEstado,
   ): Observable<ActualizarReservaEstado> {
-    return this.http
-      .patch<ActualizarReservaEstado>(`${this.baseUrl}/reservas/${reservaId}/estado`, payload)
-      .pipe(
-        catchError((err: unknown) => {
-          if (err instanceof HttpErrorResponse && (err.status === 404 || err.status === 0)) {
-            return of(payload);
-          }
-          return throwError(() => err);
-        }),
-      );
+    return this.http.patch<ActualizarReservaEstado>(
+      `${this.baseUrl}/reservas/${reservaId}/estado`,
+      payload,
+    );
   }
   private normalizarFecha(fecha?: Date | string | null): string {
     if (!fecha) {

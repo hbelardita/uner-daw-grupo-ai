@@ -13,8 +13,8 @@ import { AuthService } from '../../auth/auth-service';
 import { EmptyState, EstadoBadge } from '../../shared';
 import { DocumentoPipe } from '../../shared/documento-pipe';
 import { obtenerFechaLocalIso } from '../regla-cancelacion';
-import type { Reserva } from '../reserva';
 import { ReservasService } from '../reservas-service';
+import type { TurnoAgenda } from '../turno-agenda';
 
 @Component({
   selector: 'app-agenda-diaria',
@@ -69,7 +69,7 @@ export default class AgendaDiaria {
     return new Date();
   });
 
-  protected readonly reservas = signal<Reserva[]>([]);
+  protected readonly reservas = signal<TurnoAgenda[]>([]);
   protected readonly cargando = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
 
@@ -104,18 +104,16 @@ export default class AgendaDiaria {
         switchMap(({ fecha }) => {
           const medico = this.authService.medico();
           const idMedico = medico?.id;
+          if (!idMedico) {
+            return of([]);
+          }
 
-          return this.reservasService
-            .obtenerReservas({
-              fecha,
-              ...(idMedico ? { idMedico } : {}),
-            })
-            .pipe(
-              catchError(() => {
-                this.error.set('No pudimos cargar los turnos de tu agenda.');
-                return of([]);
-              }),
-            );
+          return this.reservasService.obtenerTurnosMedico(idMedico, fecha).pipe(
+            catchError(() => {
+              this.error.set('No pudimos cargar los turnos de tu agenda.');
+              return of([]);
+            }),
+          );
         }),
         takeUntilDestroyed(this.destroyRef),
       )

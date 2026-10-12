@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { And, LessThan, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { Reserva } from '../reservas/entities/reserva.entity.js';
 import { EstadoReserva } from '../reservas/enums/estado-reserva.enum.js';
+import { EstadoUsuario } from '../usuarios/enums/estado-usuario.enum.js';
 import { Medico } from './entities/medico.entity.js';
 
 @Injectable()
@@ -58,5 +59,22 @@ export class MedicosService {
     }
 
     return medico.valorConsulta;
+  }
+
+  async buscarMedicosHabilitados(): Promise<Medico[]> {
+    return this.medicosRepository.find({
+      relations: { usuario: true },
+      where: {
+        usuario: {
+          estado: EstadoUsuario.ACTIVO,
+        },
+      },
+      order: {
+        usuario: {
+          apellidos: 'ASC',
+          nombres: 'ASC',
+        },
+      },
+    });
   }
 }

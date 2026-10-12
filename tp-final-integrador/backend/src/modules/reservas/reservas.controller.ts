@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   HttpStatus,
   Param,
@@ -7,6 +8,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiParam,
   ApiResponse,
@@ -14,7 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { Auth, CurrentUser, type JwtPayload } from '../auth/index.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
-import { ReservaResponseDto } from './dto/index.js';
+import { ActualizarEstadoReservaDto, ReservaResponseDto } from './dto/index.js';
 import { ReservasService } from './reservas.service.js';
 
 @ApiTags('Reservas')
@@ -24,38 +26,51 @@ import { ReservasService } from './reservas.service.js';
 export class ReservasController {
   constructor(private readonly reservasService: ReservasService) {}
 
-  @Patch(':id/atender')
+  @Patch(':id/estado')
   @ApiOperation({
-    summary: 'Marcar un turno propio como atendido',
+    summary: 'Registrar la asistencia médica de un turno propio',
     description:
-      'Cambia el estado de un turno propio de ACTIVO a ATENDIDO diez minutos después de su fecha y hora. Los turnos de otro médico, con otro estado o dentro de esos diez minutos no pueden modificarse.',
+      'Permite al médico registrar la asistencia (ATENDIDO o AUSENTE) de un turno propio en estado ACTIVO una vez alcanzada la fecha y hora pactada.',
   })
-  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    example: 1,
+    description: 'Identificador único de la reserva',
+  })
+  @ApiBody({ type: ActualizarEstadoReservaDto })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Turno marcado como atendido.',
+    description: 'Estado de la reserva actualizado exitosamente.',
     type: ReservaResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    description: 'El turno pertenece a otro profesional.',
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     description:
-      'El turno no está activo o no transcurrieron 10 minutos de la hora de inicio.',
+      'Cuerpo de la petición inválido o intento de registrar asistencia antes de la hora pactada.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'El turno pertenece a otro profesional médico.',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'No existe un turno con el identificador indicado.',
+    description: 'No existe una reserva con el identificador indicado.',
   })
-  async marcarComoAtendido(
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'La reserva no se encuentra en estado ACTIVO (ya ATENDIDO, AUSENTE o CANCELADO).',
+  })
+  async actualizarEstado(
     @Param('id', ParseIntPipe) idReserva: number,
+    @Body() body: ActualizarEstadoReservaDto,
     @CurrentUser() usuario: JwtPayload,
   ): Promise<ReservaResponseDto> {
-    const reserva = await this.reservasService.marcarComoAtendido(
+    const reserva = await this.reservasService.actualizarEstado(
       idReserva,
       usuario.idMedico,
+      body.estado,
     );
     return ReservaResponseDto.fromEntity(reserva);
   }

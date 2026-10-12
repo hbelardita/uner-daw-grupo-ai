@@ -176,20 +176,15 @@ describe('Endpoint GET /api/v1/reservas - Historial de turnos de paciente (e2e)'
             apellidos: expect.any(String),
             matricula: expect.any(Number),
           },
-          paciente: {
-            id: idPaciente1,
-            nombres: 'Julia',
-            apellidos: 'Fernandez',
-            documento: '30111111',
-          },
         });
 
         // Verificar formato ISO 8601 de fechaHora
         expect(new Date(item.fechaHora).toISOString()).toBe(item.fechaHora);
 
-        // Verificar que no se filtren ni expongan claves planas no deseadas
+        // Verificar que no se filtren ni expongan claves planas ni paciente redundante
         expect(item).not.toHaveProperty('idMedico');
         expect(item).not.toHaveProperty('idPaciente');
+        expect(item).not.toHaveProperty('paciente');
       }
     });
 
@@ -254,10 +249,11 @@ describe('Endpoint GET /api/v1/reservas - Historial de turnos de paciente (e2e)'
         .expect(200);
 
       expect(resP1.body).toHaveLength(4);
-      for (const turno of resP1.body) {
-        expect(turno.paciente.id).toBe(idPaciente1);
-        expect(turno.paciente.documento).toBe('30111111');
-      }
+      const idsP1 = resP1.body.map((r: { id: number }) => r.id);
+      expect(idsP1).toEqual(
+        expect.arrayContaining(insertedReservaIds.slice(0, 4)),
+      );
+      expect(idsP1).not.toContain(insertedReservaIds[4]);
 
       // Consulta Paciente 2: debe tener 1 turno y ninguno de Paciente 1
       const resP2 = await request(app.getHttpServer())
@@ -266,8 +262,7 @@ describe('Endpoint GET /api/v1/reservas - Historial de turnos de paciente (e2e)'
         .expect(200);
 
       expect(resP2.body).toHaveLength(1);
-      expect(resP2.body[0].paciente.id).toBe(idPaciente2);
-      expect(resP2.body[0].paciente.documento).toBe('30222222');
+      expect(resP2.body[0].id).toBe(insertedReservaIds[4]);
       expect(resP2.body[0].estado).toBe('ACTIVO');
     });
 
@@ -280,9 +275,11 @@ describe('Endpoint GET /api/v1/reservas - Historial de turnos de paciente (e2e)'
         .expect(200);
 
       expect(response.body).toHaveLength(4);
-      for (const turno of response.body) {
-        expect(turno.paciente.id).toBe(idPaciente1);
-      }
+      const idsObtenidos = response.body.map((r: { id: number }) => r.id);
+      expect(idsObtenidos).toEqual(
+        expect.arrayContaining(insertedReservaIds.slice(0, 4)),
+      );
+      expect(idsObtenidos).not.toContain(insertedReservaIds[4]);
     });
   });
 

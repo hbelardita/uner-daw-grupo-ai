@@ -17,8 +17,37 @@ import { EmptyState, EstadoBadge } from '../../shared';
 import { DocumentoPipe } from '../../shared/documento-pipe';
 import { puedeRegistrarAsistencia } from '../regla-asistencia';
 import { obtenerFechaLocalIso } from '../regla-cancelacion';
+import type { EstadoAsistencia } from '../reserva';
 import { ReservasService } from '../reservas-service';
 import type { TurnoAgenda } from '../turno-agenda';
+
+interface AsistenciaConfig {
+  readonly header: string;
+  readonly icon: string;
+  readonly acceptLabel: string;
+  readonly acceptSeverity: 'success' | 'danger';
+  readonly verboAria: string;
+  readonly generarMensaje: (paciente: string, hora: string) => string;
+}
+
+const CONFIG_ASISTENCIA: Record<EstadoAsistencia, AsistenciaConfig> = {
+  ATENDIDO: {
+    header: 'Confirmar atención',
+    icon: 'pi pi-check-circle',
+    acceptLabel: 'Marcar atendido',
+    acceptSeverity: 'success',
+    verboAria: 'Marcar atendido a',
+    generarMensaje: (paciente, hora) => `¿Marcar como atendido el turno de ${paciente} (${hora})?`,
+  },
+  AUSENTE: {
+    header: 'Confirmar inasistencia',
+    icon: 'pi pi-user-minus',
+    acceptLabel: 'Marcar ausente',
+    acceptSeverity: 'danger',
+    verboAria: 'Marcar ausente a',
+    generarMensaje: (paciente, hora) => `¿Marcar como ausente a ${paciente} (${hora})?`,
+  },
+};
 
 @Component({
   selector: 'app-agenda-diaria',
@@ -149,36 +178,19 @@ export default class AgendaDiaria {
     return `Disponible desde las ${hora}`;
   }
 
-  ariaLabelAccion(turno: TurnoAgenda, accion: 'ATENDIDO' | 'AUSENTE'): string {
+  ariaLabelAccion(turno: TurnoAgenda, accion: EstadoAsistencia): string {
     const hora = this.formatearHora(turno.fechaHora);
     const paciente = `${turno.paciente.nombres} ${turno.paciente.apellidos}`;
-    const verbo = accion === 'ATENDIDO' ? 'Marcar atendido a' : 'Marcar ausente a';
-    return `${verbo} ${paciente}, ${hora}`;
+    return `${CONFIG_ASISTENCIA[accion].verboAria} ${paciente}, ${hora}`;
   }
 
-  confirmarAsistencia(turno: TurnoAgenda, nuevoEstado: 'ATENDIDO' | 'AUSENTE'): void {
+  confirmarAsistencia(turno: TurnoAgenda, nuevoEstado: EstadoAsistencia): void {
     const hora = this.formatearHora(turno.fechaHora);
     const paciente = `${turno.paciente.nombres} ${turno.paciente.apellidos}`;
-
-    const config =
-      nuevoEstado === 'ATENDIDO'
-        ? {
-            message: `¿Marcar como atendido el turno de ${paciente} (${hora})?`,
-            header: 'Confirmar atención',
-            icon: 'pi pi-check-circle',
-            acceptLabel: 'Marcar atendido',
-            acceptSeverity: 'success',
-          }
-        : {
-            message: `¿Marcar como ausente a ${paciente} (${hora})?`,
-            header: 'Confirmar inasistencia',
-            icon: 'pi pi-user-minus',
-            acceptLabel: 'Marcar ausente',
-            acceptSeverity: 'danger',
-          };
+    const config = CONFIG_ASISTENCIA[nuevoEstado];
 
     this.confirmationService.confirm({
-      message: config.message,
+      message: config.generarMensaje(paciente, hora),
       header: config.header,
       icon: config.icon,
       rejectButtonProps: {
@@ -193,7 +205,7 @@ export default class AgendaDiaria {
       accept: () => {
         this.modificandoId.set(turno.id);
         this.reservasService
-          .cambiarEstado(turno.id, nuevoEstado)
+          .cambiarEstado(turno.id, { estado: nuevoEstado })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: (reservaActualizada) => {
@@ -205,7 +217,7 @@ export default class AgendaDiaria {
               this.modificandoId.set(null);
               this.messageService.add({
                 severity: 'success',
-                summary: nuevoEstado === 'ATENDIDO' ? 'Turno atendido' : 'Turno ausente',
+                summary: config.acceptLabel,
                 detail: `Se registró como ${nuevoEstado.toLowerCase()} el turno de ${paciente}.`,
               });
             },

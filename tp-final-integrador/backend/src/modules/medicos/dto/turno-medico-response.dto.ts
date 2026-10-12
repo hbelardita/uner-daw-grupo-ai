@@ -30,7 +30,7 @@ export class PacienteResponseDto {
   }
 }
 
-export class ReservaResponseDto {
+export class TurnoMedicoResponseDto {
   @ApiProperty({ example: 1 })
   id: number;
 
@@ -50,8 +50,8 @@ export class ReservaResponseDto {
   @ApiProperty({ type: PacienteResponseDto })
   paciente: PacienteResponseDto;
 
-  static fromEntity(reserva: Reserva): ReservaResponseDto {
-    const respuesta = new ReservaResponseDto();
+  static fromEntity(reserva: Reserva): TurnoMedicoResponseDto {
+    const respuesta = new TurnoMedicoResponseDto();
     respuesta.id = reserva.id;
     respuesta.fechaHora = reserva.fechaHora;
     respuesta.estado = reserva.estado;

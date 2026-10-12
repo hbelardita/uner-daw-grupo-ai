@@ -22,7 +22,7 @@ import {
   ActualizarValorConsultaDto,
   ConsultarAgendaQueryDto,
   MedicoResponseDto,
-  ReservaResponseDto,
+  TurnoMedicoResponseDto,
 } from './dto/index.js';
 import { MedicosService } from './medicos.service.js';
 
@@ -69,7 +69,7 @@ export class MedicosController {
     type: String,
     example: '2026-09-26',
   })
-  @ApiResponse({ status: HttpStatus.OK, type: [ReservaResponseDto] })
+  @ApiResponse({ status: HttpStatus.OK, type: [TurnoMedicoResponseDto] })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'El médico intenta consultar la agenda de otro profesional.',
@@ -82,14 +82,14 @@ export class MedicosController {
     @Param('idMedico', ParseIntPipe) idMedico: number,
     @Query() query: ConsultarAgendaQueryDto,
     @CurrentUser() usuario: JwtPayload,
-  ): Promise<ReservaResponseDto[]> {
+  ): Promise<TurnoMedicoResponseDto[]> {
     const reservas = await this.medicosService.buscarTurnosPorFecha(
       idMedico,
       usuario.idMedico,
       query.fecha,
     );
 
-    return reservas.map(ReservaResponseDto.fromEntity);
+    return reservas.map(TurnoMedicoResponseDto.fromEntity);
   }
 
   @Patch(':id/valor-consulta')

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -16,17 +17,52 @@ import {
 } from '@nestjs/swagger';
 import { Auth, CurrentUser, type JwtPayload } from '../auth/index.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
-import { ActualizarEstadoReservaDto, ReservaResponseDto } from './dto/index.js';
+import {
+  ActualizarEstadoReservaDto,
+  HistorialReservaResponseDto,
+  ReservaResponseDto,
+} from './dto/index.js';
 import { ReservasService } from './reservas.service.js';
 
 @ApiTags('Reservas')
 @Controller('reservas')
-@Auth(RolUsuario.MEDICO)
 @ApiBearerAuth()
 export class ReservasController {
   constructor(private readonly reservasService: ReservasService) {}
 
+  @Get()
+  @Auth(RolUsuario.PACIENTE)
+  @ApiOperation({
+    summary: 'Consultar el historial de turnos del paciente autenticado',
+    description:
+      'Devuelve el listado completo de reservas (en cualquier estado) asociadas al paciente autenticado, ordenadas cronológicamente de forma descendente.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Historial de reservas del paciente obtenido exitosamente.',
+    type: [HistorialReservaResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Token de sesión no proporcionado o inválido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Acceso no permitido para el rol del usuario autenticado.',
+  })
+  async obtenerHistorialPaciente(
+    @CurrentUser() usuario: JwtPayload,
+  ): Promise<HistorialReservaResponseDto[]> {
+    const reservas = await this.reservasService.buscarReservasPorPaciente(
+      usuario.sub,
+    );
+    return reservas.map((reserva) =>
+      HistorialReservaResponseDto.fromEntity(reserva),
+    );
+  }
+
   @Patch(':id/estado')
+  @Auth(RolUsuario.MEDICO)
   @ApiOperation({
     summary: 'Registrar la asistencia médica de un turno propio',
     description:

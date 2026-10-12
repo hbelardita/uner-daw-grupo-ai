@@ -63,6 +63,12 @@ describe('Endpoint PATCH /api/v1/medicos/:id/valor-consulta (e2e)', () => {
   });
 
   afterAll(async () => {
+    if (dataSource && idMedicoExistente) {
+      await dataSource.query(
+        'UPDATE medicos SET valor_consulta = 5000 WHERE id = $1',
+        [idMedicoExistente],
+      );
+    }
     if (app) {
       await app.close();
     }

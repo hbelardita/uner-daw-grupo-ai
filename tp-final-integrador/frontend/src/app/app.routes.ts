@@ -5,13 +5,6 @@ import { obtenerRutaInicioPorRol } from './auth/auth-navigation';
 import { AuthService } from './auth/auth-service';
 
 @Component({
-  selector: 'app-agenda-diaria',
-  imports: [],
-  template: '<p>Agenda del Médico</p>',
-})
-export class AgendaDiariaComponent {}
-
-@Component({
   selector: 'app-turno-medico-detalle',
   imports: [],
   template: '<p>Detalle de Turno Médico</p>',
@@ -82,7 +75,7 @@ export const routes: Routes = [
         children: [
           {
             path: '',
-            component: AgendaDiariaComponent,
+            loadComponent: () => import('./reservas/agenda-diaria/agenda-diaria'),
           },
           {
             path: 'turnos/:id',

@@ -1,9 +1,11 @@
 import {
+  Body,
   Controller,
   Get,
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Query,
 } from '@nestjs/common';
 import {
@@ -16,9 +18,12 @@ import {
 } from '@nestjs/swagger';
 import { Auth, CurrentUser, type JwtPayload } from '../auth/index.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
-import { ConsultarAgendaQueryDto } from './dto/consultar-agenda-query.dto.js';
-import { MedicoResponseDto } from './dto/medico-response.dto.js';
-import { ReservaResponseDto } from './dto/reserva-response.dto.js';
+import {
+  ActualizarValorConsultaDto,
+  ConsultarAgendaQueryDto,
+  MedicoResponseDto,
+  ReservaResponseDto,
+} from './dto/index.js';
 import { MedicosService } from './medicos.service.js';
 
 @ApiTags('Médicos')
@@ -85,5 +90,50 @@ export class MedicosController {
     );
 
     return reservas.map(ReservaResponseDto.fromEntity);
+  }
+
+  @Patch(':id/valor-consulta')
+  @Auth(RolUsuario.ADMINISTRADOR)
+  @ApiOperation({
+    summary: 'Actualizar honorario de consulta de un médico',
+    description:
+      'Permite al Administrador actualizar el valor de consulta vigente de un médico.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    example: 1,
+    description: 'Identificador único del médico',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Honorario de consulta actualizado exitosamente.',
+    type: MedicoResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parámetro de ruta o cuerpo de la solicitud inválido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Token de sesión no proporcionado o inválido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Acceso denegado (requiere rol ADMINISTRADOR).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No se encontró el médico con el id especificado.',
+  })
+  async actualizarValorConsulta(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ActualizarValorConsultaDto,
+  ): Promise<MedicoResponseDto> {
+    const medico = await this.medicosService.actualizarValorConsulta(
+      id,
+      dto.valorConsulta,
+    );
+    return MedicoResponseDto.fromEntity(medico);
   }
 }

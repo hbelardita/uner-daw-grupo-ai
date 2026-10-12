@@ -17,17 +17,43 @@ import {
 import { Auth, CurrentUser, type JwtPayload } from '../auth/index.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import { ConsultarAgendaQueryDto } from './dto/consultar-agenda-query.dto.js';
+import { MedicoResponseDto } from './dto/medico-response.dto.js';
 import { ReservaResponseDto } from './dto/reserva-response.dto.js';
 import { MedicosService } from './medicos.service.js';
 
 @ApiTags('Médicos')
 @Controller('medicos')
-@Auth(RolUsuario.MEDICO)
 @ApiBearerAuth()
 export class MedicosController {
   constructor(private readonly medicosService: MedicosService) {}
 
+  @Get()
+  @Auth(RolUsuario.PACIENTE, RolUsuario.ADMINISTRADOR)
+  @ApiOperation({
+    summary: 'Consultar el listado de profesionales habilitados',
+    description:
+      'Devuelve el listado de médicos cuyo usuario asociado se encuentra en estado ACTIVO, con matrículas y honorarios vigentes, ordenados alfabéticamente por apellido y nombre.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Listado de médicos obtenido exitosamente.',
+    type: [MedicoResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Token de sesión no proporcionado o inválido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Acceso no permitido para el rol del usuario autenticado.',
+  })
+  async obtenerMedicosHabilitados(): Promise<MedicoResponseDto[]> {
+    const medicos = await this.medicosService.buscarMedicosHabilitados();
+    return medicos.map(MedicoResponseDto.fromEntity);
+  }
+
   @Get(':idMedico/turnos')
+  @Auth(RolUsuario.MEDICO)
   @ApiOperation({
     summary: 'Consultar la agenda propia de un médico por fecha',
   })

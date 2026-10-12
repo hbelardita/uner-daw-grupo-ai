@@ -64,6 +64,17 @@ export class ReservasService {
     return this.reservasRepository.save(reserva);
   }
 
+  async buscarReservasPorPaciente(idPaciente: number): Promise<Reserva[]> {
+    return this.reservasRepository.find({
+      where: { idPaciente },
+      relations: {
+        medico: { usuario: true },
+        paciente: true,
+      },
+      order: { fechaHora: 'DESC' },
+    });
+  }
+
   async actualizarEstado(
     idReserva: number,
     idMedicoAutenticado: number | undefined,

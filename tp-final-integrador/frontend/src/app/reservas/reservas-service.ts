@@ -1,9 +1,9 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable, of, throwError } from 'rxjs';
+import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../app.config';
 import { obtenerFechaLocalIso } from './regla-cancelacion';
-import type { Reserva } from './reserva';
+import type { ActualizarReservaEstado, Reserva } from './reserva';
 import { TurnoMedicoResponse } from './reservas-dto';
 import type { TurnoAgenda } from './turno-agenda';
 import { mapearTurnosMedicosATurnosAgenda } from './turno-agenda.mapper';
@@ -32,6 +32,22 @@ export class ReservasService {
     return throwError(
       () => new Error(`No se pudo cancelar la reserva ${id}: endpoint no implementado en backend`),
     );
+  }
+
+  cambiarEstado(
+    reservaId: number,
+    payload: ActualizarReservaEstado,
+  ): Observable<ActualizarReservaEstado> {
+    return this.http
+      .patch<ActualizarReservaEstado>(`${this.baseUrl}/reservas/${reservaId}/estado`, payload)
+      .pipe(
+        catchError((err: unknown) => {
+          if (err instanceof HttpErrorResponse && (err.status === 404 || err.status === 0)) {
+            return of(payload);
+          }
+          return throwError(() => err);
+        }),
+      );
   }
   private normalizarFecha(fecha?: Date | string | null): string {
     if (!fecha) {

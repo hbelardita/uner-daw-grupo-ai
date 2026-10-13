@@ -115,11 +115,11 @@ export class ReservasController {
 
   @Post(':id/cancelacion')
   @HttpCode(HttpStatus.OK)
-  @Auth(RolUsuario.PACIENTE)
+  @Auth(RolUsuario.PACIENTE, RolUsuario.ADMINISTRADOR)
   @ApiOperation({
-    summary: 'Cancelar un turno propio antes del día de la consulta',
+    summary: 'Cancelar un turno activo (paciente o administrador)',
     description:
-      'Permite al paciente cancelar una reserva propia en estado ACTIVO antes de las 00:00 del día del turno en hora local de America/Argentina/Buenos_Aires.',
+      'Permite al paciente cancelar una reserva propia en estado ACTIVO antes de las 00:00 del día del turno (hora local de America/Argentina/Buenos_Aires), o al administrador cancelar cualquier turno activo hasta el instante previo a su inicio.',
   })
   @ApiParam({
     name: 'id',
@@ -135,11 +135,12 @@ export class ReservasController {
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     description:
-      'Intento de cancelar el mismo día de la consulta o posterior a ella.',
+      'Intento de cancelar el mismo día de la consulta (paciente) o una vez iniciada o transcurrida la consulta (administrador).',
   })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
-    description: 'El turno pertenece a otro paciente.',
+    description:
+      'El turno pertenece a otro paciente (cuando el solicitante es paciente).',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -154,10 +155,10 @@ export class ReservasController {
     @Param('id', ParseIntPipe) idReserva: number,
     @CurrentUser() usuario: JwtPayload,
   ): Promise<ReservaResponseDto> {
-    const reserva = await this.reservasService.cancelarReserva(
-      idReserva,
-      usuario.sub,
-    );
+    const reserva = await this.reservasService.cancelarReserva(idReserva, {
+      idUsuario: usuario.sub,
+      rol: usuario.rol,
+    });
     return ReservaResponseDto.fromEntity(reserva);
   }
 }

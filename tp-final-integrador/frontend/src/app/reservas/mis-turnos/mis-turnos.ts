@@ -1,6 +1,8 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
@@ -11,7 +13,7 @@ import { Tooltip } from 'primeng/tooltip';
 import { AuthService } from '../../auth/auth-service';
 import { EmptyState, EstadoBadge } from '../../shared';
 import { debeMostrarCancelacionDeshabilitada, puedeCancelar } from '../regla-cancelacion';
-import { Reserva } from '../reserva';
+import { HistorialReservaResponse } from '../reservas-dto';
 import { ReservasService } from '../reservas-service';
 
 @Component({
@@ -39,9 +41,10 @@ export default class MisTurnos implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly datePipe = inject(DatePipe);
 
-  protected readonly reservas = signal<Reserva[]>([]);
+  protected readonly reservas = signal<HistorialReservaResponse[]>([]);
   protected readonly cargando = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
+  protected readonly cancelandoId = signal<number | null>(null);
 
   ngOnInit(): void {
     this.cargarReservas();
@@ -69,17 +72,21 @@ export default class MisTurnos implements OnInit {
       });
   }
 
-  protected puedeCancelarReserva(reserva: Reserva): boolean {
+  protected puedeCancelarReserva(reserva: HistorialReservaResponse): boolean {
     const rol = this.authService.rol() ?? 'PACIENTE';
     return puedeCancelar(reserva, rol, new Date());
   }
 
-  protected debeMostrarCancelacionDeshabilitada(reserva: Reserva): boolean {
+  protected debeMostrarCancelacionDeshabilitada(reserva: HistorialReservaResponse): boolean {
     const rol = this.authService.rol() ?? 'PACIENTE';
     return debeMostrarCancelacionDeshabilitada(reserva, rol, new Date());
   }
 
-  protected confirmarCancelacion(reserva: Reserva): void {
+  protected estaCancelando(reserva: HistorialReservaResponse): boolean {
+    return this.cancelandoId() === reserva.id;
+  }
+
+  protected confirmarCancelacion(reserva: HistorialReservaResponse): void {
     const fecha = this.datePipe.transform(reserva.fechaHora, 'dd/MM/yyyy') ?? '';
     const hora = this.datePipe.transform(reserva.fechaHora, 'HH:mm') ?? '';
     const medico = `${reserva.medico.nombres} ${reserva.medico.apellidos}`;
@@ -98,13 +105,26 @@ export default class MisTurnos implements OnInit {
         severity: 'danger',
       },
       accept: () => {
+        this.cancelandoId.set(reserva.id);
         this.reservasService
           .cancelarReserva(reserva.id)
-          .pipe(takeUntilDestroyed(this.destroyRef))
+          .pipe(
+            takeUntilDestroyed(this.destroyRef),
+            finalize(() => this.cancelandoId.set(null)),
+          )
           .subscribe({
-            next: (reservaActualizada) => {
+            next: (reservaCancelada) => {
               this.reservas.update((actuales) =>
-                actuales.map((r) => (r.id === reserva.id ? reservaActualizada : r)),
+                actuales.map((r) =>
+                  r.id === reserva.id
+                    ? {
+                        ...r,
+                        estado: reservaCancelada.estado,
+                        fechaHora: reservaCancelada.fechaHora,
+                        valorConsulta: reservaCancelada.valorConsulta,
+                      }
+                    : r,
+                ),
               );
               this.messageService.add({
                 severity: 'success',
@@ -112,15 +132,34 @@ export default class MisTurnos implements OnInit {
                 detail: `Tu turno del ${fecha} fue cancelado exitosamente.`,
               });
             },
-            error: () => {
+            error: (error: unknown) => {
               this.messageService.add({
                 severity: 'error',
-                summary: 'Error',
-                detail: 'No pudimos cancelar tu turno. Por favor, intentá nuevamente.',
+                summary: 'No se pudo cancelar',
+                detail: this.mensajeErrorCancelacion(error),
               });
+              if (error instanceof HttpErrorResponse && error.status === 409) {
+                this.cargarReservas();
+              }
             },
           });
       },
     });
+  }
+
+  private mensajeErrorCancelacion(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const mensajeBackend = typeof error.error?.message === 'string' ? error.error.message : null;
+      if (mensajeBackend) {
+        return mensajeBackend;
+      }
+      if (error.status === 404) {
+        return 'El turno ya no existe. Actualizamos tu lista.';
+      }
+      if (error.status === 403) {
+        return 'No tenés permiso para cancelar este turno.';
+      }
+    }
+    return 'No pudimos cancelar tu turno. Por favor, intentá nuevamente.';
   }
 }

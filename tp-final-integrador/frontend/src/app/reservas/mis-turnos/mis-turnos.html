@@ -110,9 +110,6 @@
       <p-table
         [value]="reservas()"
         [rowHover]="true"
-        [paginator]="true"
-        [rows]="10"
-        [rowsPerPageOptions]="[10, 20, 50]"
         [tableStyle]="{ 'min-width': '48rem' }"
         [sortField]="'fechaHora'"
         [sortOrder]="-1"
@@ -162,6 +159,7 @@
                     icon="pi pi-times"
                     size="small"
                     label="Cancelar"
+                    [loading]="estaCancelando(reserva)"
                     [attr.aria-label]="
                       'Cancelar turno del ' +
                       (reserva.fechaHora | date: 'dd/MM/yyyy') +
@@ -188,6 +186,8 @@
                       [attr.aria-label]="'Cancelar turno deshabilitado. Solo podés cancelar hasta el día anterior a la consulta.'"
                     />
                   </span>
+                } @else {
+                  <span class="text-xs text-slate-500">Sin acciones</span>
                 }
               </div>
             </td>
@@ -228,6 +228,7 @@
                   icon="pi pi-times"
                   label="Cancelar"
                   styleClass="w-full"
+                  [loading]="estaCancelando(reserva)"
                   [attr.aria-label]="
                     'Cancelar turno del ' +
                     (reserva.fechaHora | date: 'dd/MM/yyyy') +
@@ -264,6 +265,10 @@
                 <span [attr.id]="'motivo-' + reserva.id" class="sr-only">
                   {{ motivoCancelacion() }}
                 </span>
+              </div>
+            } @else {
+              <div class="pt-3 border-t border-slate-100 mt-2">
+                <span class="text-xs text-slate-500">Sin acciones</span>
               </div>
             }
           </div>

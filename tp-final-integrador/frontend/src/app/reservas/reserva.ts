@@ -26,8 +26,11 @@ export interface CrearReserva {
   idPaciente?: number;
 }
 
+export const ESTADOS_ASISTENCIA = ['ATENDIDO', 'AUSENTE'] as const;
+export type EstadoAsistencia = (typeof ESTADOS_ASISTENCIA)[number];
+
 export interface ActualizarReservaEstado {
-  estado: 'ATENDIDO' | 'AUSENTE';
+  estado: EstadoAsistencia;
 }
 
 /** Información resumida de un paciente reutilizada en autocompletes, tablas y agendas */

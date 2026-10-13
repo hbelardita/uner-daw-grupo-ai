@@ -159,6 +159,7 @@
                     icon="pi pi-times"
                     size="small"
                     label="Cancelar"
+                    [loading]="estaCancelando(reserva)"
                     [attr.aria-label]="
                       'Cancelar turno del ' +
                       (reserva.fechaHora | date: 'dd/MM/yyyy') +
@@ -227,6 +228,7 @@
                   icon="pi pi-times"
                   label="Cancelar"
                   styleClass="w-full"
+                  [loading]="estaCancelando(reserva)"
                   [attr.aria-label]="
                     'Cancelar turno del ' +
                     (reserva.fechaHora | date: 'dd/MM/yyyy') +

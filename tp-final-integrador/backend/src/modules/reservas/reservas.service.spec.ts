@@ -7,6 +7,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import type { Reserva } from './entities/reserva.entity.js';
 import { EstadoReserva } from './enums/estado-reserva.enum.js';
+import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import { ReservasService } from './reservas.service.js';
 
 // Todas las fechas se construyen como instantes UTC explícitos.
@@ -467,5 +468,94 @@ describe('ReservasService - Cancelar reserva', () => {
         new Date('fecha-invalida'),
       ),
     ).rejects.toThrow('La fecha y hora de referencia no es válida.');
+  });
+
+  describe('Rol ADMINISTRADOR', () => {
+    const adminSolicitante = {
+      idUsuario: 50,
+      rol: RolUsuario.ADMINISTRADOR,
+    };
+
+    it('debe permitir al administrador cancelar cualquier turno activo sin importar quién sea el paciente', async () => {
+      // Turno: lunes 2026-10-12 08:00 AR (11:00 UTC). Paciente es 20, solicitante admin es 50.
+      const resultado = await crearServicio(reservaActiva).cancelarReserva(
+        1,
+        adminSolicitante,
+        new Date('2026-10-09T13:00:00.000Z'),
+      );
+
+      expect(resultado.estado).toBe(EstadoReserva.CANCELADO);
+    });
+
+    it('debe permitir al administrador cancelar el mismo día de la consulta antes de la hora de inicio', async () => {
+      // Turno: lunes 2026-10-12 11:00 UTC (08:00 AR). Ahora: lunes 2026-10-12 09:00 UTC (06:00 AR) -> 2 horas antes
+      const resultado = await crearServicio(reservaActiva).cancelarReserva(
+        1,
+        adminSolicitante,
+        new Date('2026-10-12T09:00:00.000Z'),
+      );
+
+      expect(resultado.estado).toBe(EstadoReserva.CANCELADO);
+    });
+
+    it('debe permitir al administrador cancelar hasta 1 segundo antes del inicio', async () => {
+      // Turno: lunes 2026-10-12 11:00 UTC. Ahora: lunes 2026-10-12 10:59:59 UTC.
+      const resultado = await crearServicio(reservaActiva).cancelarReserva(
+        1,
+        adminSolicitante,
+        new Date('2026-10-12T10:59:59.000Z'),
+      );
+
+      expect(resultado.estado).toBe(EstadoReserva.CANCELADO);
+    });
+
+    it('debe rechazar con BadRequestException si el administrador intenta cancelar en el instante de inicio (ahora == fechaHora)', async () => {
+      await expect(
+        crearServicio(reservaActiva).cancelarReserva(
+          1,
+          adminSolicitante,
+          new Date('2026-10-12T11:00:00.000Z'),
+        ),
+      ).rejects.toThrow(
+        'No se puede cancelar una consulta médica que ya ha iniciado o transcurrido en el pasado.',
+      );
+    });
+
+    it('debe rechazar con BadRequestException si el administrador intenta cancelar una consulta ya pasada (ahora > fechaHora)', async () => {
+      await expect(
+        crearServicio(reservaActiva).cancelarReserva(
+          1,
+          adminSolicitante,
+          new Date('2026-10-12T11:01:00.000Z'),
+        ),
+      ).rejects.toThrow(
+        'No se puede cancelar una consulta médica que ya ha iniciado o transcurrido en el pasado.',
+      );
+    });
+
+    it('debe rechazar con ConflictException si el administrador intenta cancelar un turno que no está en estado ACTIVO', async () => {
+      const reservaYaAtendida = {
+        ...reservaActiva,
+        estado: EstadoReserva.ATENDIDO,
+      };
+
+      await expect(
+        crearServicio(reservaYaAtendida).cancelarReserva(
+          1,
+          adminSolicitante,
+          new Date('2026-10-09T13:00:00.000Z'),
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('debe rechazar con NotFoundException si la reserva no existe', async () => {
+      await expect(
+        crearServicio(null).cancelarReserva(
+          999,
+          adminSolicitante,
+          new Date('2026-10-09T13:00:00.000Z'),
+        ),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
   });
 });

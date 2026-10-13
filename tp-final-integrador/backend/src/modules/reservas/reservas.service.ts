@@ -8,8 +8,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MedicosService } from '../medicos/medicos.service.js';
+import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import {
   validarAntelacionCancelacion,
+  validarCancelacionAdministrador,
   validarReglasCreacionReserva,
 } from './domain/reglas-temporales.js';
 import { Reserva } from './entities/reserva.entity.js';
@@ -19,6 +21,11 @@ export interface CrearReservaParams {
   idMedico: number;
   idPaciente: number;
   fechaHora: Date;
+}
+
+export interface UsuarioSolicitanteCancelacion {
+  idUsuario: number;
+  rol: RolUsuario;
 }
 
 @Injectable()
@@ -101,7 +108,7 @@ export class ReservasService {
 
   async cancelarReserva(
     idReserva: number,
-    idPacienteAutenticado: number,
+    solicitante: UsuarioSolicitanteCancelacion | number,
     ahora: Date = new Date(),
   ): Promise<Reserva> {
     const reserva = await this.reservasRepository.findOne({
@@ -114,10 +121,17 @@ export class ReservasService {
       );
     }
 
-    if (reserva.idPaciente !== idPacienteAutenticado) {
-      throw new ForbiddenException(
-        'Solo puede cancelar un turno propio del paciente autenticado.',
-      );
+    const { idUsuario, rol } =
+      typeof solicitante === 'number'
+        ? { idUsuario: solicitante, rol: RolUsuario.PACIENTE }
+        : solicitante;
+
+    if (rol === RolUsuario.PACIENTE) {
+      if (reserva.idPaciente !== idUsuario) {
+        throw new ForbiddenException(
+          'Solo puede cancelar un turno propio del paciente autenticado.',
+        );
+      }
     }
 
     if (reserva.estado !== EstadoReserva.ACTIVO) {
@@ -131,7 +145,11 @@ export class ReservasService {
         ? reserva.fechaHora
         : new Date(reserva.fechaHora);
 
-    validarAntelacionCancelacion(fechaHoraTurno, ahora);
+    if (rol === RolUsuario.ADMINISTRADOR) {
+      validarCancelacionAdministrador(fechaHoraTurno, ahora);
+    } else {
+      validarAntelacionCancelacion(fechaHoraTurno, ahora);
+    }
 
     reserva.estado = EstadoReserva.CANCELADO;
     return this.reservasRepository.save(reserva);

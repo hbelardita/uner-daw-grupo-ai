@@ -1,4 +1,5 @@
 import { DatePipe, formatDate, I18nPluralPipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, input, LOCALE_ID, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -12,7 +13,7 @@ import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
-import { catchError, of, switchMap, tap } from 'rxjs';
+import { catchError, finalize, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../auth/auth-service';
 import { EmptyState, EstadoBadge } from '../../shared';
 import { DocumentoPipe } from '../../shared/documento-pipe';
@@ -179,6 +180,10 @@ export default class AgendaDiaria {
     return puedeRegistrarAsistencia(turno, new Date());
   }
 
+  protected estaModificando(turno: TurnoAgenda): boolean {
+    return this.modificandoId() === turno.id;
+  }
+
   private formatearHora(fechaHora: string): string {
     return formatDate(fechaHora, 'HH:mm', this.locale);
   }
@@ -212,36 +217,72 @@ export default class AgendaDiaria {
         label: config.acceptLabel,
         severity: config.acceptSeverity,
       },
-      accept: () => {
-        this.modificandoId.set(turno.id);
-        this.reservasService
-          .cambiarEstado(turno.id, { estado: nuevoEstado })
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe({
-            next: (reservaActualizada) => {
-              this.reservas.update((actuales) =>
-                actuales.map((r) =>
-                  r.id === turno.id ? { ...r, estado: reservaActualizada.estado } : r,
-                ),
-              );
-              this.modificandoId.set(null);
-              this.messageService.add({
-                severity: 'success',
-                summary: config.acceptLabel,
-                detail: `Se registró como ${nuevoEstado.toLowerCase()} el turno de ${paciente}.`,
-              });
-            },
-            error: () => {
-              this.modificandoId.set(null);
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'No pudimos registrar la asistencia. Por favor, intentá nuevamente.',
-              });
-            },
-          });
-      },
+      accept: () => this.registrarAsistencia(turno, nuevoEstado, paciente),
     });
+  }
+
+  private registrarAsistencia(
+    turno: TurnoAgenda,
+    nuevoEstado: EstadoAsistencia,
+    paciente: string,
+  ): void {
+    const config = CONFIG_ASISTENCIA[nuevoEstado];
+    this.modificandoId.set(turno.id);
+    this.reservasService
+      .cambiarEstado(turno.id, { estado: nuevoEstado })
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.modificandoId.set(null)),
+      )
+      .subscribe({
+        next: (reservaActualizada) => {
+          this.reservas.update((actuales) =>
+            actuales.map((r) =>
+              r.id === turno.id
+                ? {
+                    ...r,
+                    estado: reservaActualizada.estado,
+                    fechaHora: reservaActualizada.fechaHora,
+                  }
+                : r,
+            ),
+          );
+          this.messageService.add({
+            severity: 'success',
+            summary: config.acceptLabel,
+            detail: `Se registró como ${nuevoEstado.toLowerCase()} el turno de ${paciente}.`,
+          });
+        },
+        error: (error: unknown) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'No se pudo registrar',
+            detail: this.mensajeErrorAsistencia(error),
+          });
+          if (
+            error instanceof HttpErrorResponse &&
+            (error.status === 409 || error.status === 404)
+          ) {
+            this.cargarReservas();
+          }
+        },
+      });
+  }
+
+  private mensajeErrorAsistencia(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const mensajeBackend = typeof error.error?.message === 'string' ? error.error.message : null;
+      if (mensajeBackend) {
+        return mensajeBackend;
+      }
+      if (error.status === 404) {
+        return 'El turno ya no existe. Actualizamos tu agenda.';
+      }
+      if (error.status === 403) {
+        return 'No tenés permiso para registrar este turno.';
+      }
+    }
+    return 'No pudimos registrar la asistencia. Por favor, intentá nuevamente.';
   }
 
   alCambiarFecha(nuevaFecha: Date | null): void {

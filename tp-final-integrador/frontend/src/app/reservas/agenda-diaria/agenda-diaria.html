@@ -202,7 +202,7 @@
                       label="Atendido"
                       size="small"
                       [disabled]="!puedeMarcarAsistencia(franja.turno)"
-                      [loading]="modificandoId() === franja.turno.id"
+                      [loading]="estaModificando(franja.turno)"
                       [pTooltip]="
                         !puedeMarcarAsistencia(franja.turno)
                           ? mensajeDisponibilidad(franja.turno)
@@ -219,7 +219,7 @@
                       label="Ausente"
                       size="small"
                       [disabled]="!puedeMarcarAsistencia(franja.turno)"
-                      [loading]="modificandoId() === franja.turno.id"
+                      [loading]="estaModificando(franja.turno)"
                       [pTooltip]="
                         !puedeMarcarAsistencia(franja.turno)
                           ? mensajeDisponibilidad(franja.turno)
@@ -281,7 +281,7 @@
                     class="w-full"
                     styleClass="w-full justify-center"
                     [disabled]="!puedeMarcarAsistencia(franja.turno)"
-                    [loading]="modificandoId() === franja.turno.id"
+                    [loading]="estaModificando(franja.turno)"
                     [pTooltip]="
                       !puedeMarcarAsistencia(franja.turno)
                         ? mensajeDisponibilidad(franja.turno)
@@ -300,7 +300,7 @@
                     class="w-full"
                     styleClass="w-full justify-center"
                     [disabled]="!puedeMarcarAsistencia(franja.turno)"
-                    [loading]="modificandoId() === franja.turno.id"
+                    [loading]="estaModificando(franja.turno)"
                     [pTooltip]="
                       !puedeMarcarAsistencia(franja.turno)
                         ? mensajeDisponibilidad(franja.turno)

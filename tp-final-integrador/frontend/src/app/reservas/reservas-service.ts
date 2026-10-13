@@ -1,10 +1,10 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable, of, throwError } from 'rxjs';
+import { map, Observable, throwError } from 'rxjs';
 import { API_BASE_URL } from '../app.config';
 import { obtenerFechaLocalIso } from './regla-cancelacion';
-import type { ActualizarReservaEstado, Reserva } from './reserva';
-import { TurnoMedicoResponse } from './reservas-dto';
+import type { ActualizarReservaEstado } from './reserva';
+import { HistorialReservaResponse, TurnoMedicoResponse } from './reservas-dto';
 import type { TurnoAgenda } from './turno-agenda';
 import { mapearTurnosMedicosATurnosAgenda } from './turno-agenda.mapper';
 
@@ -24,11 +24,11 @@ export class ReservasService {
       .pipe(map(mapearTurnosMedicosATurnosAgenda));
   }
 
-  obtenerMisReservas(): Observable<Reserva[]> {
-    return of([]);
+  obtenerMisReservas(): Observable<HistorialReservaResponse[]> {
+    return this.http.get<HistorialReservaResponse[]>(`${this.baseUrl}/reservas`);
   }
 
-  cancelarReserva(id: number): Observable<Reserva> {
+  cancelarReserva(id: number): Observable<HistorialReservaResponse> {
     return throwError(
       () => new Error(`No se pudo cancelar la reserva ${id}: endpoint no implementado en backend`),
     );

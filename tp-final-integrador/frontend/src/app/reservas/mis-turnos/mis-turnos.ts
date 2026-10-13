@@ -11,7 +11,7 @@ import { Tooltip } from 'primeng/tooltip';
 import { AuthService } from '../../auth/auth-service';
 import { EmptyState, EstadoBadge } from '../../shared';
 import { debeMostrarCancelacionDeshabilitada, puedeCancelar } from '../regla-cancelacion';
-import { Reserva } from '../reserva';
+import { HistorialReservaResponse } from '../reservas-dto';
 import { ReservasService } from '../reservas-service';
 
 @Component({
@@ -39,7 +39,7 @@ export default class MisTurnos implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly datePipe = inject(DatePipe);
 
-  protected readonly reservas = signal<Reserva[]>([]);
+  protected readonly reservas = signal<HistorialReservaResponse[]>([]);
   protected readonly cargando = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
 
@@ -69,17 +69,17 @@ export default class MisTurnos implements OnInit {
       });
   }
 
-  protected puedeCancelarReserva(reserva: Reserva): boolean {
+  protected puedeCancelarReserva(reserva: HistorialReservaResponse): boolean {
     const rol = this.authService.rol() ?? 'PACIENTE';
     return puedeCancelar(reserva, rol, new Date());
   }
 
-  protected debeMostrarCancelacionDeshabilitada(reserva: Reserva): boolean {
+  protected debeMostrarCancelacionDeshabilitada(reserva: HistorialReservaResponse): boolean {
     const rol = this.authService.rol() ?? 'PACIENTE';
     return debeMostrarCancelacionDeshabilitada(reserva, rol, new Date());
   }
 
-  protected confirmarCancelacion(reserva: Reserva): void {
+  protected confirmarCancelacion(reserva: HistorialReservaResponse): void {
     const fecha = this.datePipe.transform(reserva.fechaHora, 'dd/MM/yyyy') ?? '';
     const hora = this.datePipe.transform(reserva.fechaHora, 'HH:mm') ?? '';
     const medico = `${reserva.medico.nombres} ${reserva.medico.apellidos}`;

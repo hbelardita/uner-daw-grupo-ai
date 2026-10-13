@@ -1,5 +1,20 @@
 import type { EstadoReserva } from './reserva';
 
+export interface MedicoHistorialResponse {
+  id: number;
+  nombres: string;
+  apellidos: string;
+  matricula: number;
+}
+
+export interface HistorialReservaResponse {
+  id: number;
+  fechaHora: string;
+  estado: EstadoReserva;
+  valorConsulta: number;
+  medico: MedicoHistorialResponse;
+}
+
 export interface TurnoMedicoPacienteResponse {
   id: number;
   documento: string;

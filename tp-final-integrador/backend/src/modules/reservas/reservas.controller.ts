@@ -63,12 +63,12 @@ export class ReservasController {
     );
   }
 
-  @Patch(':id/estado')
+  @Patch(':id')
   @Auth(RolUsuario.MEDICO)
   @ApiOperation({
-    summary: 'Registrar la asistencia médica de un turno propio',
+    summary: 'Registrar la asistencia médica de un turno',
     description:
-      'Permite al médico registrar la asistencia (ATENDIDO o AUSENTE) de un turno propio en estado ACTIVO una vez alcanzada la fecha y hora pactada.',
+      'Permite al médico registrar la asistencia (ATENDIDO o AUSENTE) de un turno en estado ACTIVO una vez alcanzada la fecha y hora pactada.',
   })
   @ApiParam({
     name: 'id',

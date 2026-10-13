@@ -320,10 +320,10 @@ describe('Endpoint GET /api/v1/reservas - Historial de turnos de paciente (e2e)'
     });
   });
 
-  describe('Regresión: PATCH /api/v1/reservas/:id/estado mantiene su autorización exclusiva de MEDICO', () => {
-    it('debe rechazar con 403 Forbidden cuando un PACIENTE intenta invocar PATCH :id/estado', async () => {
+  describe('Regresión: PATCH /api/v1/reservas/:id mantiene su autorización exclusiva de MEDICO', () => {
+    it('debe rechazar con 403 Forbidden cuando un PACIENTE intenta invocar PATCH :id', async () => {
       const response = await request(app.getHttpServer())
-        .patch(`/api/v1/reservas/${insertedReservaIds[0]}/estado`)
+        .patch(`/api/v1/reservas/${insertedReservaIds[0]}`)
         .set('Authorization', `Bearer ${paciente1Token}`)
         .send({ estado: 'ATENDIDO' })
         .expect(403);

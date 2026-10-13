@@ -1,10 +1,15 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable, throwError } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { API_BASE_URL } from '../app.config';
 import { obtenerFechaLocalIso } from './regla-cancelacion';
 import type { ActualizarReservaEstado } from './reserva';
-import { HistorialReservaResponse, TurnoMedicoResponse } from './reservas-dto';
+import {
+  ActualizarReservaEstadoResponse,
+  CancelarReservaResponse,
+  HistorialReservaResponse,
+  TurnoMedicoResponse,
+} from './reservas-dto';
 import type { TurnoAgenda } from './turno-agenda';
 import { mapearTurnosMedicosATurnosAgenda } from './turno-agenda.mapper';
 
@@ -28,17 +33,18 @@ export class ReservasService {
     return this.http.get<HistorialReservaResponse[]>(`${this.baseUrl}/reservas`);
   }
 
-  cancelarReserva(id: number): Observable<HistorialReservaResponse> {
-    return throwError(
-      () => new Error(`No se pudo cancelar la reserva ${id}: endpoint no implementado en backend`),
+  cancelarReserva(id: number): Observable<CancelarReservaResponse> {
+    return this.http.post<CancelarReservaResponse>(
+      `${this.baseUrl}/reservas/${id}/cancelacion`,
+      {},
     );
   }
 
   cambiarEstado(
     reservaId: number,
     payload: ActualizarReservaEstado,
-  ): Observable<ActualizarReservaEstado> {
-    return this.http.patch<ActualizarReservaEstado>(
+  ): Observable<ActualizarReservaEstadoResponse> {
+    return this.http.patch<ActualizarReservaEstadoResponse>(
       `${this.baseUrl}/reservas/${reservaId}/estado`,
       payload,
     );

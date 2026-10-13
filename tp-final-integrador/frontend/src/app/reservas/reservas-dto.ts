@@ -30,3 +30,21 @@ export interface TurnoMedicoResponse {
   valorConsulta: number;
   paciente: TurnoMedicoPacienteResponse;
 }
+
+export interface CancelarReservaResponse {
+  id: number;
+  idMedico: number;
+  idPaciente: number;
+  fechaHora: string;
+  estado: EstadoReserva;
+  valorConsulta: number;
+}
+
+export interface ActualizarReservaEstadoResponse {
+  id: number;
+  idMedico: number;
+  idPaciente: number;
+  fechaHora: string;
+  estado: EstadoReserva;
+  valorConsulta: number;
+}

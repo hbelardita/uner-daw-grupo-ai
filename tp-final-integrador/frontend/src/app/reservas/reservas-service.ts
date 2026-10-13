@@ -45,7 +45,7 @@ export class ReservasService {
     payload: ActualizarReservaEstado,
   ): Observable<ActualizarReservaEstadoResponse> {
     return this.http.patch<ActualizarReservaEstadoResponse>(
-      `${this.baseUrl}/reservas/${reservaId}/estado`,
+      `${this.baseUrl}/reservas/${reservaId}`,
       payload,
     );
   }

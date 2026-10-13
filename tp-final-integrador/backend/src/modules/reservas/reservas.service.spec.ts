@@ -357,3 +357,115 @@ describe('ReservasService - Actualizar estado del turno (asistencia)', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 });
+
+describe('ReservasService - Cancelar reserva', () => {
+  it('debe cancelar exitosamente un turno activo con más de un día de anticipación', async () => {
+    // Turno: lunes 2026-10-12 08:00 AR (11:00 UTC). Ahora: viernes 2026-10-09 10:00 AR (13:00 UTC).
+    const resultado = await crearServicio(reservaActiva).cancelarReserva(
+      1,
+      20,
+      new Date('2026-10-09T13:00:00.000Z'),
+    );
+
+    expect(resultado.estado).toBe(EstadoReserva.CANCELADO);
+  });
+
+  it('debe permitir cancelar exactamente el día calendario previo (23:59:59 hora local AR)', async () => {
+    // Turno: lunes 2026-10-12 08:00 AR (11:00 UTC).
+    // Ahora: domingo 2026-10-11 23:59:59 AR (2026-10-12 02:59:59 UTC) -> antelación = 1 día.
+    const resultado = await crearServicio(reservaActiva).cancelarReserva(
+      1,
+      20,
+      new Date('2026-10-12T02:59:59.000Z'),
+    );
+
+    expect(resultado.estado).toBe(EstadoReserva.CANCELADO);
+  });
+
+  it('debe rechazar la cancelación a las 00:00 del mismo día de la fecha local del turno', async () => {
+    // Turno: lunes 2026-10-12 08:00 AR (11:00 UTC).
+    // Ahora: lunes 2026-10-12 00:00:00 AR (2026-10-12 03:00:00 UTC) -> antelación = 0 días.
+    await expect(
+      crearServicio(reservaActiva).cancelarReserva(
+        1,
+        20,
+        new Date('2026-10-12T03:00:00.000Z'),
+      ),
+    ).rejects.toThrow(
+      'Solo se puede cancelar hasta 1 dia antes de la fecha del turno.',
+    );
+  });
+
+  it('debe rechazar la cancelación si el turno es de una fecha ya pasada', async () => {
+    // Turno: lunes 2026-10-12 08:00 AR. Ahora: martes 2026-10-13 10:00 AR.
+    await expect(
+      crearServicio(reservaActiva).cancelarReserva(
+        1,
+        20,
+        new Date('2026-10-13T13:00:00.000Z'),
+      ),
+    ).rejects.toThrow(
+      'Solo se puede cancelar hasta 1 dia antes de la fecha del turno.',
+    );
+  });
+
+  it('debe rechazar si la reserva no existe con NotFoundException', async () => {
+    await expect(
+      crearServicio(null).cancelarReserva(
+        999,
+        20,
+        new Date('2026-10-09T13:00:00.000Z'),
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('debe rechazar si el turno pertenece a otro paciente con ForbiddenException', async () => {
+    await expect(
+      crearServicio(reservaActiva).cancelarReserva(
+        1,
+        99,
+        new Date('2026-10-09T13:00:00.000Z'),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('debe rechazar si el turno no está en estado ACTIVO con ConflictException', async () => {
+    const reservaCancelada = {
+      ...reservaActiva,
+      estado: EstadoReserva.CANCELADO,
+    };
+
+    await expect(
+      crearServicio(reservaCancelada).cancelarReserva(
+        1,
+        20,
+        new Date('2026-10-09T13:00:00.000Z'),
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('debe rechazar con BadRequestException si la fecha y hora del turno es inválida', async () => {
+    const reservaInvalida = {
+      ...reservaActiva,
+      fechaHora: new Date('fecha-invalida'),
+    };
+
+    await expect(
+      crearServicio(reservaInvalida).cancelarReserva(
+        1,
+        20,
+        new Date('2026-10-09T13:00:00.000Z'),
+      ),
+    ).rejects.toThrow('La fecha y hora del turno no es válida.');
+  });
+
+  it('debe rechazar con BadRequestException si la fecha y hora de referencia es inválida', async () => {
+    await expect(
+      crearServicio(reservaActiva).cancelarReserva(
+        1,
+        20,
+        new Date('fecha-invalida'),
+      ),
+    ).rejects.toThrow('La fecha y hora de referencia no es válida.');
+  });
+});

@@ -2,10 +2,12 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
+  Post,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -107,6 +109,54 @@ export class ReservasController {
       idReserva,
       usuario.idMedico,
       body.estado,
+    );
+    return ReservaResponseDto.fromEntity(reserva);
+  }
+
+  @Post(':id/cancelacion')
+  @HttpCode(HttpStatus.OK)
+  @Auth(RolUsuario.PACIENTE)
+  @ApiOperation({
+    summary: 'Cancelar un turno propio antes del día de la consulta',
+    description:
+      'Permite al paciente cancelar una reserva propia en estado ACTIVO antes de las 00:00 del día del turno en hora local de America/Argentina/Buenos_Aires.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    example: 1,
+    description: 'Identificador único de la reserva',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Reserva cancelada exitosamente.',
+    type: ReservaResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Intento de cancelar el mismo día de la consulta o posterior a ella.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'El turno pertenece a otro paciente.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No existe una reserva con el identificador indicado.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'La reserva no se encuentra en estado ACTIVO (ya ATENDIDO, AUSENTE o CANCELADO).',
+  })
+  async cancelarReserva(
+    @Param('id', ParseIntPipe) idReserva: number,
+    @CurrentUser() usuario: JwtPayload,
+  ): Promise<ReservaResponseDto> {
+    const reserva = await this.reservasService.cancelarReserva(
+      idReserva,
+      usuario.sub,
     );
     return ReservaResponseDto.fromEntity(reserva);
   }

@@ -215,7 +215,7 @@
                     label="Atendido"
                     size="small"
                     [disabled]="!puedeMarcarAsistencia(reserva)"
-                    [loading]="modificandoId() === reserva.id"
+                    [loading]="estaModificando(reserva)"
                     [pTooltip]="
                       !puedeMarcarAsistencia(reserva) ? mensajeDisponibilidad(reserva) : undefined
                     "
@@ -230,7 +230,7 @@
                     label="Ausente"
                     size="small"
                     [disabled]="!puedeMarcarAsistencia(reserva)"
-                    [loading]="modificandoId() === reserva.id"
+                    [loading]="estaModificando(reserva)"
                     [pTooltip]="
                       !puedeMarcarAsistencia(reserva) ? mensajeDisponibilidad(reserva) : undefined
                     "
@@ -277,7 +277,7 @@
                   class="w-full"
                   styleClass="w-full justify-center"
                   [disabled]="!puedeMarcarAsistencia(reserva)"
-                  [loading]="modificandoId() === reserva.id"
+                  [loading]="estaModificando(reserva)"
                   [pTooltip]="
                     !puedeMarcarAsistencia(reserva) ? mensajeDisponibilidad(reserva) : undefined
                   "
@@ -294,7 +294,7 @@
                   class="w-full"
                   styleClass="w-full justify-center"
                   [disabled]="!puedeMarcarAsistencia(reserva)"
-                  [loading]="modificandoId() === reserva.id"
+                  [loading]="estaModificando(reserva)"
                   [pTooltip]="
                     !puedeMarcarAsistencia(reserva) ? mensajeDisponibilidad(reserva) : undefined
                   "

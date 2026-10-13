@@ -130,3 +130,23 @@ export function validarAntelacionCancelacion(
     );
   }
 }
+
+export function validarCancelacionAdministrador(
+  fechaHoraTurno: Date,
+  ahora: Date = new Date(),
+): void {
+  if (Number.isNaN(fechaHoraTurno.getTime())) {
+    throw new BadRequestException('La fecha y hora del turno no es válida.');
+  }
+  if (Number.isNaN(ahora.getTime())) {
+    throw new BadRequestException(
+      'La fecha y hora de referencia no es válida.',
+    );
+  }
+
+  if (ahora.getTime() >= fechaHoraTurno.getTime()) {
+    throw new BadRequestException(
+      'No se puede cancelar una consulta médica que ya ha iniciado o transcurrido en el pasado.',
+    );
+  }
+}

@@ -12,13 +12,18 @@ describe('Endpoint POST /api/v1/reservas/:id/cancelacion - Cancelación de reser
   let paciente1Token: string;
   let paciente2Token: string;
   let medicoToken: string;
+  let adminToken: string;
 
   let idPaciente1: number;
+  let idPaciente2: number;
   let idMedico1: number;
 
   let idReservaFuturaP1: number;
   let idReservaHoyP1: number;
   let idReservaCanceladaP1: number;
+  let idReservaFuturaP2: number;
+  let idReservaPasadaP1: number;
+  let fechaFuturaP2Iso: string;
 
   const insertedReservaIds: number[] = [];
 
@@ -51,10 +56,21 @@ describe('Endpoint POST /api/v1/reservas/:id/cancelacion - Cancelación de reser
       .expect(200);
     medicoToken = loginMedico.body.token;
 
+    const loginAdmin = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ documento: '40111111', clave: 'clave_ficticia_10' })
+      .expect(200);
+    adminToken = loginAdmin.body.token;
+
     const paciente1Res = await dataSource.query(
       "SELECT id FROM usuarios WHERE documento = '30111111'",
     );
     idPaciente1 = paciente1Res[0].id;
+
+    const paciente2Res = await dataSource.query(
+      "SELECT id FROM usuarios WHERE documento = '30222222'",
+    );
+    idPaciente2 = paciente2Res[0].id;
 
     const medico1Res = await dataSource.query(
       `SELECT m.id FROM medicos m
@@ -70,24 +86,43 @@ describe('Endpoint POST /api/v1/reservas/:id/cancelacion - Cancelación de reser
     const fechaFutura = new Date(hoy.getTime() + 5 * 86_400_000);
     const fechaFuturaIso = `${fechaFutura.getFullYear()}-${String(fechaFutura.getMonth() + 1).padStart(2, '0')}-${String(fechaFutura.getDate()).padStart(2, '0')} 10:00:00`;
 
+    fechaFuturaP2Iso = `${fechaFutura.getFullYear()}-${String(fechaFutura.getMonth() + 1).padStart(2, '0')}-${String(fechaFutura.getDate()).padStart(2, '0')} 14:00:00`;
+
+    const fechaPasada = new Date(hoy.getTime() - 2 * 86_400_000);
+    const fechaPasadaIso = `${fechaPasada.getFullYear()}-${String(fechaPasada.getMonth() + 1).padStart(2, '0')}-${String(fechaPasada.getDate()).padStart(2, '0')} 11:00:00`;
+
     const insertRes = await dataSource.query(
       `INSERT INTO reservas (id_medico, id_paciente, fecha_hora, estado, valor_consulta)
        VALUES
          ($1, $2, $3, 'ACTIVO', 5000),
          ($1, $2, $4, 'ACTIVO', 5000),
-         ($1, $2, $3, 'CANCELADO', 5000)
+         ($1, $2, $3, 'CANCELADO', 5000),
+         ($1, $5, $6, 'ACTIVO', 5000),
+         ($1, $2, $7, 'ACTIVO', 5000)
        RETURNING id, estado;`,
-      [idMedico1, idPaciente1, fechaFuturaIso, fechaHoyIso],
+      [
+        idMedico1,
+        idPaciente1,
+        fechaFuturaIso,
+        fechaHoyIso,
+        idPaciente2,
+        fechaFuturaP2Iso,
+        fechaPasadaIso,
+      ],
     );
 
     idReservaFuturaP1 = insertRes[0].id;
     idReservaHoyP1 = insertRes[1].id;
     idReservaCanceladaP1 = insertRes[2].id;
+    idReservaFuturaP2 = insertRes[3].id;
+    idReservaPasadaP1 = insertRes[4].id;
 
     insertedReservaIds.push(
       idReservaFuturaP1,
       idReservaHoyP1,
       idReservaCanceladaP1,
+      idReservaFuturaP2,
+      idReservaPasadaP1,
     );
   });
 
@@ -144,7 +179,7 @@ describe('Endpoint POST /api/v1/reservas/:id/cancelacion - Cancelación de reser
       expect(response.status).toBe(403);
     });
 
-    it('debe rechazar con 403 Forbidden si un rol distinto a PACIENTE intenta cancelar', async () => {
+    it('debe rechazar con 403 Forbidden si un rol no autorizado (ej: MEDICO) intenta cancelar', async () => {
       const response = await request(app.getHttpServer())
         .post(`/api/v1/reservas/${idReservaHoyP1}/cancelacion`)
         .set('Authorization', `Bearer ${medicoToken}`)
@@ -176,6 +211,69 @@ describe('Endpoint POST /api/v1/reservas/:id/cancelacion - Cancelación de reser
       const response = await request(app.getHttpServer())
         .post('/api/v1/reservas/999999/cancelacion')
         .set('Authorization', `Bearer ${paciente1Token}`)
+        .expect(404);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('Rol ADMINISTRADOR - Cancelación y regla temporal extendida', () => {
+    it('debe permitir al administrador cancelar exitosamente con 200 OK cualquier turno activo sin restricción de titularidad', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/api/v1/reservas/${idReservaFuturaP2}/cancelacion`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty('id', idReservaFuturaP2);
+      expect(response.body).toHaveProperty('estado', 'CANCELADO');
+
+      // Verificar persistencia real en la base de datos
+      const rows = await dataSource.query(
+        'SELECT estado FROM reservas WHERE id = $1',
+        [idReservaFuturaP2],
+      );
+      expect(rows[0].estado).toBe('CANCELADO');
+    });
+
+    it('debe liberar el slot tras la cancelación permitiendo que se agende una nueva reserva en el mismo horario', async () => {
+      // Al encontrarse idReservaFuturaP2 en estado CANCELADO, el índice único parcial
+      // (id_medico, fecha_hora) WHERE estado != 'CANCELADO' permite un nuevo INSERT ACTIVO
+      const nuevoTurnoRes = await dataSource.query(
+        `INSERT INTO reservas (id_medico, id_paciente, fecha_hora, estado, valor_consulta)
+         VALUES ($1, $2, $3, 'ACTIVO', 5000)
+         RETURNING id, estado;`,
+        [idMedico1, idPaciente1, fechaFuturaP2Iso],
+      );
+
+      expect(nuevoTurnoRes[0]).toHaveProperty('id');
+      expect(nuevoTurnoRes[0].estado).toBe('ACTIVO');
+      insertedReservaIds.push(nuevoTurnoRes[0].id);
+    });
+
+    it('debe rechazar con 400 Bad Request si el administrador intenta cancelar una consulta médica que ya inició o transcurrió en el pasado', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/api/v1/reservas/${idReservaPasadaP1}/cancelacion`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(400);
+
+      expect(response.body.message).toBe(
+        'No se puede cancelar una consulta médica que ya ha iniciado o transcurrido en el pasado.',
+      );
+    });
+
+    it('debe rechazar con 409 Conflict si el administrador intenta cancelar una reserva que no está en estado ACTIVO', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/api/v1/reservas/${idReservaCanceladaP1}/cancelacion`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(409);
+
+      expect(response.status).toBe(409);
+    });
+
+    it('debe rechazar con 404 Not Found si el administrador intenta cancelar una reserva inexistente', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/reservas/999999/cancelacion')
+        .set('Authorization', `Bearer ${adminToken}`)
         .expect(404);
 
       expect(response.status).toBe(404);

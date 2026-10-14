@@ -1,11 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class BuscarPacientesQueryDto {
   @ApiProperty({
-    example: 'García',
-    description: 'Texto a buscar en nombres o apellidos del paciente.',
+    examples: {
+      'nombre o apellido': {
+        value: 'Juan',
+      },
+      documento: {
+        value: '10111111',
+      },
+    },
+    description:
+      'Texto a buscar en nombres, apellidos o documento del paciente.',
   })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   busqueda: string;

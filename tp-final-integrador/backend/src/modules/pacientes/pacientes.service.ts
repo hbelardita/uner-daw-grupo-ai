@@ -33,6 +33,11 @@ export class PacientesService {
           rol: RolUsuario.PACIENTE,
           apellidos: ILike(termino),
         },
+        {
+          estado: EstadoUsuario.ACTIVO,
+          rol: RolUsuario.PACIENTE,
+          documento: ILike(termino),
+        },
       ],
       order: { apellidos: 'ASC', nombres: 'ASC' },
       take: 10,

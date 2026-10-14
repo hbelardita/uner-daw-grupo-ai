@@ -25,8 +25,15 @@ export class PacientesController {
   @ApiQuery({
     name: 'busqueda',
     required: true,
-    example: 'García',
-    description: 'Parte del nombre o apellido del paciente.',
+    examples: {
+      'nombre o apellido': {
+        value: 'Juan',
+      },
+      documento: {
+        value: '10111111',
+      },
+    },
+    description: 'Parte del nombre, apellido o documento del paciente.',
   })
   @ApiResponse({
     status: HttpStatus.OK,

@@ -21,6 +21,7 @@ import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import {
   ActualizarValorConsultaDto,
   ConsultarAgendaQueryDto,
+  DisponibilidadSlotResponseDto,
   MedicoResponseDto,
   TurnoMedicoResponseDto,
 } from './dto/index.js';
@@ -90,6 +91,53 @@ export class MedicosController {
     );
 
     return reservas.map(TurnoMedicoResponseDto.fromEntity);
+  }
+
+  @Get(':id/disponibilidad')
+  @Auth(RolUsuario.PACIENTE, RolUsuario.ADMINISTRADOR)
+  @ApiOperation({
+    summary: 'Consultar la grilla de disponibilidad de un médico por fecha',
+    description:
+      'Devuelve los 8 slots de las horas en punto entre las 08:00 y las 15:00 (hora local America/Argentina/Buenos_Aires) indicando si cada horario está libre u ocupado.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    example: 1,
+    description: 'Identificador único del médico',
+  })
+  @ApiQuery({
+    name: 'fecha',
+    required: true,
+    type: String,
+    example: '2026-10-15',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Grilla de disponibilidad obtenida exitosamente.',
+    type: [DisponibilidadSlotResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parámetro de ruta o fecha con formato inválido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Token de sesión no proporcionado o inválido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Acceso no permitido para el rol del usuario autenticado.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No se encontró el médico con el id especificado.',
+  })
+  async obtenerDisponibilidad(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: ConsultarAgendaQueryDto,
+  ): Promise<DisponibilidadSlotResponseDto[]> {
+    return this.medicosService.obtenerDisponibilidad(id, query.fecha);
   }
 
   @Patch(':id/valor-consulta')

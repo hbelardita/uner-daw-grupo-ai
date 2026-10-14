@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   Get,
   HttpCode,
@@ -21,16 +22,79 @@ import { Auth, CurrentUser, type JwtPayload } from '../auth/index.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import {
   ActualizarEstadoReservaDto,
+  CrearReservaRequestDto,
   HistorialReservaResponseDto,
   ReservaResponseDto,
 } from './dto/index.js';
 import { ReservasService } from './reservas.service.js';
+
+function esViolacionUnicidad(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+  const codigo = (error as { code?: unknown }).code;
+  const codigoDriver = (error as { driverError?: { code?: unknown } })
+    .driverError?.code;
+  return codigo === '23505' || codigoDriver === '23505';
+}
 
 @ApiTags('Reservas')
 @Controller('reservas')
 @ApiBearerAuth()
 export class ReservasController {
   constructor(private readonly reservasService: ReservasService) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @Auth(RolUsuario.PACIENTE)
+  @ApiOperation({
+    summary: 'Crear un turno médico (paciente)',
+    description:
+      'Permite al paciente autenticado reservar un turno de lunes a viernes, de 08:00 a 15:00 en punto (hora local clínica), en el futuro y con un máximo de 30 días de anticipación. El paciente se asigna desde el usuario autenticado.',
+  })
+  @ApiBody({ type: CrearReservaRequestDto })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Reserva creada exitosamente.',
+    type: ReservaResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Cuerpo de la petición inválido o incumplimiento de las reglas temporales de la reserva.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Token de sesión no proporcionado o inválido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Acceso no permitido para el rol del usuario autenticado.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'El turno seleccionado ya se encuentra ocupado.',
+  })
+  async crearReserva(
+    @Body() body: CrearReservaRequestDto,
+    @CurrentUser() usuario: JwtPayload,
+  ): Promise<ReservaResponseDto> {
+    try {
+      const reserva = await this.reservasService.crearReserva({
+        idMedico: body.idMedico,
+        idPaciente: usuario.sub,
+        fechaHora: new Date(body.fechaHora),
+      });
+      return ReservaResponseDto.fromEntity(reserva);
+    } catch (error) {
+      if (esViolacionUnicidad(error)) {
+        throw new ConflictException(
+          'El turno seleccionado ya se encuentra ocupado.',
+        );
+      }
+      throw error;
+    }
+  }
 
   @Get()
   @Auth(RolUsuario.PACIENTE)

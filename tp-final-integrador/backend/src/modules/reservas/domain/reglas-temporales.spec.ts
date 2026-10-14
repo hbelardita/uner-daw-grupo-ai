@@ -4,7 +4,9 @@ import {
   diferenciaDiasCalendario,
   esFinDeSemana,
   estaDentroDeLaVentanaDeAtencion,
+  generarSlotsDelDia,
   obtenerPartesLocales,
+  parsearYValidarFechaCalendario,
   validarAntelacionCancelacion,
   validarReglasCreacionReserva,
 } from './reglas-temporales.js';
@@ -135,6 +137,50 @@ describe('reglas-temporales - funciones puras de dominio', () => {
       expect(() => validarAntelacionCancelacion(turno, ahora)).toThrow(
         BadRequestException,
       );
+    });
+  });
+
+  describe('parsearYValidarFechaCalendario', () => {
+    it('debe parsear una fecha válida y retornar PartesLocales con hora y minuto en cero', () => {
+      const partes = parsearYValidarFechaCalendario('2026-10-15');
+      expect(partes).toEqual({
+        anio: 2026,
+        mes: 10,
+        dia: 15,
+        hora: 0,
+        minuto: 0,
+      });
+    });
+
+    it('debe rechazar fechas imposibles en el calendario que desbordan mes (ej. 31 de febrero)', () => {
+      expect(() => parsearYValidarFechaCalendario('2026-02-31')).toThrow(
+        BadRequestException,
+      );
+      expect(() => parsearYValidarFechaCalendario('2026-04-31')).toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('debe rechazar strings con partes no enteras o formatos invalidos', () => {
+      expect(() => parsearYValidarFechaCalendario('invalida')).toThrow(
+        BadRequestException,
+      );
+      expect(() => parsearYValidarFechaCalendario('2026-13-40')).toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('generarSlotsDelDia', () => {
+    it('debe generar exactamente 8 slots para las horas de 08:00 a 15:00 UTC-3', () => {
+      const slots = generarSlotsDelDia('2026-10-15');
+      expect(slots).toHaveLength(8);
+
+      // Primer slot: 08:00 America/Argentina/Buenos_Aires = 11:00 UTC
+      expect(slots[0]?.toISOString()).toBe('2026-10-15T11:00:00.000Z');
+
+      // Ultimo slot: 15:00 America/Argentina/Buenos_Aires = 18:00 UTC
+      expect(slots[7]?.toISOString()).toBe('2026-10-15T18:00:00.000Z');
     });
   });
 });

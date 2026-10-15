@@ -8,7 +8,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MedicosService } from '../medicos/medicos.service.js';
+import { EstadoUsuario } from '../usuarios/enums/estado-usuario.enum.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
+import { UsuariosService } from '../usuarios/usuarios.service.js';
 import {
   validarAntelacionCancelacion,
   validarCancelacionAdministrador,
@@ -17,15 +19,16 @@ import {
 import { Reserva } from './entities/reserva.entity.js';
 import { EstadoReserva } from './enums/index.js';
 
+export interface UsuarioSolicitante {
+  idUsuario: number;
+  rol: RolUsuario;
+}
+
 export interface CrearReservaParams {
   idMedico: number;
   idPaciente: number;
   fechaHora: Date;
-}
-
-export interface UsuarioSolicitanteCancelacion {
-  idUsuario: number;
-  rol: RolUsuario;
+  solicitante: UsuarioSolicitante;
 }
 
 @Injectable()
@@ -34,21 +37,78 @@ export class ReservasService {
     @InjectRepository(Reserva)
     private readonly reservasRepository: Repository<Reserva>,
     private readonly medicosService: MedicosService,
+    private readonly usuariosService: UsuariosService,
   ) {}
 
   async crearReserva(dto: CrearReservaParams): Promise<Reserva> {
     this.validarReglasTemporales(dto.fechaHora);
+    const idPaciente = await this.resolverYValidarPacienteDestino(dto);
     const valorConsulta = await this.medicosService.obtenerArancelVigente(
       dto.idMedico,
     );
     const reserva = this.reservasRepository.create({
       idMedico: dto.idMedico,
-      idPaciente: dto.idPaciente,
+      idPaciente,
       fechaHora: dto.fechaHora,
       estado: EstadoReserva.ACTIVO,
       valorConsulta,
     });
     return this.reservasRepository.save(reserva);
+  }
+
+  /**
+   * Resuelve y valida el paciente destino según el rol del solicitante:
+   * - Si es PACIENTE: se asigna a sí mismo (idUsuario del token). Si envía un
+   *   idPaciente diferente al suyo, se rechaza la solicitud.
+   * - Si es ADMINISTRADOR: idPaciente es obligatorio en el payload y debe
+   *   corresponder a un usuario existente con rol PACIENTE y estado ACTIVO.
+   */
+  private async resolverYValidarPacienteDestino(
+    dto: CrearReservaParams,
+  ): Promise<number> {
+    if (dto.solicitante.rol === RolUsuario.PACIENTE) {
+      if (
+        dto.idPaciente !== undefined &&
+        dto.idPaciente !== dto.solicitante.idUsuario
+      ) {
+        throw new BadRequestException(
+          'Un paciente no puede reservar turnos para otro paciente.',
+        );
+      }
+      return dto.solicitante.idUsuario;
+    }
+
+    if (dto.solicitante.rol === RolUsuario.ADMINISTRADOR) {
+      if (typeof dto.idPaciente !== 'number') {
+        throw new BadRequestException(
+          'El administrador debe indicar el idPaciente del paciente destino.',
+        );
+      }
+
+      const paciente = await this.usuariosService.buscarPorId(dto.idPaciente);
+
+      if (!paciente) {
+        throw new NotFoundException(
+          `No se encontró ningún usuario con id ${dto.idPaciente} para asignar el turno.`,
+        );
+      }
+
+      if (paciente.rol !== RolUsuario.PACIENTE) {
+        throw new NotFoundException(
+          `El usuario con id ${dto.idPaciente} no tiene rol PACIENTE y no puede recibir turnos.`,
+        );
+      }
+
+      if (paciente.estado !== EstadoUsuario.ACTIVO) {
+        throw new NotFoundException(
+          `El paciente con id ${dto.idPaciente} no se encuentra activo.`,
+        );
+      }
+
+      return dto.idPaciente;
+    }
+
+    throw new ForbiddenException('Rol no autorizado para crear reservas.');
   }
 
   async buscarReservasPorPaciente(idPaciente: number): Promise<Reserva[]> {
@@ -108,7 +168,7 @@ export class ReservasService {
 
   async cancelarReserva(
     idReserva: number,
-    solicitante: UsuarioSolicitanteCancelacion | number,
+    solicitante: UsuarioSolicitante | number,
     ahora: Date = new Date(),
   ): Promise<Reserva> {
     const reserva = await this.reservasRepository.findOne({

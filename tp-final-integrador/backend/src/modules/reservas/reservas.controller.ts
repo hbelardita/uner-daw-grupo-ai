@@ -46,11 +46,11 @@ export class ReservasController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Auth(RolUsuario.PACIENTE)
+  @Auth(RolUsuario.PACIENTE, RolUsuario.ADMINISTRADOR)
   @ApiOperation({
-    summary: 'Crear un turno médico (paciente)',
+    summary: 'Crear un turno médico (paciente o administrador)',
     description:
-      'Permite al paciente autenticado reservar un turno de lunes a viernes, de 08:00 a 15:00 en punto (hora local clínica), en el futuro y con un máximo de 30 días de anticipación. El paciente se asigna desde el usuario autenticado.',
+      'Permite reservar un turno de lunes a viernes, de 08:00 a 15:00 en punto (hora local clínica), en el futuro y con un máximo de 30 días de anticipación. Un paciente se asigna a sí mismo desde el token; un administrador debe indicar el idPaciente del paciente destino en el cuerpo de la petición.',
   })
   @ApiBody({ type: CrearReservaRequestDto })
   @ApiResponse({
@@ -82,8 +82,9 @@ export class ReservasController {
     try {
       const reserva = await this.reservasService.crearReserva({
         idMedico: body.idMedico,
-        idPaciente: usuario.sub,
+        idPaciente: body.idPaciente,
         fechaHora: new Date(body.fechaHora),
+        solicitante: { idUsuario: usuario.sub, rol: usuario.rol },
       });
       return ReservaResponseDto.fromEntity(reserva);
     } catch (error) {

@@ -16,9 +16,9 @@ import {
   validarCancelacionAdministrador,
   validarReglasCreacionReserva,
 } from './domain/reglas-temporales.js';
+import { PAGINACION_ADMIN_DEFAULTS } from './dto/index.js';
 import { Reserva } from './entities/reserva.entity.js';
 import { EstadoReserva } from './enums/index.js';
-import { PAGINACION_ADMIN_DEFAULTS } from './dto/index.js';
 
 export interface UsuarioSolicitante {
   idUsuario: number;

@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Raw, Repository } from 'typeorm';
 import { MedicosService } from '../medicos/medicos.service.js';
 import { EstadoUsuario } from '../usuarios/enums/estado-usuario.enum.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
@@ -18,6 +18,7 @@ import {
 } from './domain/reglas-temporales.js';
 import { Reserva } from './entities/reserva.entity.js';
 import { EstadoReserva } from './enums/index.js';
+import { PAGINACION_ADMIN_DEFAULTS } from './dto/index.js';
 
 export interface UsuarioSolicitante {
   idUsuario: number;
@@ -26,9 +27,29 @@ export interface UsuarioSolicitante {
 
 export interface CrearReservaParams {
   idMedico: number;
-  idPaciente: number;
+  idPaciente?: number;
   fechaHora: Date;
   solicitante: UsuarioSolicitante;
+}
+
+export interface FiltrosListarReservasAdmin {
+  fecha?: string;
+  idMedico?: number;
+  idPaciente?: number;
+  documentoPaciente?: string;
+  estado?: EstadoReserva;
+  page?: number;
+  limit?: number;
+}
+
+export interface ReservasAdminPaginadasResultado {
+  data: Reserva[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 @Injectable()
@@ -121,6 +142,66 @@ export class ReservasService {
       },
       order: { fechaHora: 'DESC' },
     });
+  }
+
+  async listarReservasAdmin(
+    filtros: FiltrosListarReservasAdmin = {},
+  ): Promise<ReservasAdminPaginadasResultado> {
+    const page = filtros.page ?? PAGINACION_ADMIN_DEFAULTS.PAGE;
+    const limit = filtros.limit ?? PAGINACION_ADMIN_DEFAULTS.LIMIT;
+    const skip = (page - 1) * limit;
+
+    const where: FindOptionsWhere<Reserva> = {};
+
+    if (filtros.fecha) {
+      where.fechaHora = Raw((alias) => `DATE(${alias}) = :fecha`, {
+        fecha: filtros.fecha,
+      });
+    }
+
+    if (filtros.idMedico !== undefined) {
+      where.idMedico = filtros.idMedico;
+    }
+
+    if (filtros.idPaciente !== undefined) {
+      where.idPaciente = filtros.idPaciente;
+    }
+
+    if (filtros.documentoPaciente) {
+      where.paciente = { documento: filtros.documentoPaciente };
+    }
+
+    if (filtros.estado) {
+      where.estado = filtros.estado;
+    }
+
+    const [data, total] = await this.reservasRepository.findAndCount({
+      where,
+      relations: {
+        medico: {
+          usuario: true,
+        },
+        paciente: true,
+      },
+      order: {
+        fechaHora: 'ASC',
+        id: 'ASC',
+      },
+      skip,
+      take: limit,
+    });
+
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
   }
 
   async actualizarEstado(

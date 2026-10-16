@@ -24,7 +24,7 @@ export class PacientesController {
   })
   @ApiQuery({
     name: 'busqueda',
-    required: true,
+    required: false,
     examples: {
       'nombre o apellido': {
         value: 'Juan',
@@ -41,8 +41,12 @@ export class PacientesController {
     type: [PacienteResponseDto],
   })
   @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parámetro de búsqueda ausente o inválido.',
+  })
+  @ApiResponse({
     status: HttpStatus.FORBIDDEN,
-    description: 'El endpoint requiere rol ADMINISTRADOR.',
+    description: 'Acceso no permitido para el rol del usuario autenticado.',
   })
   async buscarPacientes(
     @Query() query: BuscarPacientesQueryDto,

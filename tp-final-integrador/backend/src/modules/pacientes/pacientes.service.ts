@@ -5,6 +5,11 @@ import { Usuario } from '../usuarios/entities/usuario.entity.js';
 import { EstadoUsuario } from '../usuarios/enums/estado-usuario.enum.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 
+function escaparLike(termino: string): string {
+  // Escapa backslash, porcentaje y guion bajo
+  return termino.replace(/[%_\\]/g, '\\$&');
+}
+
 @Injectable()
 export class PacientesService {
   constructor(
@@ -12,9 +17,19 @@ export class PacientesService {
     private readonly usuariosRepository: Repository<Usuario>,
   ) {}
 
-  async buscarPacientesActivos(busqueda: string): Promise<Usuario[]> {
-    const termino = `%${busqueda.trim()}%`;
-
+  async buscarPacientesActivos(busqueda?: string): Promise<Usuario[]> {
+    const termino = busqueda?.trim();
+    const base = {
+      estado: EstadoUsuario.ACTIVO,
+      rol: RolUsuario.PACIENTE,
+    };
+    const where = termino
+      ? [
+          { ...base, nombres: ILike(`%${escaparLike(termino)}%`) },
+          { ...base, apellidos: ILike(`%${escaparLike(termino)}%`) },
+          { ...base, documento: ILike(`%${escaparLike(termino)}%`) },
+        ]
+      : base;
     return this.usuariosRepository.find({
       select: {
         id: true,
@@ -22,23 +37,7 @@ export class PacientesService {
         nombres: true,
         apellidos: true,
       },
-      where: [
-        {
-          estado: EstadoUsuario.ACTIVO,
-          rol: RolUsuario.PACIENTE,
-          nombres: ILike(termino),
-        },
-        {
-          estado: EstadoUsuario.ACTIVO,
-          rol: RolUsuario.PACIENTE,
-          apellidos: ILike(termino),
-        },
-        {
-          estado: EstadoUsuario.ACTIVO,
-          rol: RolUsuario.PACIENTE,
-          documento: ILike(termino),
-        },
-      ],
+      where,
       order: { apellidos: 'ASC', nombres: 'ASC' },
       take: 10,
     });

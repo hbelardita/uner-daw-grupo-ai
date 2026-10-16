@@ -1,8 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsOptional, IsString } from 'class-validator';
 
 export class BuscarPacientesQueryDto {
   @ApiProperty({
+    required: false,
+
     examples: {
       'nombre o apellido': {
         value: 'Juan',
@@ -14,8 +17,10 @@ export class BuscarPacientesQueryDto {
     description:
       'Texto a buscar en nombres, apellidos o documento del paciente.',
   })
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsString({ message: 'El parámetro q debe ser una cadena de texto.' })
   @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  busqueda: string;
+  busqueda?: string;
 }

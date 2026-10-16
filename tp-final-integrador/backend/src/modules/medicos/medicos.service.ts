@@ -65,7 +65,11 @@ export class MedicosService {
     ahora: Date = new Date(),
   ): Promise<SlotDisponibilidad[]> {
     const medico = await this.medicosRepository.findOne({
-      where: { id: idMedico },
+      where: {
+        id: idMedico,
+        usuario: { estado: EstadoUsuario.ACTIVO },
+      },
+      relations: { usuario: true },
       select: { id: true },
     });
 
@@ -78,11 +82,20 @@ export class MedicosService {
     const partesFecha = parsearYValidarFechaCalendario(fecha);
 
     const partesAhora = obtenerPartesLocales(ahora);
+    const diasDeAntelacion = diferenciaDiasCalendario(partesAhora, partesFecha);
 
     const bloqueadoPorCalendario =
       esFinDeSemana(partesFecha) ||
-      diferenciaDiasCalendario(partesAhora, partesFecha) >
-        DIAS_MAXIMOS_ANTELACION;
+      diasDeAntelacion < 0 ||
+      diasDeAntelacion > DIAS_MAXIMOS_ANTELACION;
+
+    const slots = generarSlotsDelDia(fecha);
+    if (bloqueadoPorCalendario) {
+      return slots.map((slot) => ({
+        fechaHora: slot.toISOString(),
+        disponible: false,
+      }));
+    }
 
     const inicio = new Date(`${fecha}T00:00:00.000Z`);
     const fin = new Date(inicio);
@@ -104,13 +117,9 @@ export class MedicosService {
       ),
     );
     const ahoraMs = ahora.getTime();
-    const slots = generarSlotsDelDia(fecha);
     return slots.map((slot) => ({
       fechaHora: slot.toISOString(),
-      disponible:
-        !bloqueadoPorCalendario &&
-        slot.getTime() > ahoraMs &&
-        !ocupados.has(slot.getTime()),
+      disponible: slot.getTime() > ahoraMs && !ocupados.has(slot.getTime()),
     }));
   }
 

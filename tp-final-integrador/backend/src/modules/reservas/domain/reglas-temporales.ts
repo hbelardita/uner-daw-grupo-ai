@@ -150,3 +150,45 @@ export function validarCancelacionAdministrador(
     );
   }
 }
+/**
+ * Genera los instantes de inicio para cada slot de atencion del dia en horario local de la clinica (UTC-3).
+ */
+export function generarSlotsDelDia(fecha: string): Date[] {
+  const slots: Date[] = [];
+  for (
+    let hora = PRIMERA_HORA_ATENCION;
+    hora <= ULTIMA_HORA_ATENCION;
+    hora += 1
+  ) {
+    const horaLocal = String(hora).padStart(2, '0');
+    slots.push(new Date(`${fecha}T${horaLocal}:00:00-03:00`));
+  }
+  return slots;
+}
+
+// Parsea un string AAAA-MM-DD y valida que sea una fecha de calendario real.
+function tieneFormatoFechaValido(fecha: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(fecha);
+}
+
+/**
+ * Utiliza una sonda UTC para detectar desbordamientos silenciosos de Date.UTC (ej. 31 de febrero).
+ */
+export function parsearYValidarFechaCalendario(fecha: string): PartesLocales {
+  const badException = new BadRequestException(
+    'La fecha debe tener el formato AAAA-MM-DD y ser una fecha calendario válida.',
+  );
+  if (!tieneFormatoFechaValido(fecha)) {
+    throw badException;
+  }
+  const [anio, mes, dia] = fecha.split('-').map(Number);
+  const sonda = new Date(Date.UTC(anio, mes - 1, dia));
+  if (
+    sonda.getUTCFullYear() !== anio ||
+    sonda.getUTCMonth() !== mes - 1 ||
+    sonda.getUTCDate() !== dia
+  ) {
+    throw badException;
+  }
+  return { anio, mes, dia, hora: 0, minuto: 0 };
+}

@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from './config/env.validation.js';
 import { DatabaseModule } from './database/database.module.js';
-import { HealthModule } from './modules/health/health.module.js';
-import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
-import { MedicosModule } from './modules/medicos/medicos.module.js';
-import { ReservasModule } from './modules/reservas/reservas.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { HealthModule } from './modules/health/health.module.js';
+import { MedicosModule } from './modules/medicos/medicos.module.js';
+import { PacientesModule } from './modules/pacientes/pacientes.module.js';
+import { ReservasModule } from './modules/reservas/reservas.module.js';
+import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
     MedicosModule,
     ReservasModule,
     AuthModule,
+    PacientesModule,
   ],
   controllers: [],
   providers: [],

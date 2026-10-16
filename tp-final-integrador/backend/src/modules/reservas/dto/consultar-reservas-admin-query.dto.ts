@@ -4,8 +4,8 @@ import { IsEnum, IsInt, IsOptional, Matches, Min } from 'class-validator';
 import { EstadoReserva } from '../enums/index.js';
 
 export const PAGINACION_ADMIN_DEFAULTS = {
-  PAGE: 1,
-  LIMIT: 10,
+  PAGINA: 1,
+  LIMITE: 10,
 } as const;
 
 export class ConsultarReservasAdminQueryDto {
@@ -55,7 +55,11 @@ export class ConsultarReservasAdminQueryDto {
     example: EstadoReserva.ACTIVO,
   })
   @IsOptional()
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' && value.trim() !== ''
+      ? (value.trim().toUpperCase() as EstadoReserva)
+      : undefined,
+  )
   @IsEnum(EstadoReserva, {
     message:
       'El estado debe ser uno de los valores válidos: ACTIVO, ATENDIDO, AUSENTE, CANCELADO.',
@@ -65,24 +69,24 @@ export class ConsultarReservasAdminQueryDto {
   @ApiPropertyOptional({
     description: 'Número de página a consultar (comenzando en 1)',
     example: 1,
-    default: PAGINACION_ADMIN_DEFAULTS.PAGE,
+    default: PAGINACION_ADMIN_DEFAULTS.PAGINA,
   })
   @IsOptional()
   @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Number)
-  @IsInt({ message: 'El parámetro page debe ser un número entero.' })
-  @Min(1, { message: 'El parámetro page debe ser mayor o igual a 1.' })
-  page?: number = PAGINACION_ADMIN_DEFAULTS.PAGE;
+  @IsInt({ message: 'El parámetro pagina debe ser un número entero.' })
+  @Min(1, { message: 'El parámetro pagina debe ser mayor o igual a 1.' })
+  pagina?: number = PAGINACION_ADMIN_DEFAULTS.PAGINA;
 
   @ApiPropertyOptional({
     description: 'Cantidad de registros por página',
     example: 10,
-    default: PAGINACION_ADMIN_DEFAULTS.LIMIT,
+    default: PAGINACION_ADMIN_DEFAULTS.LIMITE,
   })
   @IsOptional()
   @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Number)
-  @IsInt({ message: 'El parámetro limit debe ser un número entero.' })
-  @Min(1, { message: 'El parámetro limit debe ser mayor o igual a 1.' })
-  limit?: number = PAGINACION_ADMIN_DEFAULTS.LIMIT;
+  @IsInt({ message: 'El parámetro limite debe ser un número entero.' })
+  @Min(1, { message: 'El parámetro limite debe ser mayor o igual a 1.' })
+  limite?: number = PAGINACION_ADMIN_DEFAULTS.LIMITE;
 }

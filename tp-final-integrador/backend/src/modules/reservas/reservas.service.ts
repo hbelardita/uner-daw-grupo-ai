@@ -38,17 +38,17 @@ export interface FiltrosListarReservasAdmin {
   idPaciente?: number;
   documentoPaciente?: string;
   estado?: EstadoReserva;
-  page?: number;
-  limit?: number;
+  pagina?: number;
+  limite?: number;
 }
 
 export interface ReservasAdminPaginadasResultado {
   data: Reserva[];
   meta: {
     total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
+    pagina: number;
+    limite: number;
+    totalPaginas: number;
   };
 }
 
@@ -147,9 +147,9 @@ export class ReservasService {
   async listarReservasAdmin(
     filtros: FiltrosListarReservasAdmin = {},
   ): Promise<ReservasAdminPaginadasResultado> {
-    const page = filtros.page ?? PAGINACION_ADMIN_DEFAULTS.PAGE;
-    const limit = filtros.limit ?? PAGINACION_ADMIN_DEFAULTS.LIMIT;
-    const skip = (page - 1) * limit;
+    const pagina = filtros.pagina ?? PAGINACION_ADMIN_DEFAULTS.PAGINA;
+    const limite = filtros.limite ?? PAGINACION_ADMIN_DEFAULTS.LIMITE;
+    const skip = (pagina - 1) * limite;
 
     const where: FindOptionsWhere<Reserva> = {};
 
@@ -188,18 +188,18 @@ export class ReservasService {
         id: 'ASC',
       },
       skip,
-      take: limit,
+      take: limite,
     });
 
-    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+    const totalPaginas = total === 0 ? 0 : Math.ceil(total / limite);
 
     return {
       data,
       meta: {
         total,
-        page,
-        limit,
-        totalPages,
+        pagina,
+        limite,
+        totalPaginas,
       },
     };
   }

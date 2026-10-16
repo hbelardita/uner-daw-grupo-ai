@@ -130,19 +130,19 @@ export class PaginacionMetaDto {
     description: 'Página actual consultada',
     example: 1,
   })
-  page: number;
+  pagina: number;
 
   @ApiProperty({
     description: 'Cantidad de registros por página solicitados',
     example: 10,
   })
-  limit: number;
+  limite: number;
 
   @ApiProperty({
     description: 'Cantidad total de páginas disponibles',
     example: 3,
   })
-  totalPages: number;
+  totalPaginas: number;
 }
 
 export class ReservasAdminPaginadasResponseDto {

@@ -1,2 +1,27 @@
 @import 'primeicons/primeicons.css';
 @import 'tailwindcss';
+@import 'tailwindcss-primeui';
+
+@layer theme, base, primeng;
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Estados de turno (alias semánticos) */
+  --color-reservado-bg: #eef2ff;
+  --color-reservado-fg: #4338ca;
+  --color-reservado-bd: #c7d2fe;
+  --color-atendido-bg: #ecfdf5;
+  --color-atendido-fg: #047857;
+  --color-atendido-bd: #a7f3d0;
+  --color-ausente-bg: #fffbeb;
+  --color-ausente-fg: #b45309;
+  --color-ausente-bd: #fde68a;
+  --color-cancelado-bg: #fff1f2;
+  --color-cancelado-fg: #be123c;
+  --color-cancelado-bd: #fecdd3;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 font-sans antialiased;
+}

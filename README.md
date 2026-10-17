@@ -18,10 +18,11 @@ Repositorio de trabajos prácticos de la cátedra **Desarrollo de Aplicaciones W
 
 ## 📚 Trabajos Prácticos
 
-|    TP     | Módulo                                          | Conceptos Clave                                                    |                         Documentación                         |                    Código Fuente                     |
-| :-------: | :---------------------------------------------- | :----------------------------------------------------------------- | :-----------------------------------------------------------: | :--------------------------------------------------: |
-|   **1**   | [tp1-intro-typescript](./tp1-intro-typescript/) | Tipado estático, Interfaces, Polimorfismo, Enums, Genéricos        |        [Ver README](./tp1-intro-typescript/README.md)         |    [`index.ts`](./tp1-intro-typescript/index.ts)     |
-| **Final** | [tp-final-integrador](./tp-final-integrador/)   | Sistema de Gestión de Turnos Médicos (NestJS, PostgreSQL, TypeORM) | [Ver README Backend](./tp-final-integrador/backend/README.md) | [`backend/src/`](./tp-final-integrador/backend/src/) |
+|    TP     | Módulo                                                          | Conceptos Clave                                                 |                          Documentación                          |                     Código Fuente                      |
+| :-------: | :-------------------------------------------------------------- | :-------------------------------------------------------------- | :-------------------------------------------------------------: | :----------------------------------------------------: |
+|   **1**   | [tp1-intro-typescript](./tp1-intro-typescript/)                 | Tipado estático, Interfaces, Polimorfismo, Enums, Genéricos     |         [Ver README](./tp1-intro-typescript/README.md)          |     [`index.ts`](./tp1-intro-typescript/index.ts)      |
+| **Final** | [tp-final-integrador/backend](./tp-final-integrador/backend/)   | Backend API REST Turnos Médicos (NestJS, PostgreSQL, TypeORM)   |  [Ver README Backend](./tp-final-integrador/backend/README.md)  |  [`backend/src/`](./tp-final-integrador/backend/src/)  |
+| **Final** | [tp-final-integrador/frontend](./tp-final-integrador/frontend/) | Frontend SPA Turnos Médicos (Angular 21, PrimeNG, Tailwind CSS) | [Ver README Frontend](./tp-final-integrador/frontend/README.md) | [`frontend/src/`](./tp-final-integrador/frontend/src/) |
 
 ---
 
@@ -35,11 +36,17 @@ Repositorio de trabajos prácticos de la cátedra **Desarrollo de Aplicaciones W
 │   ├── package.json                # Scripts de ejecución (dev, build, start)
 │   └── tsconfig.json               # Configuración del compilador TypeScript
 ├── tp-final-integrador/            # TP Final Integrador: Gestión de Turnos Médicos
-│   └── backend/                    # Backend API REST (NestJS + TypeORM + PostgreSQL)
-│       ├── README.md               # Documentación y configuración detallada del Backend
-│       ├── docker-compose.yml      # Servicios de PostgreSQL y pgAdmin
-│       ├── package.json            # Scripts y dependencias de NestJS
-│       └── src/                    # Código fuente de la API
+│   ├── backend/                    # Backend API REST (NestJS + TypeORM + PostgreSQL)
+│   │   ├── README.md               # Documentación y configuración detallada del Backend
+│   │   ├── docker-compose.yml      # Servicios de PostgreSQL y pgAdmin
+│   │   ├── package.json            # Scripts y dependencias de NestJS
+│   │   └── src/                    # Código fuente de la API
+│   └── frontend/                   # Frontend SPA (Angular 21 + PrimeNG + Tailwind CSS)
+│       ├── README.md               # Documentación y configuración detallada del Frontend
+│       ├── angular.json            # Configuración de Angular CLI y dev server
+│       ├── package.json            # Scripts y dependencias de Angular
+│       ├── proxy.conf.json         # Configuración del proxy inverso hacia la API backend
+│       └── src/                    # Código fuente de la SPA
 ├── package.json                    # Scripts globales y automatización (postinstall, db, dev)
 └── README.md                       # Portada institucional e índice general
 ```

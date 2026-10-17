@@ -9,22 +9,28 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiExtraModels,
   ApiOperation,
   ApiParam,
   ApiResponse,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { Auth, CurrentUser, type JwtPayload } from '../auth/index.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
 import {
   ActualizarEstadoReservaDto,
+  ConsultarReservasAdminQueryDto,
   CrearReservaRequestDto,
   HistorialReservaResponseDto,
+  ReservaAdminResponseDto,
   ReservaResponseDto,
+  ReservasAdminPaginadasResponseDto,
 } from './dto/index.js';
 import { ReservasService } from './reservas.service.js';
 
@@ -96,18 +102,40 @@ export class ReservasController {
       throw error;
     }
   }
-
   @Get()
-  @Auth(RolUsuario.PACIENTE)
+  @Auth(RolUsuario.PACIENTE, RolUsuario.ADMINISTRADOR)
+  @ApiExtraModels(
+    HistorialReservaResponseDto,
+    ReservasAdminPaginadasResponseDto,
+  )
   @ApiOperation({
-    summary: 'Consultar el historial de turnos del paciente autenticado',
+    summary:
+      'Consultar reservas (historial para paciente o supervisión global para administrador)',
     description:
-      'Devuelve el listado completo de reservas (en cualquier estado) asociadas al paciente autenticado, ordenadas cronológicamente de forma descendente.',
+      'Si el usuario autenticado tiene rol PACIENTE, devuelve su historial completo en orden cronológico descendente ignorando filtros externos. Si tiene rol ADMINISTRADOR, devuelve el listado global paginado en orden ascendente con soporte de filtros multicriterio.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Historial de reservas del paciente obtenido exitosamente.',
-    type: [HistorialReservaResponseDto],
+    description:
+      'Listado de reservas obtenido exitosamente (array para paciente, objeto paginado con meta para administrador).',
+    schema: {
+      oneOf: [
+        {
+          $ref: getSchemaPath(ReservasAdminPaginadasResponseDto),
+        },
+        {
+          type: 'array',
+          items: {
+            $ref: getSchemaPath(HistorialReservaResponseDto),
+          },
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Parámetros de consulta inválidos (exclusivo para rol administrador).',
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -117,15 +145,27 @@ export class ReservasController {
     status: HttpStatus.FORBIDDEN,
     description: 'Acceso no permitido para el rol del usuario autenticado.',
   })
-  async obtenerHistorialPaciente(
+  async listarReservas(
     @CurrentUser() usuario: JwtPayload,
-  ): Promise<HistorialReservaResponseDto[]> {
-    const reservas = await this.reservasService.buscarReservasPorPaciente(
-      usuario.sub,
-    );
-    return reservas.map((reserva) =>
-      HistorialReservaResponseDto.fromEntity(reserva),
-    );
+    @Query() query: ConsultarReservasAdminQueryDto,
+  ): Promise<
+    HistorialReservaResponseDto[] | ReservasAdminPaginadasResponseDto
+  > {
+    if (usuario.rol === RolUsuario.PACIENTE) {
+      const reservas = await this.reservasService.buscarReservasPorPaciente(
+        usuario.sub,
+      );
+      return reservas.map((reserva) =>
+        HistorialReservaResponseDto.fromEntity(reserva),
+      );
+    }
+
+    const { data, meta } =
+      await this.reservasService.listarReservasAdmin(query);
+    return {
+      data: data.map((reserva) => ReservaAdminResponseDto.fromEntity(reserva)),
+      meta,
+    };
   }
 
   @Patch(':id')

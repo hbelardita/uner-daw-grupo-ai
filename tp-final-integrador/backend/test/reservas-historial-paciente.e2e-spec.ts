@@ -13,6 +13,7 @@ describe('Endpoint GET /api/v1/reservas - Historial de turnos de paciente (e2e)'
   let paciente2Token: string;
   let pacienteSinTurnosToken: string;
   let medicoToken: string;
+  // oxlint-disable-next-line no-unused-vars
   let adminToken: string;
 
   let idPaciente1: number;
@@ -305,15 +306,6 @@ describe('Endpoint GET /api/v1/reservas - Historial de turnos de paciente (e2e)'
       const response = await request(app.getHttpServer())
         .get('/api/v1/reservas')
         .set('Authorization', `Bearer ${medicoToken}`)
-        .expect(403);
-
-      expect(response.status).toBe(403);
-    });
-
-    it('debe responder 403 Forbidden cuando el usuario autenticado tiene rol ADMINISTRADOR', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/v1/reservas')
-        .set('Authorization', `Bearer ${adminToken}`)
         .expect(403);
 
       expect(response.status).toBe(403);

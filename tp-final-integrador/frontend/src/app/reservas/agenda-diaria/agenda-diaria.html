@@ -1,0 +1,235 @@
+<section class="flex flex-col gap-6">
+  <header>
+    <h1 class="text-2xl md:text-3xl font-semibold text-slate-900">Mi agenda</h1>
+    <p class="text-sm text-slate-600 mt-1">Consultá los turnos programados del día</p>
+  </header>
+
+  <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-2 flex-wrap">
+        <p-button
+          icon="pi pi-chevron-left"
+          [text]="true"
+          severity="secondary"
+          aria-label="Día anterior"
+          (click)="diaAnterior()"
+        />
+
+        <p-datepicker
+          [ngModel]="fechaSeleccionada()"
+          (ngModelChange)="alCambiarFecha($event)"
+          [showIcon]="true"
+          dateFormat="dd/mm/yy"
+          [disabledDays]="[0, 6]"
+          placeholder="dd/mm/yyyy"
+          pInputMask="99/99/9999"
+          class="w-44 sm:w-52"
+          inputStyleClass="w-full tabular-nums text-sm font-medium"
+          aria-label="Seleccionar fecha de agenda"
+        />
+
+        <p-button
+          icon="pi pi-chevron-right"
+          [text]="true"
+          severity="secondary"
+          aria-label="Día siguiente"
+          (click)="diaSiguiente()"
+        />
+
+        <p-button
+          label="Hoy"
+          [outlined]="true"
+          severity="secondary"
+          size="small"
+          [disabled]="esFechaDeHoy()"
+          (click)="irAHoy()"
+        />
+      </div>
+
+      @if (!cargando() && !error()) {
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="text-sm text-slate-600 tabular-nums" role="status">
+            <span class="font-medium text-slate-900">{{ totalFranjas() }}</span> franjas
+            <span class="text-slate-400"> &middot; </span>
+            <span
+              >{{ totalOcupados() }} {{ totalOcupados() | i18nPlural: mapaPluralOcupados }}</span
+            >
+            <span class="text-slate-400"> &middot; </span>
+            <span>{{ totalLibres() }} {{ totalLibres() | i18nPlural: mapaPluralLibres }}</span>
+          </div>
+
+          <div class="hidden lg:flex items-center gap-2">
+            <p-toggleswitch
+              inputId="ocultar-franjas-libres"
+              [ngModel]="ocultarLibres()"
+              (ngModelChange)="alCambiarOcultarLibres($event)"
+            />
+            <label
+              for="ocultar-franjas-libres"
+              class="text-sm text-slate-700 cursor-pointer select-none"
+            >
+              Ocultar franjas libres
+            </label>
+          </div>
+        </div>
+      }
+    </div>
+  </p-card>
+
+  @if (error()) {
+    <div
+      role="alert"
+      class="rounded-xl border border-rose-200 bg-rose-50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <div class="flex items-center gap-3 text-rose-800">
+        <i class="pi pi-exclamation-circle text-2xl"></i>
+        <div>
+          <p class="font-medium text-sm">{{ error() }}</p>
+          <p class="text-xs text-rose-600">Por favor, verificá tu conexión e intentá nuevamente.</p>
+        </div>
+      </div>
+      <p-button
+        label="Reintentar"
+        icon="pi pi-refresh"
+        severity="danger"
+        [outlined]="true"
+        [loading]="cargando()"
+        (click)="cargarReservas()"
+      />
+    </div>
+  } @else if (cargando()) {
+    <div
+      class="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden hidden lg:block"
+      aria-busy="true"
+    >
+      <table class="w-full text-left text-sm border-collapse">
+        <caption class="sr-only">
+          Cargando turnos de la agenda
+        </caption>
+        <thead class="text-slate-700 bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th scope="col" class="py-3 px-4">Horario</th>
+            <th scope="col" class="py-3 px-4">Paciente</th>
+            <th scope="col" class="py-3 px-4">Documento</th>
+            <th scope="col" class="py-3 px-4">Estado de Reserva</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of [1, 2, 3, 4, 5]; track item) {
+            <tr class="border-b border-slate-100">
+              <td class="py-4 px-4"><p-skeleton width="6rem" height="1.25rem" /></td>
+              <td class="py-4 px-4"><p-skeleton width="10rem" height="1.25rem" /></td>
+              <td class="py-4 px-4"><p-skeleton width="7rem" height="1.25rem" /></td>
+              <td class="py-4 px-4">
+                <p-skeleton width="5.5rem" height="1.5rem" borderRadius="0.5rem" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex flex-col gap-3 lg:hidden" aria-busy="true">
+      @for (item of [1, 2, 3]; track item) {
+        <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
+          <div class="flex flex-col gap-3">
+            <p-skeleton width="8rem" height="1rem" />
+            <p-skeleton width="12rem" height="1.25rem" />
+            <p-skeleton width="6rem" height="1rem" />
+            <div class="flex items-center justify-end pt-2 border-t border-slate-100">
+              <p-skeleton width="5rem" height="1.5rem" borderRadius="0.5rem" />
+            </div>
+          </div>
+        </p-card>
+      }
+    </div>
+  } @else if (franjasVisibles().length === 0) {
+    <app-empty-state
+      icono="pi pi-calendar"
+      [titulo]="
+        'No hay turnos reservados para el ' + (fechaSeleccionada() | date: 'EEEE dd/MM/yyyy')
+      "
+    />
+  } @else {
+    <div
+      class="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden hidden lg:block"
+    >
+      <p-table
+        [value]="franjasVisibles()"
+        [rowHover]="true"
+        [tableStyle]="{ 'min-width': '48rem' }"
+      >
+        <ng-template #header>
+          <tr class="text-slate-700 text-sm">
+            <th scope="col" class="py-3 px-4 text-left w-36">Horario</th>
+            <th scope="col" class="py-3 px-4 text-left">Paciente</th>
+            <th scope="col" class="py-3 px-4 text-left">Documento</th>
+            <th scope="col" class="py-3 px-4 text-left">Estado de Reserva</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-franja>
+          @if (franja.tipo === 'OCUPADA') {
+            <tr
+              class="border-b border-slate-100 text-sm text-slate-900 hover:bg-slate-50 transition-colors"
+            >
+              <td class="py-3 px-4 w-36 tabular-nums font-medium whitespace-nowrap">
+                {{ franja.etiquetaHorario }}
+              </td>
+              <td class="py-3 px-4 font-medium text-slate-900">
+                {{ franja.turno.paciente.apellidos }}, {{ franja.turno.paciente.nombres }}
+              </td>
+              <td class="py-3 px-4 tabular-nums text-slate-600">
+                DNI {{ franja.turno.paciente.documento | documento }}
+              </td>
+              <td class="py-3 px-4">
+                <app-estado-badge [estado]="franja.turno.estado" />
+              </td>
+            </tr>
+          } @else {
+            <tr class="border-b border-slate-200/70 bg-slate-100/80 text-sm text-slate-600">
+              <td class="py-3 px-4 w-36 tabular-nums font-medium whitespace-nowrap">
+                {{ franja.etiquetaHorario }}
+              </td>
+              <td class="py-3 px-4 italic text-slate-600">— Franja libre —</td>
+              <td class="py-3 px-4 text-slate-400">—</td>
+              <td class="py-3 px-4 text-slate-400">—</td>
+            </tr>
+          }
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div class="flex flex-col gap-3 lg:hidden">
+      @for (franja of franjasVisibles(); track franja.horaInicio) {
+        @if (franja.tipo === 'OCUPADA') {
+          <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <span class="tabular-nums font-semibold text-base text-slate-900">
+                  {{ franja.horaInicio }} hs
+                </span>
+                <app-estado-badge [estado]="franja.turno.estado" />
+              </div>
+
+              <p class="font-medium text-slate-900">
+                {{ franja.turno.paciente.apellidos }}, {{ franja.turno.paciente.nombres }}
+              </p>
+
+              <div class="text-sm text-slate-600 tabular-nums">
+                DNI {{ franja.turno.paciente.documento | documento }}
+              </div>
+            </div>
+          </p-card>
+        } @else {
+          <div
+            class="rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 flex items-center justify-between text-slate-600"
+          >
+            <span class="tabular-nums font-medium text-sm">{{ franja.horaInicio }} hs</span>
+            <span class="text-sm italic">— Franja libre —</span>
+          </div>
+        }
+      }
+    </div>
+  }
+</section>

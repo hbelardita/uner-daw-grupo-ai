@@ -7,13 +7,6 @@ export interface ReservaMedico {
   matricula: number;
 }
 
-export interface ReservaPaciente {
-  id: number;
-  nombres: string;
-  apellidos: string;
-  documento: string;
-}
-
 export interface Reserva {
   id: number;
   idMedico: number;
@@ -22,8 +15,10 @@ export interface Reserva {
   estado: EstadoReserva;
   valorConsulta: number;
   medico: ReservaMedico;
-  paciente: ReservaPaciente;
+  paciente: PacienteResumen;
 }
+
+export type ReservaPaciente = PacienteResumen;
 
 export interface CrearReserva {
   idMedico: number;
@@ -35,9 +30,19 @@ export interface ActualizarReservaEstado {
   estado: 'ATENDIDO' | 'AUSENTE';
 }
 
-export interface PacienteAutocompleteItem {
+/** Información resumida de un paciente reutilizada en autocompletes, tablas y agendas */
+export interface PacienteResumen {
   id: number;
   documento: string;
   nombres: string;
   apellidos: string;
+}
+
+export type PacienteAutocompleteItem = PacienteResumen;
+
+export interface FiltroReservas {
+  fecha?: Date | string;
+  idMedico?: number;
+  idPaciente?: number;
+  estado?: EstadoReserva;
 }

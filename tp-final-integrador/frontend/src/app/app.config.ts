@@ -12,7 +12,7 @@ import {
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
-import { MessageService } from 'primeng/api';
+import { MessageService, Translation } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { routes } from './app.routes';
 import { authInterceptor, AuthService } from './auth';
@@ -65,6 +65,42 @@ export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL', {
   factory: () => '/api/v1',
 });
 
+const traduccionEsAR: Translation = {
+  dayNames: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
+  dayNamesShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
+  dayNamesMin: ['D', 'L', 'M', 'M', 'J', 'V', 'S'],
+  monthNames: [
+    'enero',
+    'febrero',
+    'marzo',
+    'abril',
+    'mayo',
+    'junio',
+    'julio',
+    'agosto',
+    'septiembre',
+    'octubre',
+    'noviembre',
+    'diciembre',
+  ],
+  monthNamesShort: [
+    'ene',
+    'feb',
+    'mar',
+    'abr',
+    'may',
+    'jun',
+    'jul',
+    'ago',
+    'sep',
+    'oct',
+    'nov',
+    'dic',
+  ],
+  today: 'Hoy',
+  clear: 'Limpiar',
+};
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -85,6 +121,7 @@ export const appConfig: ApplicationConfig = {
           },
         },
       },
+      translation: traduccionEsAR,
       ripple: true,
     }),
     MessageService,

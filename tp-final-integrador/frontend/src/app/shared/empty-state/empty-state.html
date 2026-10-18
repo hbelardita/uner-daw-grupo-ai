@@ -1,0 +1,14 @@
+<div
+  class="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-xs flex flex-col items-center justify-center"
+>
+  <div
+    class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4"
+  >
+    <i class="pi text-3xl" [class]="icono()"></i>
+  </div>
+  <h2 class="text-base font-semibold text-slate-900">{{ titulo() }}</h2>
+  @if (descripcion()) {
+    <p class="text-sm text-slate-600 mt-1 max-w-sm">{{ descripcion() }}</p>
+  }
+  <ng-content />
+</div>

@@ -1,0 +1,130 @@
+<section class="flex flex-col gap-6">
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-semibold text-slate-900">Mis turnos</h1>
+      <p class="text-sm text-slate-600 mt-1">Consultá y administrá tus turnos reservados</p>
+    </div>
+    <p-button
+      label="Reservar turno"
+      icon="pi pi-plus"
+      [routerLink]="rutaReservar"
+      class="hidden sm:inline-flex"
+    />
+  </header>
+
+  <!-- Zona A: Selector de Vista -->
+  <nav aria-label="Selector de vista de turnos" class="flex items-center">
+    <p-selectbutton
+      [options]="opcionesVista()"
+      [ngModel]="vistaSeleccionada()"
+      (ngModelChange)="cambiarVista($event)"
+      [allowEmpty]="false"
+      optionLabel="label"
+      optionValue="value"
+      aria-label="Filtrar turnos por próximos o historial"
+    />
+  </nav>
+
+  <!-- Estado 1: Error de carga -->
+  @if (error()) {
+    <div
+      role="alert"
+      class="rounded-xl border border-rose-200 bg-rose-50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <div class="flex items-center gap-3 text-rose-800">
+        <i class="pi pi-exclamation-circle text-2xl"></i>
+        <div>
+          <p class="font-medium text-sm">{{ error() }}</p>
+          <p class="text-xs text-rose-600">Por favor, verificá tu conexión e intentá nuevamente.</p>
+        </div>
+      </div>
+      <p-button
+        label="Reintentar"
+        icon="pi pi-refresh"
+        severity="danger"
+        [outlined]="true"
+        [loading]="cargando()"
+        (click)="cargarReservas()"
+      />
+    </div>
+  }
+
+  <!-- Estado 2: Cargando con Skeletons de 148px para evitar CLS -->
+  @else if (cargando()) {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4" aria-busy="true">
+      @for (item of [1, 2]; track item) {
+        <div
+          class="rounded-xl border border-slate-200 bg-white p-4 flex flex-col justify-between h-37"
+        >
+          <div class="flex items-center justify-between">
+            <p-skeleton width="12rem" height="1.25rem" />
+            <p-skeleton width="5.5rem" height="1.5rem" borderRadius="0.5rem" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <p-skeleton width="10rem" height="1rem" />
+            <p-skeleton width="8rem" height="1rem" />
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Estado 3: Lista vacía según la pestaña seleccionada -->
+  @else if (turnosMostrados().length === 0) {
+    @if (vistaSeleccionada() === 'proximos') {
+      <app-empty-state
+        icono="pi pi-calendar-plus"
+        titulo="No tenés turnos programados"
+        descripcion="Cuando reserves una consulta médica, vas a poder consultarla desde acá."
+      >
+        <p-button
+          label="Reservar un turno"
+          icon="pi pi-plus"
+          [routerLink]="rutaReservar"
+          class="mt-4"
+        />
+      </app-empty-state>
+    } @else {
+      <app-empty-state
+        icono="pi pi-history"
+        titulo="No tenés turnos en tu historial"
+        descripcion="Acá aparecerán tus consultas médicas pasadas, atendidas o canceladas."
+      />
+    }
+  }
+
+  <!-- Estado 4: Grilla de tarjetas de turnos (2 columnas en escritorio, 1 en móvil) -->
+  @else {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+      @for (reserva of turnosMostrados(); track reserva.id) {
+        <article
+          class="rounded-xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col justify-between gap-3 hover:border-slate-300 transition-colors"
+        >
+          <!-- Cabecera de Tarjeta: Fecha/Hora y Badge -->
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="text-base font-semibold text-slate-900 tabular-nums">
+              {{ formatearFechaHora(reserva.fechaHora) }}
+            </h3>
+            <app-estado-badge [estado]="reserva.estado" class="shrink-0" />
+          </div>
+
+          <!-- Cuerpo de Tarjeta: Profesional con matrícula y arancel congelado -->
+          <div class="flex flex-col gap-1 text-sm text-slate-600">
+            <p class="font-medium text-slate-800">
+              {{ reserva.medico.nombres }} {{ reserva.medico.apellidos }}
+              <span class="text-xs font-normal text-slate-500 tabular-nums">
+                · MP {{ reserva.medico.matricula }}
+              </span>
+            </p>
+            <p class="text-xs text-slate-500">
+              Consulta Clínica &middot;
+              <span class="font-semibold text-slate-700 tabular-nums">
+                {{ reserva.valorConsulta | currency: 'ARS' : 'symbol' : '1.2-2' }}
+              </span>
+            </p>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

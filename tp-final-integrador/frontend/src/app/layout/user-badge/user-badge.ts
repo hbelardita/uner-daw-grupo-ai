@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { AuthService } from '../../auth/auth-service';
-import { formatearDocumento, obtenerEtiquetaRol } from '../layout-navigation';
+import { formatearDocumento } from '../../shared/functions/utils';
+import { obtenerEtiquetaRol } from '../layout-navigation';
 
 export type AlineacionUserBadge = 'left' | 'right';
 
@@ -12,8 +13,8 @@ export type AlineacionUserBadge = 'left' | 'right';
 export class UserBadge {
   private readonly auth = inject(AuthService);
 
-  protected readonly alineacion = input<AlineacionUserBadge>('left');
-  protected readonly mostrarDocumento = input<boolean>(false);
+  readonly alineacion = input<AlineacionUserBadge>('left');
+  readonly mostrarDocumento = input<boolean>(false);
 
   protected readonly nombreUsuario = computed(() => this.auth.nombreCompleto() || 'Usuario');
   protected readonly etiquetaRol = computed(() => obtenerEtiquetaRol(this.auth.rol()));

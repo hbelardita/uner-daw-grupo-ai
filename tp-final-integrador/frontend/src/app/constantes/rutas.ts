@@ -1,9 +1,20 @@
+export const SEGMENTOS_RUTA = {
+  LOGIN: 'login',
+  AGENDA: 'agenda',
+  MIS_TURNOS: 'mis-turnos',
+  TURNOS: 'turnos',
+  TURNOS_NUEVO: 'nuevo',
+  GESTION_MEDICOS: 'gestion',
+  ACCESO_DENEGADO: 'acceso-denegado',
+} as const;
+
 export const RUTAS = {
-  LOGIN: '/login',
-  AGENDA: '/agenda',
-  MIS_TURNOS: '/mis-turnos',
-  TURNOS_ADMIN: '/turnos',
-  TURNOS_NUEVA: '/turnos/nueva',
-  GESTION_MEDICOS: '/gestion',
+  LOGIN: `/${SEGMENTOS_RUTA.LOGIN}`,
+  AGENDA: `/${SEGMENTOS_RUTA.AGENDA}`,
+  MIS_TURNOS: `/${SEGMENTOS_RUTA.MIS_TURNOS}`,
+  TURNOS_ADMIN: `/${SEGMENTOS_RUTA.TURNOS}`,
+  TURNOS_NUEVO: `/${SEGMENTOS_RUTA.TURNOS}/${SEGMENTOS_RUTA.TURNOS_NUEVO}`,
+  GESTION_MEDICOS: `/${SEGMENTOS_RUTA.GESTION_MEDICOS}`,
+  ACCESO_DENEGADO: `/${SEGMENTOS_RUTA.ACCESO_DENEGADO}`,
 } as const;
 export type RutaApp = (typeof RUTAS)[keyof typeof RUTAS];

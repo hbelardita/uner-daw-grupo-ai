@@ -1,21 +1,19 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AuthService } from '../auth/auth-service';
+import { BottomNav } from './bottom-nav/bottom-nav';
 import { Header } from './header/header';
-import { Sidebar } from './sidebar/sidebar';
+import { obtenerItemsNavegacion } from './layout-navigation';
 
 @Component({
   selector: 'app-private-layout',
-  imports: [RouterOutlet, Header, Sidebar],
+  imports: [RouterOutlet, Header, BottomNav],
   templateUrl: './private-layout.html',
 })
 export default class PrivateLayout {
-  readonly sidebarAbierto = signal(false);
+  private readonly auth = inject(AuthService);
 
-  alternarSidebar(): void {
-    this.sidebarAbierto.update((actual) => !actual);
-  }
+  protected readonly itemsNavegacion = computed(() => obtenerItemsNavegacion(this.auth.rol()));
 
-  cerrarSidebar(): void {
-    this.sidebarAbierto.set(false);
-  }
+  protected readonly mostrarBarraInferior = computed(() => this.itemsNavegacion().length > 1);
 }

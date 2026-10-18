@@ -1,34 +1,46 @@
-<header class="bg-white border-b border-slate-200 shadow-xs sticky top-0 z-30 transition-colors">
-  <div class="px-4 md:px-6 h-16 flex items-center justify-between gap-4">
-    <div class="flex items-center space-x-3">
-      <!-- Botón de apertura de Sidebar en dispositivos móviles -->
-      <button
-        type="button"
-        (click)="toggleSidebar.emit()"
-        aria-label="Abrir menú de navegación"
-        class="lg:hidden items-center flex justify-center p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 transition-colors"
+<header class="bg-(--color-card) border-b border-border sticky top-0 z-30">
+  <div class="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-6 h-full min-w-0">
+      <a
+        [routerLink]="rutaInicio()"
+        class="inline-flex items-center gap-2.5 rounded-lg py-1 pr-2 text-foreground hover:text-primary transition-colors shrink-0"
       >
-        <i class="pi pi-bars text-xl"></i>
-      </button>
-
-      <!-- Identificador de la aplicación en móvil cuando la sidebar está oculta -->
-      <div class="flex items-center space-x-2.5 lg:hidden">
-        <div
-          class="w-8 h-8 rounded-lg bg-teal-700 flex items-center justify-center text-white shadow-xs"
+        <span
+          class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-(--color-on-primary) shadow-2xs shrink-0"
+          aria-hidden="true"
         >
-          <i class="pi pi-plus text-sm font-bold"></i>
-        </div>
-        <span class="font-semibold text-base text-slate-900 tracking-tight"> Clínica </span>
-      </div>
+          <i class="pi pi-heart-fill text-sm" aria-hidden="true"></i>
+        </span>
+        <span
+          class="font-bold text-base md:text-lg tracking-tight text-foreground"
+          style="font-family: var(--font-heading)"
+        >
+          Clínica Médica
+        </span>
+      </a>
+
+      @if (itemsNavegacion().length > 0) {
+        <nav aria-label="Navegación principal" class="hidden lg:flex items-center gap-1 h-full">
+          @for (item of itemsNavegacion(); track item.ruta) {
+            <a
+              [routerLink]="item.ruta"
+              routerLinkActive="text-[var(--color-primary)] border-[var(--color-primary)] bg-[var(--color-primary-subtle)] font-semibold"
+              [routerLinkActiveOptions]="{ exact: item.exacto }"
+              ariaCurrentWhenActive="page"
+              class="inline-flex items-center gap-2 px-3.5 h-full border-b-2 border-transparent text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            >
+              <i [class]="item.icono" class="text-sm shrink-0" aria-hidden="true"></i>
+              <span>{{ item.etiqueta }}</span>
+            </a>
+          }
+        </nav>
+      }
     </div>
 
-    <!-- Sección de usuario: nombre, rol con badge en desktop y acción de cierre de sesión -->
-    <div class="hidden md:flex items-center space-x-3">
-      <div class="hidden lg:flex">
-        <app-user-badge tema="light" alineacion="right" />
-      </div>
+    <div class="hidden lg:flex items-center gap-4 shrink-0">
+      <app-user-badge alineacion="right" [mostrarDocumento]="false" />
 
-      <div class="h-6 w-px bg-slate-200 hidden lg:block"></div>
+      <div class="h-6 w-px bg-border" aria-hidden="true"></div>
 
       <p-button
         icon="pi pi-sign-out"
@@ -36,8 +48,57 @@
         severity="secondary"
         [outlined]="true"
         size="small"
+        styleClass="min-h-10 cursor-pointer"
         (onClick)="cerrarSesion()"
       />
+    </div>
+
+    <div class="relative flex lg:hidden items-center">
+      <button
+        type="button"
+        (click)="alternarMenuUsuario()"
+        [attr.aria-expanded]="menuUsuarioAbierto()"
+        aria-haspopup="menu"
+        aria-controls="menu-usuario-movil"
+        [attr.aria-label]="'Menú de usuario: ' + nombreCompleto()"
+        class="min-h-11 px-2.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 text-sm font-semibold text-foreground hover:bg-muted border border-border transition-colors cursor-pointer"
+      >
+        <span
+          class="w-7 h-7 rounded-full bg-primary-subtle text-primary border border-border-accent inline-flex items-center justify-center text-xs font-bold tracking-tight"
+          aria-hidden="true"
+        >
+          {{ inicialesUsuario() }}
+        </span>
+        <i
+          class="pi pi-chevron-down text-xs text-muted-foreground transition-transform"
+          [class.rotate-180]="menuUsuarioAbierto()"
+          aria-hidden="true"
+        ></i>
+      </button>
+
+      @if (menuUsuarioAbierto()) {
+        <div
+          id="menu-usuario-movil"
+          role="region"
+          aria-label="Perfil de usuario activo"
+          class="absolute right-0 top-full mt-2 w-64 rounded-xl bg-(--color-card) border border-border shadow-lg p-3 z-40"
+        >
+          <div class="pb-3 border-b border-border">
+            <app-user-badge alineacion="left" [mostrarDocumento]="true" />
+          </div>
+
+          <div class="pt-2">
+            <button
+              type="button"
+              (click)="cerrarSesion()"
+              class="w-full min-h-12 px-3 py-2.5 rounded-lg inline-flex items-center justify-center gap-2 text-sm font-semibold text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+            >
+              <i class="pi pi-sign-out text-base shrink-0" aria-hidden="true"></i>
+              <span>Cerrar sesión</span>
+            </button>
+          </div>
+        </div>
+      }
     </div>
   </div>
 </header>

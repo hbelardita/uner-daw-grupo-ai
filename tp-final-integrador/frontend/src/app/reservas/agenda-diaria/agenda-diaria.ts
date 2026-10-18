@@ -12,7 +12,6 @@ import { DatePicker } from 'primeng/datepicker';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { ToggleSwitch } from 'primeng/toggleswitch';
-import { Tooltip } from 'primeng/tooltip';
 import { catchError, finalize, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../auth/auth-service';
 import { EmptyState, EstadoBadge } from '../../shared';
@@ -28,7 +27,7 @@ interface AsistenciaConfig {
   readonly header: string;
   readonly icon: string;
   readonly acceptLabel: string;
-  readonly acceptSeverity: 'success' | 'danger';
+  readonly acceptSeverity: 'success' | 'warn' | 'danger';
   readonly verboAria: string;
   readonly generarMensaje: (paciente: string, hora: string) => string;
 }
@@ -46,7 +45,7 @@ const CONFIG_ASISTENCIA: Record<EstadoAsistencia, AsistenciaConfig> = {
     header: 'Confirmar inasistencia',
     icon: 'pi pi-user-minus',
     acceptLabel: 'Marcar ausente',
-    acceptSeverity: 'danger',
+    acceptSeverity: 'warn',
     verboAria: 'Marcar ausente a',
     generarMensaje: (paciente, hora) => `¿Marcar como ausente a ${paciente} (${hora})?`,
   },
@@ -65,7 +64,6 @@ const CONFIG_ASISTENCIA: Record<EstadoAsistencia, AsistenciaConfig> = {
     Button,
     ToggleSwitch,
     ConfirmDialog,
-    Tooltip,
     EstadoBadge,
     EmptyState,
     DocumentoPipe,
@@ -190,7 +188,7 @@ export default class AgendaDiaria {
 
   mensajeDisponibilidad(turno: TurnoAgenda): string {
     const hora = this.formatearHora(turno.fechaHora);
-    return `Disponible desde las ${hora}`;
+    return `Disponible desde las ${hora} hs`;
   }
 
   ariaLabelAccion(turno: TurnoAgenda, accion: EstadoAsistencia): string {

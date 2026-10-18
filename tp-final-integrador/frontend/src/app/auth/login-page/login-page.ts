@@ -1,0 +1,126 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Button } from 'primeng/button';
+import { Card } from 'primeng/card';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
+import { InputText } from 'primeng/inputtext';
+import { Password } from 'primeng/password';
+import { ResumenErrores } from '../../shared/resumen-errores/resumen-errores';
+import { AuthService } from '../auth-service';
+
+type CampoLogin = keyof LoginPage['formulario']['controls'];
+
+@Component({
+  selector: 'app-login-page',
+  imports: [
+    ReactiveFormsModule,
+    Card,
+    InputText,
+    Password,
+    Button,
+    IconField,
+    InputIcon,
+    ResumenErrores,
+  ],
+  templateUrl: './login-page.html',
+})
+export default class LoginPage {
+  private readonly auth = inject(AuthService);
+  private readonly destructor = inject(DestroyRef);
+
+  protected readonly cargando = signal(false);
+  protected readonly error = signal<string | null>(null);
+
+  protected readonly formulario = new FormGroup({
+    documento: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(/^[0-9]{7,8}$/)],
+    }),
+    clave: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
+
+  constructor() {
+    this.formulario.controls.documento.valueChanges
+      .pipe(takeUntilDestroyed(this.destructor))
+      .subscribe((val) => {
+        const saneado = val.replace(/\D/g, '');
+        if (saneado !== val) {
+          this.formulario.controls.documento.setValue(saneado, { emitEvent: false });
+        }
+      });
+
+    this.formulario.valueChanges.pipe(takeUntilDestroyed(this.destructor)).subscribe(() => {
+      if (this.error()) {
+        this.error.set(null);
+      }
+    });
+  }
+
+  get documento(): FormControl<string> {
+    return this.formulario.controls.documento;
+  }
+
+  get clave(): FormControl<string> {
+    return this.formulario.controls.clave;
+  }
+
+  esInvalido(campo: CampoLogin): boolean {
+    const control = this.formulario.controls[campo];
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  obtenerMensajeError(campo: CampoLogin): string | null {
+    const control = this.formulario.controls[campo];
+    if (!this.esInvalido(campo)) {
+      return null;
+    }
+    if (control.hasError('required')) {
+      return campo === 'documento' ? 'Ingresá tu documento.' : 'Ingresá tu contraseña.';
+    }
+    if (control.hasError('pattern')) {
+      return 'El documento debe tener 7 u 8 dígitos.';
+    }
+    return null;
+  }
+
+  enviar(): void {
+    if (this.formulario.invalid) {
+      this.formulario.markAllAsTouched();
+      return;
+    }
+    const { documento, clave } = this.formulario.getRawValue();
+    this.cargando.set(true);
+    this.formulario.disable();
+    this.error.set(null);
+    this.auth
+      .iniciarSesion(documento, clave)
+      .pipe(takeUntilDestroyed(this.destructor))
+      .subscribe({
+        next: () => {
+          this.cargando.set(false);
+          this.formulario.enable();
+          this.error.set(null);
+          // TODO: navegar al destino post-login cuando exista la ruta (p. ej. '/').
+        },
+        error: (fallo: unknown) => {
+          this.cargando.set(false);
+          this.formulario.enable();
+
+          let detalle = 'No pudimos conectar con el servidor. Intentá de nuevo en unos minutos.';
+          if (fallo instanceof HttpErrorResponse) {
+            if (fallo.status === 401 || fallo.status === 400) {
+              detalle = 'Credenciales inválidas. Verificá tu documento y contraseña.';
+              this.clave.reset('');
+            } else if (fallo.status >= 500 || fallo.status === 0) {
+              detalle = 'No pudimos conectar con el servidor. Intentá de nuevo en unos minutos.';
+            }
+          }
+
+          this.error.set(detalle);
+        },
+      });
+  }
+}

@@ -1,5 +1,4 @@
 import { DatePipe, formatDate, I18nPluralPipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, input, LOCALE_ID, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +15,7 @@ import { catchError, finalize, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../auth/auth-service';
 import { EmptyState, EstadoBadge } from '../../shared';
 import { DocumentoPipe } from '../../shared/documento-pipe';
+import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
 import { puedeRegistrarAsistencia } from '../regla-asistencia';
 import { obtenerFechaLocalIso } from '../regla-cancelacion';
 import type { EstadoAsistencia } from '../reserva';
@@ -49,6 +49,12 @@ const CONFIG_ASISTENCIA: Record<EstadoAsistencia, AsistenciaConfig> = {
     verboAria: 'Marcar ausente a',
     generarMensaje: (paciente, hora) => `¿Marcar como ausente a ${paciente} (${hora})?`,
   },
+};
+
+const TEXTOS_FALLO_ASISTENCIA: TextosFalloHttp = {
+  desincronizado: 'El turno ya no existe. Actualizamos tu agenda.',
+  sinPermiso: 'No tenés permiso para registrar este turno.',
+  generico: 'No pudimos registrar la asistencia. Por favor, intentá nuevamente.',
 };
 
 @Component({
@@ -252,35 +258,17 @@ export default class AgendaDiaria {
           });
         },
         error: (error: unknown) => {
+          const fallo = clasificarFalloHttp(error, TEXTOS_FALLO_ASISTENCIA);
           this.messageService.add({
             severity: 'error',
             summary: 'No se pudo registrar',
-            detail: this.mensajeErrorAsistencia(error),
+            detail: fallo.mensaje,
           });
-          if (
-            error instanceof HttpErrorResponse &&
-            (error.status === 409 || error.status === 404)
-          ) {
+          if (fallo.requiereRecargar) {
             this.cargarReservas();
           }
         },
       });
-  }
-
-  private mensajeErrorAsistencia(error: unknown): string {
-    if (error instanceof HttpErrorResponse) {
-      const mensajeBackend = typeof error.error?.message === 'string' ? error.error.message : null;
-      if (mensajeBackend) {
-        return mensajeBackend;
-      }
-      if (error.status === 404) {
-        return 'El turno ya no existe. Actualizamos tu agenda.';
-      }
-      if (error.status === 403) {
-        return 'No tenés permiso para registrar este turno.';
-      }
-    }
-    return 'No pudimos registrar la asistencia. Por favor, intentá nuevamente.';
   }
 
   alCambiarFecha(nuevaFecha: Date | null): void {

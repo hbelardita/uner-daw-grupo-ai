@@ -13,8 +13,14 @@ import {
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { Drawer } from 'primeng/drawer';
-import type { Reserva } from '../../reservas/reserva';
 import { formatearFechaHoraTurno } from '../functions/utils';
+import type { MedicoHistorialResponse } from '../../reservas/reservas-dto';
+
+/** Contrato mínimo que el diálogo necesita de un turno: su fecha y el profesional asignado. */
+export interface TurnoACancelar {
+  fechaHora: string;
+  medico: MedicoHistorialResponse;
+}
 
 @Component({
   selector: 'app-cancelar-turno-dialog',
@@ -24,7 +30,7 @@ import { formatearFechaHoraTurno } from '../functions/utils';
 export class CancelarTurnoDialog implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly reserva = input<Reserva | null>(null);
+  readonly reserva = input<TurnoACancelar | null>(null);
   readonly visible = model<boolean>(false);
   readonly cancelando = input<boolean>(false);
 

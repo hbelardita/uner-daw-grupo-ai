@@ -1,25 +1,5 @@
 export type EstadoReserva = 'ACTIVO' | 'ATENDIDO' | 'AUSENTE' | 'CANCELADO';
 
-export interface ReservaMedico {
-  id: number;
-  nombres: string;
-  apellidos: string;
-  matricula: number;
-}
-
-export interface Reserva {
-  id: number;
-  idMedico: number;
-  idPaciente: number;
-  fechaHora: string;
-  estado: EstadoReserva;
-  valorConsulta: number;
-  medico: ReservaMedico;
-  paciente: PacienteResumen;
-}
-
-export type ReservaPaciente = PacienteResumen;
-
 export interface CrearReserva {
   idMedico: number;
   fechaHora: string;

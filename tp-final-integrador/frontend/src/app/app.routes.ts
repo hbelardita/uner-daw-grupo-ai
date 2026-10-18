@@ -3,6 +3,7 @@ import { type RedirectFunction, type Routes } from '@angular/router';
 import { authGuard, guestGuard, roleGuard } from './auth';
 import { obtenerRutaInicioPorRol } from './auth/auth-navigation';
 import { AuthService } from './auth/auth-service';
+import { SEGMENTOS_RUTA } from './constantes/rutas';
 
 @Component({
   selector: 'app-agenda-diaria',
@@ -72,16 +73,18 @@ export const routes: Routes = [
     redirectTo: resolverRutaInicio,
   },
   {
-    path: 'login',
+    path: SEGMENTOS_RUTA.LOGIN,
+    title: 'Inicio de Sesión',
     canActivate: [guestGuard],
     loadComponent: () => import('./auth/login-page/login-page'),
   },
   {
     path: '',
     canActivate: [authGuard],
+    loadComponent: () => import('./layout/private-layout'),
     children: [
       {
-        path: 'agenda',
+        path: SEGMENTOS_RUTA.AGENDA,
         title: 'Mi Agenda',
         canActivate: [roleGuard(['MEDICO'])],
         children: [
@@ -90,14 +93,14 @@ export const routes: Routes = [
             component: AgendaDiariaComponent,
           },
           {
-            path: 'turnos/:id',
+            path: `${SEGMENTOS_RUTA.TURNOS}/:id`,
             title: 'Detalle del Turno',
             component: TurnoMedicoDetalleComponent,
           },
         ],
       },
       {
-        path: 'mis-turnos',
+        path: SEGMENTOS_RUTA.MIS_TURNOS,
         title: 'Mis Turnos',
         canActivate: [roleGuard(['PACIENTE'])],
         children: [
@@ -113,10 +116,10 @@ export const routes: Routes = [
         ],
       },
       {
-        path: 'turnos',
+        path: SEGMENTOS_RUTA.TURNOS,
         children: [
           {
-            path: 'nueva',
+            path: SEGMENTOS_RUTA.TURNOS_NUEVO,
             title: 'Reservar Turno',
             canActivate: [roleGuard(['PACIENTE', 'ADMINISTRADOR'])],
             component: TurnoNuevoComponent,
@@ -124,7 +127,7 @@ export const routes: Routes = [
           {
             path: '',
             pathMatch: 'full',
-            title: 'Turnos Clínicos',
+            title: 'Turnos',
             canActivate: [roleGuard(['ADMINISTRADOR'])],
             component: TurnosAdminListaComponent,
           },
@@ -137,11 +140,26 @@ export const routes: Routes = [
         ],
       },
       {
-        path: 'gestion',
-        title: 'Gestión de Médicos',
+        path: SEGMENTOS_RUTA.GESTION_MEDICOS,
+        title: 'Gestión Médicos y Aranceles',
         canActivate: [roleGuard(['ADMINISTRADOR'])],
         component: GestionMedicosComponent,
       },
+      {
+        path: SEGMENTOS_RUTA.ACCESO_DENEGADO,
+        title: 'Acceso Denegado',
+        loadComponent: () => import('./errors/forbidden-page'),
+      },
     ],
+  },
+  {
+    path: SEGMENTOS_RUTA.NOT_FOUND,
+    title: 'Página no encontrada',
+    loadComponent: () => import('./errors/not-found-page'),
+  },
+  {
+    path: '**',
+    title: 'Página no encontrada',
+    loadComponent: () => import('./errors/not-found-page'),
   },
 ];

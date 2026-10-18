@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
+import { RUTAS } from '../constantes/rutas';
 import { AuthService } from './auth-service';
-import { obtenerRutaInicioPorRol } from './auth-navigation';
 import type { RolUsuario } from './rol-usuario';
 
 export function roleGuard(allowedRoles?: readonly RolUsuario[] | RolUsuario): CanActivateFn {
@@ -10,21 +10,24 @@ export function roleGuard(allowedRoles?: readonly RolUsuario[] | RolUsuario): Ca
     const router = inject(Router);
 
     if (!authService.estaAutenticado()) {
-      return router.createUrlTree(['/login']);
+      return router.createUrlTree([RUTAS.LOGIN]);
     }
 
     const rolActual = authService.rol();
+    if (!rolActual) {
+      return router.createUrlTree([RUTAS.LOGIN]);
+    }
+
     const rolesPermitidos: readonly RolUsuario[] = Array.isArray(allowedRoles)
       ? allowedRoles
       : allowedRoles
         ? [allowedRoles]
         : [];
 
-    if (rolActual && rolesPermitidos.includes(rolActual)) {
+    if (rolesPermitidos.includes(rolActual)) {
       return true;
     }
 
-    const rutaDestino = obtenerRutaInicioPorRol(rolActual);
-    return router.createUrlTree([rutaDestino]);
+    return router.createUrlTree([RUTAS.ACCESO_DENEGADO]);
   };
 }

@@ -1,0 +1,20 @@
+<div class="min-h-screen bg-background text-foreground flex flex-col antialiased">
+  <app-header />
+
+  <main
+    id="contenido-principal"
+    tabindex="-1"
+    class="flex-1 w-full px-4 pt-4 md:px-6 md:pt-6"
+    [class.pb-24]="mostrarBarraInferior()"
+    [class.lg:pb-6]="mostrarBarraInferior()"
+    [class.pb-6]="!mostrarBarraInferior()"
+  >
+    <div class="max-w-7xl mx-auto w-full">
+      <router-outlet />
+    </div>
+  </main>
+
+  @if (mostrarBarraInferior()) {
+    <app-bottom-nav [items]="itemsNavegacion()" />
+  }
+</div>

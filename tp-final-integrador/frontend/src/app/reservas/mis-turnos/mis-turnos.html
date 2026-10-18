@@ -123,8 +123,41 @@
               </span>
             </p>
           </div>
+
+          <!-- Pie de Tarjeta: Cancelación de turno (Solo en Próximos) -->
+          @if (vistaSeleccionada() === 'proximos') {
+            @if (puedeCancelar(reserva, 'PACIENTE', ahora)) {
+              <div class="pt-3 border-t border-slate-100 flex items-center justify-end">
+                <p-button
+                  severity="danger"
+                  [outlined]="true"
+                  label="Cancelar turno"
+                  icon="pi pi-times"
+                  (click)="abrirModalCancelacion(reserva)"
+                />
+              </div>
+            } @else if (debeMostrarCancelacionDeshabilitada(reserva, 'PACIENTE', ahora)) {
+              <div
+                class="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs rounded-lg p-2.5 bg-muted text-muted-foreground"
+              >
+                <i class="pi pi-info-circle shrink-0" aria-hidden="true"></i>
+                <span
+                  >Plazo de cancelación vencido (permitido hasta el día anterior a las 23:59
+                  hs).</span
+                >
+              </div>
+            }
+          }
         </article>
       }
     </div>
   }
+
+  <app-cancelar-turno-dialog
+    [reserva]="turnoACancelar()"
+    [(visible)]="modalCancelacionVisible"
+    [cancelando]="cancelando()"
+    (confirmar)="confirmarCancelacion()"
+    (cancelar)="cerrarModalCancelacion()"
+  />
 </section>

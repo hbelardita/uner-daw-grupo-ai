@@ -1,6 +1,6 @@
 import { registerLocaleData } from '@angular/common';
-import localeEsAr from '@angular/common/locales/es-AR';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import localeEsAr from '@angular/common/locales/es-AR';
 import {
   ApplicationConfig,
   inject,

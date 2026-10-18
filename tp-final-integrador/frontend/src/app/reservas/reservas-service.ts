@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { delay, Observable, of } from 'rxjs';
+import { delay, Observable, of, throwError } from 'rxjs';
 import type { Reserva } from './reserva';
 
 @Injectable({
@@ -31,7 +31,7 @@ export class ReservasService {
       id: 2,
       idMedico: 2,
       idPaciente: 3,
-      fechaHora: '2026-10-18T11:00:00.000Z',
+      fechaHora: '2026-10-11T11:00:00.000Z',
       estado: 'ACTIVO',
       valorConsulta: 15000,
       medico: {
@@ -111,5 +111,18 @@ export class ReservasService {
 
   obtenerMisReservas(): Observable<Reserva[]> {
     return of([...this.reservasMock]).pipe(delay(500));
+  }
+
+  cancelarReserva(id: number): Observable<Reserva> {
+    const indice = this.reservasMock.findIndex((r) => r.id === id);
+    if (indice === -1) {
+      return throwError(() => new Error('Reserva no encontrada'));
+    }
+    const reservaActualizada: Reserva = {
+      ...this.reservasMock[indice],
+      estado: 'CANCELADO',
+    };
+    this.reservasMock[indice] = reservaActualizada;
+    return of(reservaActualizada).pipe(delay(300));
   }
 }

@@ -6,6 +6,7 @@ export const SEGMENTOS_RUTA = {
   TURNOS_NUEVO: 'nuevo',
   GESTION_MEDICOS: 'gestion',
   ACCESO_DENEGADO: 'acceso-denegado',
+  NOT_FOUND: '404',
 } as const;
 
 export const RUTAS = {
@@ -16,5 +17,6 @@ export const RUTAS = {
   TURNOS_NUEVO: `/${SEGMENTOS_RUTA.TURNOS}/${SEGMENTOS_RUTA.TURNOS_NUEVO}`,
   GESTION_MEDICOS: `/${SEGMENTOS_RUTA.GESTION_MEDICOS}`,
   ACCESO_DENEGADO: `/${SEGMENTOS_RUTA.ACCESO_DENEGADO}`,
+  NOT_FOUND: `/${SEGMENTOS_RUTA.NOT_FOUND}`,
 } as const;
 export type RutaApp = (typeof RUTAS)[keyof typeof RUTAS];

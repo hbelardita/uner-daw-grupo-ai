@@ -1,29 +1,54 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Button } from 'primeng/button';
-import { obtenerRutaInicioPorRol } from '../auth/auth-navigation';
 import { AuthService } from '../auth/auth-service';
+import { resolverAccionPrincipalError } from './error-action';
+import { ErrorCard } from './error-card';
 
 @Component({
   selector: 'app-forbidden-page',
-  imports: [Button],
+  imports: [Button, ErrorCard],
   template: `
-    <div class="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
-      <span class="text-6xl font-extrabold text-amber-600 mb-2">403</span>
-      <h1 class="text-2xl font-bold text-slate-800 mb-2">Acceso Denegado</h1>
-      <p class="text-slate-600 max-w-md mb-6">
-        No cuenta con los permisos necesarios para acceder a esta sección de la clínica.
-      </p>
-      <p-button label="Ir a mi inicio" icon="pi pi-home" (onClick)="volverAlInicio()" />
-    </div>
+    <section class="min-h-[60dvh] flex flex-col justify-center items-center px-4 py-8">
+      <app-error-card
+        icono="pi-lock"
+        titulo="Acceso no permitido"
+        mensaje="Tu usuario no tiene permisos para acceder a esta sección."
+        mensajeSecundario="Si creés que esto es un error, comunicate con la administración de la clínica."
+        pie="¿Necesitás otro nivel de acceso? Contactá a la administración."
+        [accionPrincipal]="accionPrincipal()"
+        [redirigiendo]="redirigiendo()"
+        (accionPrincipalClick)="navegarPrincipal()"
+      >
+        <p-button
+          label="Cerrar sesión"
+          icon="pi pi-sign-out"
+          [text]="true"
+          styleClass="w-full min-h-12 rounded-lg font-medium text-slate-700 hover:bg-slate-100"
+          (onClick)="cerrarSesion()"
+        />
+      </app-error-card>
+    </section>
   `,
 })
-export default class ForbiddenPage {
+export class ForbiddenPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  volverAlInicio(): void {
-    const destino = obtenerRutaInicioPorRol(this.auth.rol());
-    this.router.navigateByUrl(destino);
+  readonly redirigiendo = signal(false);
+
+  readonly accionPrincipal = computed(() =>
+    resolverAccionPrincipalError(this.auth.rol(), 'volver'),
+  );
+
+  navegarPrincipal(): void {
+    this.redirigiendo.set(true);
+    void this.router.navigateByUrl(this.accionPrincipal().ruta);
+  }
+
+  cerrarSesion(): void {
+    this.auth.cerrarSesion();
   }
 }
+
+export default ForbiddenPage;

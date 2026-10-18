@@ -153,6 +153,11 @@ export const routes: Routes = [
     ],
   },
   {
+    path: SEGMENTOS_RUTA.NOT_FOUND,
+    title: 'Página no encontrada',
+    loadComponent: () => import('./errors/not-found-page'),
+  },
+  {
     path: '**',
     title: 'Página no encontrada',
     loadComponent: () => import('./errors/not-found-page'),

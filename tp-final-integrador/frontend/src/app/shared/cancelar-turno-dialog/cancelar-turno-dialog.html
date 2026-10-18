@@ -1,0 +1,98 @@
+<ng-template #contenidoTurno>
+  @if (reserva(); as r) {
+    <div class="flex flex-col gap-4 text-slate-700">
+      <!-- Resumen de verificación -->
+      <div
+        class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 flex flex-col gap-2.5 text-sm"
+      >
+        <div>
+          <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold block"
+            >Profesional</span
+          >
+          <p class="font-medium text-slate-900 mt-0.5">
+            {{ r.medico.nombres }} {{ r.medico.apellidos }}
+            <span class="text-xs font-normal text-slate-500 tabular-nums"
+              >· MP {{ r.medico.matricula }}</span
+            >
+          </p>
+        </div>
+
+        <div>
+          <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold block"
+            >Fecha y hora</span
+          >
+          <p class="font-medium text-slate-900 tabular-nums mt-0.5">
+            {{ fechaHoraFormateada() }}
+          </p>
+        </div>
+      </div>
+
+      <div
+        role="alert"
+        class="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-start gap-2.5 text-amber-900 text-xs"
+      >
+        <i
+          class="pi pi-exclamation-triangle text-amber-600 text-base shrink-0 mt-0.5"
+          aria-hidden="true"
+        ></i>
+        <span>Esta acción liberará el horario para que pueda ser reservado por otro paciente.</span>
+      </div>
+
+      <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-2">
+        <p-button
+          label="Volver"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="cancelando()"
+          (click)="cerrar()"
+          fluid
+          class="w-full sm:w-auto"
+        />
+        <p-button
+          label="Sí, cancelar turno"
+          severity="danger"
+          [loading]="cancelando()"
+          (click)="onConfirmar()"
+          fluid
+          class="w-full sm:w-auto"
+        />
+      </div>
+    </div>
+  }
+</ng-template>
+
+@if (esMobile()) {
+  <p-drawer
+    [visible]="visible()"
+    (visibleChange)="visible.set($event)"
+    position="bottom"
+    [modal]="true"
+    [blockScroll]="true"
+    [dismissible]="!cancelando()"
+    [closeOnEscape]="!cancelando()"
+    [closable]="!cancelando()"
+    header="¿Cancelar este turno?"
+    styleClass="!h-auto max-h-[90vh] rounded-t-2xl shadow-xl"
+    (onHide)="cerrar()"
+  >
+    <ng-container *ngTemplateOutlet="contenidoTurno" />
+  </p-drawer>
+} @else {
+  <p-dialog
+    [visible]="visible()"
+    (visibleChange)="visible.set($event)"
+    [modal]="true"
+    [blockScroll]="true"
+    [dismissableMask]="!cancelando()"
+    [closeOnEscape]="!cancelando()"
+    [closable]="!cancelando()"
+    header="¿Cancelar este turno?"
+    [style]="{ width: '420px' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="rounded-2xl shadow-xl"
+    (onHide)="cerrar()"
+  >
+    <ng-container *ngTemplateOutlet="contenidoTurno" />
+  </p-dialog>
+}

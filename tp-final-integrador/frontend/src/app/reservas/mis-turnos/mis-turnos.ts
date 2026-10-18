@@ -3,11 +3,14 @@ import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
 import { RUTAS } from '../../constantes/rutas';
-import { EmptyState, EstadoBadge } from '../../shared';
+import { CancelarTurnoDialog, EmptyState, EstadoBadge } from '../../shared';
+import { formatearFechaHoraTurno } from '../../shared/functions/utils';
+import { debeMostrarCancelacionDeshabilitada, puedeCancelar } from '../regla-cancelacion';
 import type { Reserva } from '../reserva';
 import { ReservasService } from '../reservas-service';
 
@@ -23,38 +26,6 @@ function obtenerInicioDiaHoy(): number {
   return new Date(`${hoyEnBsAs}T00:00:00-03:00`).getTime();
 }
 
-function formatearFechaHoraTurno(fechaIso: string): string {
-  try {
-    const fecha = new Date(fechaIso);
-    if (isNaN(fecha.getTime())) return fechaIso;
-
-    const partes = new Intl.DateTimeFormat('es-AR', {
-      weekday: 'long',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      timeZone: 'America/Argentina/Buenos_Aires',
-    }).formatToParts(fecha);
-
-    const diaSemana = partes.find((p) => p.type === 'weekday')?.value ?? '';
-    const dia = partes.find((p) => p.type === 'day')?.value ?? '';
-    const mes = partes.find((p) => p.type === 'month')?.value ?? '';
-    const anio = partes.find((p) => p.type === 'year')?.value ?? '';
-    const diaCapitalizado = diaSemana ? diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1) : '';
-
-    const horaStr = new Intl.DateTimeFormat('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'America/Argentina/Buenos_Aires',
-    }).format(fecha);
-
-    return `${diaCapitalizado} ${dia}/${mes}/${anio} · ${horaStr} hs`;
-  } catch {
-    return fechaIso;
-  }
-}
-
 @Component({
   selector: 'app-mis-turnos',
   imports: [
@@ -66,22 +37,28 @@ function formatearFechaHoraTurno(fechaIso: string): string {
     Skeleton,
     EstadoBadge,
     EmptyState,
+    CancelarTurnoDialog,
   ],
   templateUrl: './mis-turnos.html',
 })
 export default class MisTurnos implements OnInit {
   private readonly reservasService = inject(ReservasService);
-  private readonly authService = inject(AuthService);
-  private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly datePipe = inject(DatePipe);
 
   protected readonly rutaReservar = RUTAS.TURNOS_NUEVO;
   protected readonly reservas = signal<Reserva[]>([]);
   protected readonly cargando = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
   protected readonly vistaSeleccionada = signal<VistaTurnos>('proximos');
+
+  protected readonly turnoACancelar = signal<Reserva | null>(null);
+  protected readonly modalCancelacionVisible = signal<boolean>(false);
+  protected readonly cancelando = signal<boolean>(false);
+  protected readonly ahora = new Date();
+
+  protected readonly puedeCancelar = puedeCancelar;
+  protected readonly debeMostrarCancelacionDeshabilitada = debeMostrarCancelacionDeshabilitada;
 
   protected readonly proximos = computed(() => {
     const inicioHoy = obtenerInicioDiaHoy();
@@ -112,10 +89,6 @@ export default class MisTurnos implements OnInit {
     this.cargarReservas();
   }
 
-  protected motivoCancelacion(): string {
-    return 'Solo podés cancelar hasta el día anterior a la consulta.';
-  }
-
   cargarReservas(): void {
     this.cargando.set(true);
     this.reservasService
@@ -142,5 +115,53 @@ export default class MisTurnos implements OnInit {
 
   formatearFechaHora(fechaIso: string): string {
     return formatearFechaHoraTurno(fechaIso);
+  }
+
+  abrirModalCancelacion(reserva: Reserva): void {
+    this.turnoACancelar.set(reserva);
+    this.modalCancelacionVisible.set(true);
+  }
+
+  cerrarModalCancelacion(): void {
+    if (this.cancelando()) {
+      return;
+    }
+    this.modalCancelacionVisible.set(false);
+    this.turnoACancelar.set(null);
+  }
+
+  confirmarCancelacion(): void {
+    const turno = this.turnoACancelar();
+    if (!turno) {
+      return;
+    }
+
+    this.cancelando.set(true);
+    this.reservasService
+      .cancelarReserva(turno.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (reservaActualizada) => {
+          this.reservas.update((actuales) =>
+            actuales.map((r) => (r.id === reservaActualizada.id ? reservaActualizada : r)),
+          );
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Turno cancelado',
+            detail: 'El turno fue cancelado correctamente.',
+          });
+          this.cancelando.set(false);
+          this.modalCancelacionVisible.set(false);
+          this.turnoACancelar.set(null);
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error al cancelar',
+            detail: 'No se pudo cancelar el turno. Por favor, reintentá.',
+          });
+          this.cancelando.set(false);
+        },
+      });
   }
 }

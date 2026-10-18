@@ -5,7 +5,14 @@
 @layer theme, base, primeng;
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-body);
+
+  --color-primary: #0e7490;
+  --color-primary-hover: #155e75;
+  --color-primary-subtle: #ecfeff;
+  --color-accent: #15803d;
 
   /* Estados de turno (alias semánticos) */
   --color-reservado-bg: #eef2ff;
@@ -24,4 +31,13 @@
 
 body {
   @apply bg-slate-50 text-slate-900 font-sans antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
 }

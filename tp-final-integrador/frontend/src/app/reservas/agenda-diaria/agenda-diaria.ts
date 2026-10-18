@@ -8,13 +8,15 @@ import { Card } from 'primeng/card';
 import { DatePicker } from 'primeng/datepicker';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 import { catchError, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../auth/auth-service';
 import { EmptyState, EstadoBadge } from '../../shared';
 import { DocumentoPipe } from '../../shared/documento-pipe';
 import { obtenerFechaLocalIso } from '../regla-cancelacion';
 import { ReservasService } from '../reservas-service';
-import type { TurnoAgenda } from '../turno-agenda';
+import type { FranjaHorariaAgenda, TurnoAgenda } from '../turno-agenda';
+import { construirFranjasAgenda } from '../turno-agenda.mapper';
 
 @Component({
   selector: 'app-agenda-diaria',
@@ -27,6 +29,7 @@ import type { TurnoAgenda } from '../turno-agenda';
     DatePicker,
     Skeleton,
     Button,
+    ToggleSwitch,
     EstadoBadge,
     EmptyState,
     DocumentoPipe,
@@ -43,19 +46,16 @@ export default class AgendaDiaria {
 
   readonly fecha = input<string | undefined>(undefined);
 
-  protected readonly mapaPluralTurnos: Record<string, string> = {
-    '=1': 'turno',
-    other: 'turnos',
+  protected readonly ocultarLibres = signal<boolean>(false);
+
+  protected readonly mapaPluralOcupados: Record<string, string> = {
+    '=1': 'ocupado',
+    other: 'ocupados',
   };
 
-  protected readonly mapaPluralActivos: Record<string, string> = {
-    '=1': 'activo',
-    other: 'activos',
-  };
-
-  protected readonly mapaPluralAtendidos: Record<string, string> = {
-    '=1': 'atendido',
-    other: 'atendidos',
+  protected readonly mapaPluralLibres: Record<string, string> = {
+    '=1': 'libre',
+    other: 'libres',
   };
 
   protected readonly fechaSeleccionada = computed<Date>(() => {
@@ -73,15 +73,18 @@ export default class AgendaDiaria {
   protected readonly cargando = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
 
-  protected readonly totalTurnos = computed<number>(() => this.reservas().length);
-  protected readonly totalReservados = computed<number>(
-    () => this.reservas().filter((r) => r.estado === 'ACTIVO').length,
+  protected readonly franjas = computed<FranjaHorariaAgenda[]>(() =>
+    construirFranjasAgenda(this.reservas()),
   );
-  protected readonly totalAtendidos = computed<number>(
-    () => this.reservas().filter((r) => r.estado === 'ATENDIDO').length,
+  protected readonly franjasVisibles = computed<FranjaHorariaAgenda[]>(() =>
+    this.ocultarLibres() ? this.franjas().filter((f) => f.tipo === 'OCUPADA') : this.franjas(),
   );
-  protected readonly totalAusentes = computed<number>(
-    () => this.reservas().filter((r) => r.estado === 'AUSENTE').length,
+  protected readonly totalFranjas = computed<number>(() => this.franjas().length);
+  protected readonly totalOcupados = computed<number>(
+    () => this.franjas().filter((f) => f.tipo === 'OCUPADA').length,
+  );
+  protected readonly totalLibres = computed<number>(
+    () => this.franjas().filter((f) => f.tipo === 'LIBRE').length,
   );
   protected readonly esFechaDeHoy = computed<boolean>(() => {
     return obtenerFechaLocalIso(this.fechaSeleccionada()) === obtenerFechaLocalIso(new Date());
@@ -123,6 +126,10 @@ export default class AgendaDiaria {
         }
         this.cargando.set(false);
       });
+  }
+
+  alCambiarOcultarLibres(valor: boolean): void {
+    this.ocultarLibres.set(valor);
   }
 
   alCambiarFecha(nuevaFecha: Date | null): void {

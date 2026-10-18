@@ -6,24 +6,19 @@
   [class.text-left]="alineacion() === 'left'"
 >
   <span
-    class="text-sm font-semibold truncate max-w-44 sm:max-w-56"
-    [class.text-slate-900]="tema() === 'light'"
-    [class.text-slate-100]="tema() === 'dark'"
+    class="text-sm font-semibold text-foreground truncate max-w-48 sm:max-w-60 font-heading"
     [title]="nombreUsuario()"
   >
     {{ nombreUsuario() }}
   </span>
 
-  @if (rolUsuario(); as rol) {
-    <p-tag
-      [value]="rol"
-      [rounded]="false"
-      class="rounded-lg text-xs font-medium mt-0.5"
-      [class]="
-        tema() === 'light'
-          ? 'bg-slate-100 text-slate-700 border-slate-200'
-          : 'bg-slate-800 text-teal-400 border-slate-700'
-      "
-    />
+  @if (etiquetaRol(); as rol) {
+    <span class="text-xs font-medium text-foreground mt-0.5">
+      {{ rol }}
+      @if (mostrarDocumento() && documentoFormateado(); as dni) {
+        <span aria-hidden="true"> · </span>
+        <span class="tabular-nums">DNI {{ dni }}</span>
+      }
+    </span>
   }
 </div>

@@ -1,22 +1,23 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { Tag } from 'primeng/tag';
+import { Component, computed, inject, input } from '@angular/core';
 import { AuthService } from '../../auth/auth-service';
+import { formatearDocumento, obtenerEtiquetaRol } from '../layout-navigation';
 
-export type TemaUserBadge = 'light' | 'dark';
 export type AlineacionUserBadge = 'left' | 'right';
 
 @Component({
   selector: 'app-user-badge',
-  imports: [Tag],
+  imports: [],
   templateUrl: './user-badge.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserBadge {
   private readonly auth = inject(AuthService);
 
-  readonly tema = input<TemaUserBadge>('light');
-  readonly alineacion = input<AlineacionUserBadge>('left');
+  protected readonly alineacion = input<AlineacionUserBadge>('left');
+  protected readonly mostrarDocumento = input<boolean>(false);
 
   protected readonly nombreUsuario = computed(() => this.auth.nombreCompleto() || 'Usuario');
-  protected readonly rolUsuario = this.auth.rol;
+  protected readonly etiquetaRol = computed(() => obtenerEtiquetaRol(this.auth.rol()));
+  protected readonly documentoFormateado = computed(() =>
+    formatearDocumento(this.auth.usuario()?.documento),
+  );
 }

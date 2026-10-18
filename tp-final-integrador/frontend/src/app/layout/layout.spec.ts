@@ -6,12 +6,11 @@ import type { Usuario } from '../auth/auth-dto';
 import { AuthService } from '../auth/auth-service';
 import type { RolUsuario } from '../auth/rol-usuario';
 import {
-  formatearDocumento,
   mostrarBarraInferiorPorRol,
   obtenerEtiquetaRol,
-  obtenerInicialesUsuario,
   obtenerItemsNavegacion,
 } from './layout-navigation';
+import { formatearDocumento, obtenerInicialesUsuario } from '../shared/functions/utils';
 import PrivateLayout from './private-layout';
 
 @Component({

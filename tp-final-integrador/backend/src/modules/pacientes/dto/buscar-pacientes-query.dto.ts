@@ -20,7 +20,7 @@ export class BuscarPacientesQueryDto {
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )
-  @IsString({ message: 'El parámetro q debe ser una cadena de texto.' })
+  @IsString({ message: 'El parámetro busqueda debe ser una cadena de texto.' })
   @IsOptional()
   busqueda?: string;
 }

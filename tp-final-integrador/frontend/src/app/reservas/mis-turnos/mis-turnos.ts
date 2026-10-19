@@ -11,7 +11,7 @@ import { RUTAS } from '../../constantes/rutas';
 import { CancelarTurnoDialog, EmptyState, EstadoBadge } from '../../shared';
 import { formatearFechaHoraTurno } from '../../shared/functions/utils';
 import { debeMostrarCancelacionDeshabilitada, puedeCancelar } from '../regla-cancelacion';
-import type { Reserva } from '../reserva';
+import type { HistorialReservaResponse } from '../reservas-dto';
 import { ReservasService } from '../reservas-service';
 
 export type VistaTurnos = 'proximos' | 'historial';
@@ -47,12 +47,12 @@ export default class MisTurnos implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly rutaReservar = RUTAS.TURNOS_NUEVO;
-  protected readonly reservas = signal<Reserva[]>([]);
+  protected readonly reservas = signal<HistorialReservaResponse[]>([]);
   protected readonly cargando = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
   protected readonly vistaSeleccionada = signal<VistaTurnos>('proximos');
 
-  protected readonly turnoACancelar = signal<Reserva | null>(null);
+  protected readonly turnoACancelar = signal<HistorialReservaResponse | null>(null);
   protected readonly modalCancelacionVisible = signal<boolean>(false);
   protected readonly cancelando = signal<boolean>(false);
   protected readonly ahora = new Date();
@@ -117,7 +117,7 @@ export default class MisTurnos implements OnInit {
     return formatearFechaHoraTurno(fechaIso);
   }
 
-  abrirModalCancelacion(reserva: Reserva): void {
+  abrirModalCancelacion(reserva: HistorialReservaResponse): void {
     this.turnoACancelar.set(reserva);
     this.modalCancelacionVisible.set(true);
   }
@@ -141,9 +141,11 @@ export default class MisTurnos implements OnInit {
       .cancelarReserva(turno.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (reservaActualizada) => {
+        next: (reservaCancelada) => {
           this.reservas.update((actuales) =>
-            actuales.map((r) => (r.id === reservaActualizada.id ? reservaActualizada : r)),
+            actuales.map((r) =>
+              r.id === reservaCancelada.id ? { ...r, estado: reservaCancelada.estado } : r,
+            ),
           );
           this.messageService.add({
             severity: 'success',

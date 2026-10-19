@@ -1,5 +1,10 @@
 import type { RolUsuario } from '../auth/rol-usuario';
-import type { Reserva } from './reserva';
+import type { EstadoReserva } from './reserva';
+
+export interface TurnoCancelable {
+  estado: EstadoReserva;
+  fechaHora: string;
+}
 
 const ZONA_HORARIA_ARGENTINA = 'America/Argentina/Buenos_Aires';
 
@@ -34,7 +39,7 @@ function obtenerFinDelDiaUtc3(fecha: Date): Date {
  * - ADMINISTRADOR: puede cancelar siempre que la consulta no haya iniciado aún (fechaHora > ahora).
  * - MEDICO / Otros: no permitido (false).
  */
-export function puedeCancelar(reserva: Reserva, rol: RolUsuario, ahora: Date): boolean {
+export function puedeCancelar(reserva: TurnoCancelable, rol: RolUsuario, ahora: Date): boolean {
   if (reserva.estado !== 'ACTIVO') {
     return false;
   }
@@ -59,7 +64,7 @@ export function puedeCancelar(reserva: Reserva, rol: RolUsuario, ahora: Date): b
 /**
  * Determina de  si una reserva corresponde al día de hoy en la zona horaria de Argentina (UTC-3).
  */
-export function esTurnoDeHoy(reserva: Reserva, ahora: Date): boolean {
+export function esTurnoDeHoy(reserva: TurnoCancelable, ahora: Date): boolean {
   const fechaTurno = new Date(reserva.fechaHora);
   if (Number.isNaN(fechaTurno.getTime())) {
     return false;
@@ -75,7 +80,7 @@ export function esTurnoDeHoy(reserva: Reserva, ahora: Date): boolean {
  * - Debe ser un turno del día de hoy en UTC-3. Para turnos anteriores a hoy, ya ocurrieron y no se muestra botón.
  */
 export function debeMostrarCancelacionDeshabilitada(
-  reserva: Reserva,
+  reserva: TurnoCancelable,
   rol: RolUsuario,
   ahora: Date,
 ): boolean {

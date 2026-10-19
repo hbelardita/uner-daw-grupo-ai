@@ -1,33 +1,16 @@
 export type EstadoReserva = 'ACTIVO' | 'ATENDIDO' | 'AUSENTE' | 'CANCELADO';
 
-export interface ReservaMedico {
-  id: number;
-  nombres: string;
-  apellidos: string;
-  matricula: number;
-}
-
-export interface Reserva {
-  id: number;
-  idMedico: number;
-  idPaciente: number;
-  fechaHora: string;
-  estado: EstadoReserva;
-  valorConsulta: number;
-  medico: ReservaMedico;
-  paciente: PacienteResumen;
-}
-
-export type ReservaPaciente = PacienteResumen;
-
 export interface CrearReserva {
   idMedico: number;
   fechaHora: string;
   idPaciente?: number;
 }
 
+export const ESTADOS_ASISTENCIA = ['ATENDIDO', 'AUSENTE'] as const;
+export type EstadoAsistencia = (typeof ESTADOS_ASISTENCIA)[number];
+
 export interface ActualizarReservaEstado {
-  estado: 'ATENDIDO' | 'AUSENTE';
+  estado: EstadoAsistencia;
 }
 
 /** Información resumida de un paciente reutilizada en autocompletes, tablas y agendas */

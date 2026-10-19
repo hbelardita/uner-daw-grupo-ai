@@ -112,6 +112,7 @@
             <th scope="col" class="py-3 px-4">Paciente</th>
             <th scope="col" class="py-3 px-4">Documento</th>
             <th scope="col" class="py-3 px-4">Estado de Reserva</th>
+            <th scope="col" class="py-3 px-4">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -123,6 +124,7 @@
               <td class="py-4 px-4">
                 <p-skeleton width="5.5rem" height="1.5rem" borderRadius="0.5rem" />
               </td>
+              <td class="py-4 px-4"><p-skeleton width="8rem" height="1.5rem" /></td>
             </tr>
           }
         </tbody>
@@ -138,6 +140,10 @@
             <p-skeleton width="6rem" height="1rem" />
             <div class="flex items-center justify-end pt-2 border-t border-slate-100">
               <p-skeleton width="5rem" height="1.5rem" borderRadius="0.5rem" />
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+              <p-skeleton height="2rem" borderRadius="0.375rem" />
+              <p-skeleton height="2rem" borderRadius="0.375rem" />
             </div>
           </div>
         </p-card>
@@ -165,6 +171,7 @@
             <th scope="col" class="py-3 px-4 text-left">Paciente</th>
             <th scope="col" class="py-3 px-4 text-left">Documento</th>
             <th scope="col" class="py-3 px-4 text-left">Estado de Reserva</th>
+            <th scope="col" class="py-3 px-4 text-left">Acciones Clínicas</th>
           </tr>
         </ng-template>
 
@@ -185,13 +192,51 @@
               <td class="py-3 px-4">
                 <app-estado-badge [estado]="franja.turno.estado" />
               </td>
+              <td class="py-3 px-4">
+                @if (franja.turno.estado === 'ACTIVO') {
+                  @if (puedeMarcarAsistencia(franja.turno)) {
+                    <div class="flex items-baseline gap-2">
+                      <p-button
+                        severity="success"
+                        [outlined]="true"
+                        icon="pi pi-check"
+                        label="Atendido"
+                        size="small"
+                        [loading]="estaModificando(franja.turno)"
+                        [ariaLabel]="ariaLabelAccion(franja.turno, 'ATENDIDO')"
+                        (click)="confirmarAsistencia(franja.turno, 'ATENDIDO')"
+                      />
+                      <p-button
+                        severity="warn"
+                        [outlined]="true"
+                        icon="pi pi-user-minus"
+                        label="Ausente"
+                        size="small"
+                        [loading]="estaModificando(franja.turno)"
+                        [ariaLabel]="ariaLabelAccion(franja.turno, 'AUSENTE')"
+                        (click)="confirmarAsistencia(franja.turno, 'AUSENTE')"
+                      />
+                    </div>
+                  } @else {
+                    <div
+                      class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-600"
+                    >
+                      <i class="pi pi-clock text-slate-500" aria-hidden="true"></i>
+                      <span>{{ mensajeDisponibilidad(franja.turno) }}</span>
+                    </div>
+                  }
+                } @else {
+                  <span class="text-slate-400 text-xs">—</span>
+                }
+              </td>
             </tr>
           } @else {
             <tr class="border-b border-slate-200/70 bg-slate-100/80 text-sm text-slate-600">
               <td class="py-3 px-4 w-36 tabular-nums font-medium whitespace-nowrap">
                 {{ franja.etiquetaHorario }}
               </td>
-              <td class="py-3 px-4 italic text-slate-600">— Franja libre —</td>
+              <td class="py-3 px-4 italic text-slate-600">— Horario libre —</td>
+              <td class="py-3 px-4 text-slate-400">—</td>
               <td class="py-3 px-4 text-slate-400">—</td>
               <td class="py-3 px-4 text-slate-400">—</td>
             </tr>
@@ -219,6 +264,44 @@
               <div class="text-sm text-slate-600 tabular-nums">
                 DNI {{ franja.turno.paciente.documento | documento }}
               </div>
+
+              @if (franja.turno.estado === 'ACTIVO') {
+                @if (puedeMarcarAsistencia(franja.turno)) {
+                  <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100">
+                    <p-button
+                      severity="success"
+                      [outlined]="true"
+                      icon="pi pi-check"
+                      label="Atendido"
+                      class="w-full min-h-12"
+                      styleClass="w-full justify-center min-h-12"
+                      [loading]="estaModificando(franja.turno)"
+                      [ariaLabel]="ariaLabelAccion(franja.turno, 'ATENDIDO')"
+                      (click)="confirmarAsistencia(franja.turno, 'ATENDIDO')"
+                    />
+                    <p-button
+                      severity="warn"
+                      [outlined]="true"
+                      icon="pi pi-user-minus"
+                      label="Ausente"
+                      class="w-full min-h-12"
+                      styleClass="w-full justify-center min-h-12"
+                      [loading]="estaModificando(franja.turno)"
+                      [ariaLabel]="ariaLabelAccion(franja.turno, 'AUSENTE')"
+                      (click)="confirmarAsistencia(franja.turno, 'AUSENTE')"
+                    />
+                  </div>
+                } @else {
+                  <div class="mt-2 pt-2 border-t border-slate-100">
+                    <div
+                      class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-600 w-full"
+                    >
+                      <i class="pi pi-clock text-slate-500" aria-hidden="true"></i>
+                      <span>{{ mensajeDisponibilidad(franja.turno) }}</span>
+                    </div>
+                  </div>
+                }
+              }
             </div>
           </p-card>
         } @else {
@@ -226,10 +309,12 @@
             class="rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 flex items-center justify-between text-slate-600"
           >
             <span class="tabular-nums font-medium text-sm">{{ franja.horaInicio }} hs</span>
-            <span class="text-sm italic">— Franja libre —</span>
+            <span class="text-sm italic">— Horario libre —</span>
           </div>
         }
       }
     </div>
   }
+
+  <p-confirmdialog />
 </section>

@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -123,9 +124,20 @@ export class MedicosService {
     }));
   }
 
+  /**
+   * Devuelve el arancel vigente de un médico habilitado.
+   *
+   * Un médico dado de baja se trata como inexistente para esta consulta, igual
+   * que en `obtenerDisponibilidad`: su arancel no es una referencia válida para
+   * crear una reserva.
+   */
   async obtenerArancelVigente(idMedico: number): Promise<number> {
     const medico = await this.medicosRepository.findOne({
-      where: { id: idMedico },
+      where: {
+        id: idMedico,
+        usuario: { estado: EstadoUsuario.ACTIVO },
+      },
+      relations: { usuario: true },
       select: { id: true, valorConsulta: true },
     });
 
@@ -155,6 +167,12 @@ export class MedicosService {
     });
   }
 
+  /**
+   * Actualiza el arancel de un médico activo.
+   *
+   * El recurso existe aunque el profesional esté dado de baja, pero su estado
+   * no admite la operación: por eso responde 409 y no 404.
+   */
   async actualizarValorConsulta(
     idMedico: number,
     nuevoValorConsulta: number,
@@ -167,6 +185,12 @@ export class MedicosService {
     if (!medico) {
       throw new NotFoundException(
         `No se encontró el médico con id ${idMedico}.`,
+      );
+    }
+
+    if (medico.usuario.estado !== EstadoUsuario.ACTIVO) {
+      throw new ConflictException(
+        `Solo se puede actualizar el valor de consulta de un médico activo. El médico se encuentra en estado ${medico.usuario.estado}.`,
       );
     }
 

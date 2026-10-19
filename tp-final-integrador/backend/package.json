@@ -25,9 +25,7 @@
     "db:status": "docker compose ps",
     "db:logs": "docker compose logs -f postgres",
     "db:reset": "docker compose down -v && docker compose up -d",
-    "db:reset:test": "node test/setup/global-setup.ts",
-    "doc:generate": "compodoc -p tsconfig.build.json -d ./docs",
-    "doc:serve": "compodoc -s -d ./docs"
+    "db:reset:test": "node test/setup/global-setup.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -49,7 +47,6 @@
     "typeorm": "^0.3.31"
   },
   "devDependencies": {
-    "@compodoc/compodoc": "^2.0.0",
     "@nestjs/cli": "^12.0.0",
     "@nestjs/mau": "^0.2.6",
     "@nestjs/schematics": "^12.0.0",

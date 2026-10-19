@@ -21,7 +21,6 @@ export class ResumenErrores {
     afterRenderEffect({
       write: () => {
         if (this.mensaje()) {
-          console.log(this.mensaje());
           this.contenedorAlerta()?.nativeElement.focus();
         }
       },

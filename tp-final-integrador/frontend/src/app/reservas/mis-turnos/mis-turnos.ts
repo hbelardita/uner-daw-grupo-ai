@@ -1,4 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +11,12 @@ import { Skeleton } from 'primeng/skeleton';
 import { RUTAS } from '../../constantes/rutas';
 import { CancelarTurnoDialog, EmptyState, EstadoBadge } from '../../shared';
 import { formatearFechaHoraTurno } from '../../shared/functions/utils';
-import { debeMostrarCancelacionDeshabilitada, puedeCancelar } from '../regla-cancelacion';
+import {
+  clasificarFalloCancelacion,
+  debeMostrarCancelacionDeshabilitada,
+  puedeCancelar,
+} from '../regla-cancelacion';
+import type { FalloCancelacion } from '../regla-cancelacion';
 import type { HistorialReservaResponse } from '../reservas-dto';
 import { ReservasService } from '../reservas-service';
 
@@ -156,14 +162,26 @@ export default class MisTurnos implements OnInit {
           this.modalCancelacionVisible.set(false);
           this.turnoACancelar.set(null);
         },
-        error: () => {
+        error: (error: unknown) => {
+          this.cancelando.set(false);
+          const fallo = this.clasificar(error);
           this.messageService.add({
             severity: 'error',
-            summary: 'Error al cancelar',
-            detail: 'No se pudo cancelar el turno. Por favor, reintentá.',
+            summary: fallo.tipo === 'desincronizado' ? 'Turno no disponible' : 'Error al cancelar',
+            detail: fallo.mensaje,
           });
-          this.cancelando.set(false);
+          if (fallo.tipo === 'desincronizado') {
+            this.cerrarModalCancelacion();
+            this.cargarReservas();
+          }
         },
       });
+  }
+
+  private clasificar(error: unknown): FalloCancelacion {
+    if (error instanceof HttpErrorResponse) {
+      return clasificarFalloCancelacion({ status: error.status, cuerpo: error.error });
+    }
+    return clasificarFalloCancelacion(null);
   }
 }

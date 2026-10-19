@@ -1,4 +1,9 @@
 import type { RolUsuario } from '../auth/rol-usuario';
+import {
+  esMismaFechaLocal,
+  obtenerFechaLocalIso,
+  OFFSET_CLINICA,
+} from '../shared/functions/fecha-clinica';
 import type { EstadoReserva } from './reserva';
 
 export interface TurnoCancelable {
@@ -6,30 +11,12 @@ export interface TurnoCancelable {
   fechaHora: string;
 }
 
-const ZONA_HORARIA_ARGENTINA = 'America/Argentina/Buenos_Aires';
-
-/**
- * Obtiene la representación de fecha local 'YYYY-MM-DD' en la zona horaria de Argentina (UTC-3).
- */
-export function obtenerFechaLocalIso(fecha: Date): string {
-  if (Number.isNaN(fecha.getTime())) {
-    return '';
-  }
-  const formateador = new Intl.DateTimeFormat('en-CA', {
-    timeZone: ZONA_HORARIA_ARGENTINA,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  return formateador.format(fecha);
-}
-
 /**
  * Calcula el instante límite de las 23:59:59.000 en la zona horaria de Argentina (UTC-3).
  */
 function obtenerFinDelDiaUtc3(fecha: Date): Date {
   const fechaLocalIso = obtenerFechaLocalIso(fecha);
-  return new Date(`${fechaLocalIso}T23:59:59.000-03:00`);
+  return new Date(`${fechaLocalIso}T23:59:59.000${OFFSET_CLINICA}`);
 }
 
 /**
@@ -70,7 +57,7 @@ export function esTurnoDeHoy(reserva: TurnoCancelable, ahora: Date): boolean {
     return false;
   }
 
-  return obtenerFechaLocalIso(fechaTurno) === obtenerFechaLocalIso(ahora);
+  return esMismaFechaLocal(fechaTurno, ahora);
 }
 
 /**

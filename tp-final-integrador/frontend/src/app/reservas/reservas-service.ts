@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { API_BASE_URL } from '../app.config';
-import { obtenerFechaLocalIso } from './regla-cancelacion';
+import { obtenerFechaLocalIso } from '../shared/functions/fecha-clinica';
 import type { ActualizarReservaEstado, CrearReserva } from './reserva';
 import {
   ActualizarReservaEstadoResponse,

@@ -119,7 +119,8 @@
     <app-empty-state
       icono="pi pi-calendar"
       [titulo]="
-        'No hay turnos reservados para el ' + (fechaSeleccionada() | date: 'EEEE dd/MM/yyyy')
+        'No hay turnos reservados para el ' +
+        (fechaSeleccionada() | date: 'EEEE dd/MM/yyyy' : zonaHorariaClinica)
       "
     />
   } @else {

@@ -10,7 +10,11 @@ import { Skeleton } from 'primeng/skeleton';
 import { RUTAS } from '../../constantes/rutas';
 import { CancelarTurnoDialog, EmptyState, EstadoBadge } from '../../shared';
 import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
-import { formatearFechaHoraTurno } from '../../shared/functions/utils';
+import {
+  crearInstanteInicioDiaClinica,
+  formatearFechaHoraClinica,
+  obtenerFechaLocalIso,
+} from '../../shared/functions/fecha-clinica';
 import { debeMostrarCancelacionDeshabilitada, puedeCancelar } from '../regla-cancelacion';
 import type { HistorialReservaResponse } from '../reservas-dto';
 import { ReservasService } from '../reservas-service';
@@ -18,13 +22,7 @@ import { ReservasService } from '../reservas-service';
 export type VistaTurnos = 'proximos' | 'historial';
 
 function obtenerInicioDiaHoy(): number {
-  const hoyEnBsAs = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Argentina/Buenos_Aires',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-  return new Date(`${hoyEnBsAs}T00:00:00-03:00`).getTime();
+  return crearInstanteInicioDiaClinica(obtenerFechaLocalIso(new Date())).getTime();
 }
 
 const TEXTOS_FALLO_CANCELACION: TextosFalloHttp = {
@@ -121,7 +119,7 @@ export default class MisTurnos implements OnInit {
   }
 
   formatearFechaHora(fechaIso: string): string {
-    return formatearFechaHoraTurno(fechaIso);
+    return formatearFechaHoraClinica(fechaIso);
   }
 
   abrirModalCancelacion(reserva: HistorialReservaResponse): void {

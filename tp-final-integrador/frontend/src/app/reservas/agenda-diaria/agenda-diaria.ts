@@ -1,5 +1,5 @@
-import { DatePipe, formatDate, I18nPluralPipe } from '@angular/common';
-import { Component, computed, DestroyRef, inject, input, LOCALE_ID, signal } from '@angular/core';
+import { DatePipe, I18nPluralPipe } from '@angular/common';
+import { Component, computed, DestroyRef, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -16,7 +16,12 @@ import { EmptyState, EstadoBadge, SelectorFecha } from '../../shared';
 import { DocumentoPipe } from '../../shared/documento-pipe';
 import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
 import { puedeRegistrarAsistencia } from '../regla-asistencia';
-import { obtenerFechaLocalIso } from '../../shared/functions/fecha-clinica';
+import {
+  crearInstanteMediodiaClinica,
+  extraerHoraClinica,
+  obtenerFechaLocalIso,
+  ZONA_HORARIA_CLINICA,
+} from '../../shared/functions/fecha-clinica';
 import type { EstadoAsistencia } from '../reserva';
 import { ReservasService } from '../reservas-service';
 import type { FranjaHorariaAgenda, TurnoAgenda } from '../turno-agenda';
@@ -81,12 +86,13 @@ export default class AgendaDiaria {
   private readonly authService = inject(AuthService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
-  private readonly locale = inject(LOCALE_ID);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly fecha = input<string | undefined>(undefined);
+
+  protected readonly zonaHorariaClinica = ZONA_HORARIA_CLINICA;
 
   protected readonly ocultarLibres = signal<boolean>(false);
 
@@ -109,7 +115,7 @@ export default class AgendaDiaria {
   protected readonly fechaSeleccionada = computed<Date>(() => {
     const param = this.fecha();
     if (param && /^\d{4}-\d{2}-\d{2}$/.test(param)) {
-      const parsedDate = new Date(`${param}T12:00:00`);
+      const parsedDate = crearInstanteMediodiaClinica(param);
       if (!Number.isNaN(parsedDate.getTime())) {
         return parsedDate;
       }
@@ -185,7 +191,7 @@ export default class AgendaDiaria {
   }
 
   private formatearHora(fechaHora: string): string {
-    return formatDate(fechaHora, 'HH:mm', this.locale);
+    return extraerHoraClinica(fechaHora);
   }
 
   mensajeDisponibilidad(turno: TurnoAgenda): string {

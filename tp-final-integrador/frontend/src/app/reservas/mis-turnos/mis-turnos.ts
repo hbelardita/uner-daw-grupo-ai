@@ -1,5 +1,4 @@
 import { CurrencyPipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -10,13 +9,9 @@ import { SelectButton } from 'primeng/selectbutton';
 import { Skeleton } from 'primeng/skeleton';
 import { RUTAS } from '../../constantes/rutas';
 import { CancelarTurnoDialog, EmptyState, EstadoBadge } from '../../shared';
+import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
 import { formatearFechaHoraTurno } from '../../shared/functions/utils';
-import {
-  clasificarFalloCancelacion,
-  debeMostrarCancelacionDeshabilitada,
-  puedeCancelar,
-} from '../regla-cancelacion';
-import type { FalloCancelacion } from '../regla-cancelacion';
+import { debeMostrarCancelacionDeshabilitada, puedeCancelar } from '../regla-cancelacion';
 import type { HistorialReservaResponse } from '../reservas-dto';
 import { ReservasService } from '../reservas-service';
 
@@ -31,6 +26,12 @@ function obtenerInicioDiaHoy(): number {
   }).format(new Date());
   return new Date(`${hoyEnBsAs}T00:00:00-03:00`).getTime();
 }
+
+const TEXTOS_FALLO_CANCELACION: TextosFalloHttp = {
+  desincronizado: 'El turno cambió de estado. Actualizamos tu lista de turnos.',
+  sinPermiso: 'No tenés permiso para cancelar este turno.',
+  generico: 'No pudimos cancelar el turno. Por favor, reintentá.',
+};
 
 @Component({
   selector: 'app-mis-turnos',
@@ -164,24 +165,17 @@ export default class MisTurnos implements OnInit {
         },
         error: (error: unknown) => {
           this.cancelando.set(false);
-          const fallo = this.clasificar(error);
+          const fallo = clasificarFalloHttp(error, TEXTOS_FALLO_CANCELACION);
           this.messageService.add({
             severity: 'error',
-            summary: fallo.tipo === 'desincronizado' ? 'Turno no disponible' : 'Error al cancelar',
+            summary: fallo.requiereRecargar ? 'Turno no disponible' : 'Error al cancelar',
             detail: fallo.mensaje,
           });
-          if (fallo.tipo === 'desincronizado') {
+          if (fallo.requiereRecargar) {
             this.cerrarModalCancelacion();
             this.cargarReservas();
           }
         },
       });
-  }
-
-  private clasificar(error: unknown): FalloCancelacion {
-    if (error instanceof HttpErrorResponse) {
-      return clasificarFalloCancelacion({ status: error.status, cuerpo: error.error });
-    }
-    return clasificarFalloCancelacion(null);
   }
 }

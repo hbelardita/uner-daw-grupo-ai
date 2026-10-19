@@ -40,13 +40,6 @@ export class TurnosAdminListaComponent {}
 })
 export class TurnoAdminDetalleComponent {}
 
-@Component({
-  selector: 'app-gestion-medicos',
-  imports: [],
-  template: '<p>Gestión de Médicos y Aranceles</p>',
-})
-export class GestionMedicosComponent {}
-
 export const resolverRutaInicio: RedirectFunction = () => {
   const auth = inject(AuthService);
   return obtenerRutaInicioPorRol(auth.rol());
@@ -129,7 +122,7 @@ export const routes: Routes = [
         path: SEGMENTOS_RUTA.GESTION_MEDICOS,
         title: 'Gestión Médicos y Aranceles',
         canActivate: [roleGuard(['ADMINISTRADOR'])],
-        component: GestionMedicosComponent,
+        loadComponent: () => import('./medicos/gestion-medicos/gestion-medicos'),
       },
       {
         path: SEGMENTOS_RUTA.ACCESO_DENEGADO,

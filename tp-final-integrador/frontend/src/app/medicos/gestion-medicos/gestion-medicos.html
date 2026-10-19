@@ -1,0 +1,172 @@
+<section class="flex flex-col gap-6">
+  <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-semibold text-slate-900">Médicos y Aranceles</h1>
+      <p class="text-sm text-slate-600 mt-1">
+        Consultá el plantel de médicos clínicos activos y sus valores de consulta vigentes
+      </p>
+    </div>
+    @if (!cargando() && !error()) {
+      <p role="status" class="text-sm font-medium text-slate-600 tabular-nums">
+        {{ totalMedicos() }} {{ totalMedicos() | i18nPlural: mapaPluralMedicos }}
+      </p>
+    }
+  </header>
+
+  @if (error()) {
+    <div
+      role="alert"
+      class="rounded-xl border border-rose-200 bg-rose-50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <div class="flex items-center gap-3 text-rose-800">
+        <i class="pi pi-exclamation-circle text-2xl" aria-hidden="true"></i>
+        <div>
+          <p class="font-medium text-sm">{{ error() }}</p>
+          <p class="text-xs text-rose-600">Por favor, verificá tu conexión e intentá nuevamente.</p>
+        </div>
+      </div>
+      <p-button
+        label="Reintentar"
+        icon="pi pi-refresh"
+        severity="danger"
+        [outlined]="true"
+        [loading]="cargando()"
+        (click)="cargarMedicos()"
+      />
+    </div>
+  } @else if (cargando()) {
+    <div
+      class="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden hidden lg:block"
+      aria-busy="true"
+    >
+      <table class="w-full text-left text-sm border-collapse">
+        <caption class="sr-only">
+          Cargando listado de médicos clínicos y aranceles
+        </caption>
+        <thead class="text-slate-700 bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th scope="col" class="py-3 px-4">Profesional</th>
+            <th scope="col" class="py-3 px-4">Matrícula Provincial</th>
+            <th scope="col" class="py-3 px-4 text-right">Valor de Consulta Vigente</th>
+            <th scope="col" class="py-3 px-4 text-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of [1, 2, 3, 4, 5]; track item) {
+            <tr class="border-b border-slate-100">
+              <td class="py-4 px-4"><p-skeleton width="12rem" height="1.25rem" /></td>
+              <td class="py-4 px-4"><p-skeleton width="6rem" height="1.25rem" /></td>
+              <td class="py-4 px-4">
+                <div class="flex justify-end">
+                  <p-skeleton width="6rem" height="1.25rem" />
+                </div>
+              </td>
+              <td class="py-4 px-4">
+                <div class="flex justify-end">
+                  <p-skeleton width="9rem" height="2rem" borderRadius="0.5rem" />
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex flex-col gap-3 lg:hidden" aria-busy="true">
+      @for (item of [1, 2, 3]; track item) {
+        <article
+          class="rounded-xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col gap-3"
+        >
+          <div class="flex flex-col gap-2">
+            <p-skeleton width="12rem" height="1.25rem" />
+            <p-skeleton width="8rem" height="1rem" />
+          </div>
+          <p-skeleton width="10rem" height="1.25rem" />
+          <p-skeleton width="100%" height="3rem" borderRadius="0.5rem" />
+        </article>
+      }
+    </div>
+  } @else if (medicos().length === 0) {
+    <app-empty-state
+      icono="pi pi-id-card"
+      titulo="No hay médicos clínicos registrados"
+      descripcion="Cuando se habiliten profesionales clínicos en el sistema, aparecerán en este listado."
+    />
+  } @else {
+    <div
+      class="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden hidden lg:block"
+    >
+      <p-table
+        [value]="medicos()"
+        [rowHover]="true"
+        [tableStyle]="{ 'min-width': '48rem' }"
+        [loading]="cargando()"
+      >
+        <ng-template #header>
+          <tr class="text-slate-700 text-sm">
+            <th scope="col" class="py-3 px-4 text-left">Profesional</th>
+            <th scope="col" class="py-3 px-4 text-left">Matrícula Provincial</th>
+            <th scope="col" class="py-3 px-4 text-right">Valor de Consulta Vigente</th>
+            <th scope="col" class="py-3 px-4 text-right">Acción</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-medico>
+          <tr
+            class="border-b border-slate-100 text-sm text-slate-900 hover:bg-slate-50 transition-colors"
+          >
+            <td class="py-3 px-4 font-medium text-slate-900">
+              {{ medico.apellidos }}, {{ medico.nombres }}
+            </td>
+            <td class="py-3 px-4 tabular-nums text-slate-600">MP {{ medico.matricula }}</td>
+            <td class="py-3 px-4 tabular-nums text-right font-semibold text-foreground-teal">
+              {{ medico.valorConsulta | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+            </td>
+            <td class="py-3 px-4 text-right">
+              <p-button
+                label="Modificar arancel"
+                icon="pi pi-pencil"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                [ariaLabel]="ariaLabelModificar(medico)"
+                (click)="seleccionarMedicoParaEdicion(medico)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div class="flex flex-col gap-3 lg:hidden">
+      @for (medico of medicos(); track medico.id) {
+        <article
+          class="rounded-xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col gap-3"
+        >
+          <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-semibold text-slate-900">
+              {{ medico.apellidos }}, {{ medico.nombres }}
+            </h2>
+            <p class="text-sm text-muted-foreground tabular-nums">
+              Matrícula: MP {{ medico.matricula }}
+            </p>
+          </div>
+          <p class="text-base font-bold text-foreground-teal tabular-nums">
+            Consulta actual:
+            {{ medico.valorConsulta | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+          </p>
+          <p-button
+            label="Modificar arancel"
+            icon="pi pi-pencil"
+            severity="secondary"
+            [outlined]="true"
+            class="w-full"
+            styleClass="w-full justify-center min-h-12"
+            [ariaLabel]="ariaLabelModificar(medico)"
+            (click)="seleccionarMedicoParaEdicion(medico)"
+          />
+        </article>
+      }
+    </div>
+  }
+</section>

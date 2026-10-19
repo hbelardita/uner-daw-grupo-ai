@@ -6,45 +6,11 @@
 
   <p-card class="rounded-xl border border-slate-200 bg-white shadow-xs">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div class="flex items-center gap-2 flex-wrap">
-        <p-button
-          icon="pi pi-chevron-left"
-          [text]="true"
-          severity="secondary"
-          aria-label="Día anterior"
-          (click)="diaAnterior()"
-        />
-
-        <p-datepicker
-          [ngModel]="fechaSeleccionada()"
-          (ngModelChange)="alCambiarFecha($event)"
-          [showIcon]="true"
-          dateFormat="dd/mm/yy"
-          [disabledDays]="[0, 6]"
-          placeholder="dd/mm/yyyy"
-          pInputMask="99/99/9999"
-          class="w-44 sm:w-52"
-          inputStyleClass="w-full tabular-nums text-sm font-medium"
-          aria-label="Seleccionar fecha de agenda"
-        />
-
-        <p-button
-          icon="pi pi-chevron-right"
-          [text]="true"
-          severity="secondary"
-          aria-label="Día siguiente"
-          (click)="diaSiguiente()"
-        />
-
-        <p-button
-          label="Hoy"
-          [outlined]="true"
-          severity="secondary"
-          size="small"
-          [disabled]="esFechaDeHoy()"
-          (click)="irAHoy()"
-        />
-      </div>
+      <app-selector-fecha
+        [fecha]="fechaSeleccionada()"
+        (fechaChange)="alCambiarFecha($event)"
+        ariaLabel="Seleccionar fecha de agenda"
+      />
 
       @if (!cargando() && !error()) {
         <div class="flex flex-wrap items-center gap-4">

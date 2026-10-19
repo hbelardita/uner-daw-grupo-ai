@@ -7,17 +7,16 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { ConfirmDialog } from 'primeng/confirmdialog';
-import { DatePicker } from 'primeng/datepicker';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { catchError, finalize, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../auth/auth-service';
-import { EmptyState, EstadoBadge } from '../../shared';
+import { EmptyState, EstadoBadge, SelectorFecha } from '../../shared';
 import { DocumentoPipe } from '../../shared/documento-pipe';
 import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
 import { puedeRegistrarAsistencia } from '../regla-asistencia';
-import { obtenerFechaLocalIso } from '../regla-cancelacion';
+import { obtenerFechaLocalIso } from '../../shared/functions/fecha-clinica';
 import type { EstadoAsistencia } from '../reserva';
 import { ReservasService } from '../reservas-service';
 import type { FranjaHorariaAgenda, TurnoAgenda } from '../turno-agenda';
@@ -65,7 +64,7 @@ const TEXTOS_FALLO_ASISTENCIA: TextosFalloHttp = {
     FormsModule,
     TableModule,
     Card,
-    DatePicker,
+    SelectorFecha,
     Skeleton,
     Button,
     ToggleSwitch,
@@ -135,9 +134,6 @@ export default class AgendaDiaria {
   protected readonly totalLibres = computed<number>(
     () => this.franjas().filter((f) => f.tipo === 'LIBRE').length,
   );
-  protected readonly esFechaDeHoy = computed<boolean>(() => {
-    return obtenerFechaLocalIso(this.fechaSeleccionada()) === obtenerFechaLocalIso(new Date());
-  });
 
   private readonly recargarTrigger = signal<number>(0);
 
@@ -285,22 +281,6 @@ export default class AgendaDiaria {
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
-  }
-
-  diaAnterior(): void {
-    const actual = new Date(this.fechaSeleccionada());
-    actual.setDate(actual.getDate() - 1);
-    this.alCambiarFecha(actual);
-  }
-
-  diaSiguiente(): void {
-    const actual = new Date(this.fechaSeleccionada());
-    actual.setDate(actual.getDate() + 1);
-    this.alCambiarFecha(actual);
-  }
-
-  irAHoy(): void {
-    this.alCambiarFecha(new Date());
   }
 
   cargarReservas(): void {

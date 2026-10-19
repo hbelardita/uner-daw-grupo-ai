@@ -169,4 +169,13 @@
       }
     </div>
   }
+
+  <app-modificar-arancel-dialog
+    [medico]="medicoSeleccionado()"
+    [(visible)]="modalArancelVisible"
+    [guardando]="guardandoArancel()"
+    [errorServidor]="errorArancel()"
+    (confirmar)="confirmarModificacionArancel($event)"
+    (cancelar)="cerrarModalArancel()"
+  />
 </section>

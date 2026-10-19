@@ -1,0 +1,130 @@
+<ng-template #contenidoFormulario>
+  @if (medico(); as m) {
+    <div class="flex flex-col gap-4 text-slate-700">
+      <div
+        class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 flex flex-col gap-2.5 text-sm"
+      >
+        <div>
+          <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold block"
+            >Profesional</span
+          >
+          <p class="font-medium text-slate-900 mt-0.5">
+            {{ m.apellidos }}, {{ m.nombres }}
+            <span class="text-xs font-normal text-slate-500 tabular-nums"
+              >· MP {{ m.matricula }}</span
+            >
+          </p>
+        </div>
+
+        <div>
+          <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold block"
+            >Valor actual</span
+          >
+          <p class="font-semibold text-foreground-teal tabular-nums mt-0.5">
+            {{ m.valorConsulta | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+          </p>
+        </div>
+      </div>
+
+      <form [formGroup]="formulario" (ngSubmit)="enviar()" novalidate class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label for="nuevo-valor-consulta" class="text-sm font-medium text-slate-700"
+            >Nuevo valor de la consulta ($)</label
+          >
+          <p-inputnumber
+            inputId="nuevo-valor-consulta"
+            formControlName="valorConsulta"
+            mode="currency"
+            currency="ARS"
+            locale="es-AR"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="0"
+            [min]="1"
+            [useGrouping]="true"
+            [autofocus]="true"
+            fluid
+            inputStyleClass="w-full rounded-lg text-base tabular-nums"
+            [invalid]="esInvalido()"
+            [ariaDescribedBy]="esInvalido() ? 'valor-consulta-error' : 'rn04-aviso'"
+          />
+
+          @if (esInvalido()) {
+            <span
+              id="valor-consulta-error"
+              class="text-xs text-rose-700 flex items-center gap-1 font-medium"
+            >
+              <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+              {{ mensajeErrorValidacion }}
+            </span>
+          }
+        </div>
+
+        <p-message id="rn04-aviso" severity="info" styleClass="w-full"
+          >El nuevo valor aplicará únicamente a las reservas futuras. Los turnos ya reservados
+          conservan su arancel histórico congelado.</p-message
+        >
+
+        <app-resumen-errores [mensaje]="errorServidor()" />
+
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-2">
+          <p-button
+            type="button"
+            label="Cancelar"
+            severity="secondary"
+            [outlined]="true"
+            [disabled]="guardando()"
+            (click)="cerrar()"
+            fluid
+            class="w-full sm:w-auto"
+            styleClass="w-full sm:w-auto justify-center min-h-12 sm:min-h-10"
+          />
+          <p-button
+            type="submit"
+            [label]="guardando() ? 'Guardando...' : 'Guardar cambios'"
+            [loading]="guardando()"
+            [disabled]="guardando()"
+            fluid
+            class="w-full sm:w-auto"
+            styleClass="w-full sm:w-auto justify-center min-h-12 sm:min-h-10"
+          />
+        </div>
+      </form>
+    </div>
+  }
+</ng-template>
+
+@if (esMobile()) {
+  <p-drawer
+    [visible]="visible()"
+    (visibleChange)="visible.set($event)"
+    position="bottom"
+    [modal]="true"
+    [blockScroll]="true"
+    [dismissible]="!guardando()"
+    [closeOnEscape]="!guardando()"
+    [closable]="!guardando()"
+    header="Modificar Valor de Consulta"
+    styleClass="!h-auto max-h-[90vh] rounded-t-2xl shadow-xl"
+    (onHide)="cerrar()"
+  >
+    <ng-container *ngTemplateOutlet="contenidoFormulario" />
+  </p-drawer>
+} @else {
+  <p-dialog
+    [visible]="visible()"
+    (visibleChange)="visible.set($event)"
+    [modal]="true"
+    [blockScroll]="true"
+    [dismissableMask]="!guardando()"
+    [closeOnEscape]="!guardando()"
+    [closable]="!guardando()"
+    header="Modificar Valor de Consulta"
+    [style]="{ width: '440px' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="rounded-2xl shadow-xl"
+    (onHide)="cerrar()"
+  >
+    <ng-container *ngTemplateOutlet="contenidoFormulario" />
+  </p-dialog>
+}

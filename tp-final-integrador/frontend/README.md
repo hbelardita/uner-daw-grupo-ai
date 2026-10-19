@@ -28,6 +28,9 @@ npm run build:frontend
 
 # Ejecutar tests unitarios
 npm run test:frontend
+
+# Generar la documentación del código con Compodoc
+npm run doc:frontend
 ```
 
 La aplicación quedará disponible en: [http://localhost:4200](http://localhost:4200).
@@ -51,6 +54,26 @@ npm run build
 # Ejecutar tests unitarios
 npm test
 ```
+
+---
+
+## 📖 Documentación del Código (Compodoc)
+
+Genera un sitio HTML con la documentación del código del cliente Angular. La salida queda en `tp-final-integrador/frontend/documentation/`, un directorio que no se versiona. Compodoc documenta el cliente Angular y Swagger documenta la API en `/api/docs`.
+
+```bash
+# Generar el sitio desde la raíz del repositorio
+npm run doc:frontend
+
+# Generar el sitio desde tp-final-integrador/frontend (equivalente)
+npm run compodoc
+
+# Generar y servir el sitio, desde la raíz o desde el frontend
+npm run doc:frontend:serve
+npm run compodoc:serve
+```
+
+El servidor queda en [http://127.0.0.1:8080](http://127.0.0.1:8080). También podés abrir `documentation/index.html` directamente en el navegador, porque el sitio son archivos estáticos con rutas relativas.
 
 ---
 

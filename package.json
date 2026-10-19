@@ -18,6 +18,7 @@
     "lint:frontend": "npm --prefix tp-final-integrador/frontend run lint",
     "test:frontend": "npm --prefix tp-final-integrador/frontend run test",
     "doc:frontend": "npm --prefix tp-final-integrador/frontend run compodoc",
+    "doc:frontend:serve": "npm --prefix tp-final-integrador/frontend run compodoc:serve",
     "db:up": "npm --prefix tp-final-integrador/backend run db:up",
     "db:down": "npm --prefix tp-final-integrador/backend run db:down",
     "db:status": "npm --prefix tp-final-integrador/backend run db:status",

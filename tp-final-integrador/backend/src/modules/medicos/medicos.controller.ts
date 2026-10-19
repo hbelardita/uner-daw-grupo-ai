@@ -145,7 +145,7 @@ export class MedicosController {
   @ApiOperation({
     summary: 'Actualizar honorario de consulta de un médico',
     description:
-      'Permite al Administrador actualizar el valor de consulta vigente de un médico.',
+      'Permite al Administrador actualizar el valor de consulta vigente de un médico activo.',
   })
   @ApiParam({
     name: 'id',
@@ -173,6 +173,11 @@ export class MedicosController {
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     description: 'No se encontró el médico con el id especificado.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'El médico se encuentra dado de baja y no admite la actualización del valor de consulta.',
   })
   async actualizarValorConsulta(
     @Param('id', ParseIntPipe) id: number,

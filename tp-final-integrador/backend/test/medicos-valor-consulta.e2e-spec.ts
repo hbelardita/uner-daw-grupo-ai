@@ -181,6 +181,47 @@ describe('Endpoint PATCH /api/v1/medicos/:id/valor-consulta (e2e)', () => {
     });
   });
 
+  describe('Estado del profesional', () => {
+    it('debe rechazar con 409 Conflict si el médico está dado de baja y no modificar su honorario', async () => {
+      const usuarioCreado = await dataSource.query(
+        `INSERT INTO usuarios (documento, apellidos, nombres, email, clave, estado, rol)
+         VALUES ('99999990', 'Baja', 'Baja', 'baja@ejemplo.test', 'sin-uso', 'BAJA', 'MEDICO')
+         RETURNING id`,
+      );
+      const idUsuarioBaja = usuarioCreado[0].id;
+
+      const medicoCreado = await dataSource.query(
+        `INSERT INTO medicos (id_usuario, matricula, valor_consulta)
+         VALUES ($1, 999990, 7000) RETURNING id`,
+        [idUsuarioBaja],
+      );
+      const idMedicoBaja = medicoCreado[0].id;
+
+      try {
+        const response = await request(app.getHttpServer())
+          .patch(`/api/v1/medicos/${idMedicoBaja}/valor-consulta`)
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({ valorConsulta: 9000 })
+          .expect(409);
+
+        expect(response.body.message).toContain('estado BAJA');
+
+        const medicoEnBd = await dataSource.query(
+          'SELECT valor_consulta FROM medicos WHERE id = $1',
+          [idMedicoBaja],
+        );
+        expect(medicoEnBd[0].valor_consulta).toBe(7000);
+      } finally {
+        await dataSource.query('DELETE FROM medicos WHERE id = $1', [
+          idMedicoBaja,
+        ]);
+        await dataSource.query('DELETE FROM usuarios WHERE id = $1', [
+          idUsuarioBaja,
+        ]);
+      }
+    });
+  });
+
   describe('Validación de Parámetros de Ruta y Body', () => {
     it('debe responder 400 Bad Request si el parámetro :id no es numérico entero', async () => {
       const response = await request(app.getHttpServer())

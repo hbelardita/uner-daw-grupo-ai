@@ -78,6 +78,11 @@ export class ReservasController {
     description: 'Acceso no permitido para el rol del usuario autenticado.',
   })
   @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description:
+      'El médico o el paciente indicado no existe o no se encuentra activo.',
+  })
+  @ApiResponse({
     status: HttpStatus.CONFLICT,
     description: 'El turno seleccionado ya se encuentra ocupado.',
   })

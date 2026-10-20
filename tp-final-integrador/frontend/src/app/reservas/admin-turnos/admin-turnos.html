@@ -1,3 +1,41 @@
+<ng-template #botonCancelar let-reserva="reserva" let-esMovil="esMovil">
+  @let estado = evaluarCancelacionAdministrativa(reserva, ahora()).tipo;
+  @switch (estado) {
+    @case ('habilitada') {
+      <p-button
+        [label]="esMovil ? 'Cancelar turno' : 'Cancelar'"
+        severity="danger"
+        [outlined]="true"
+        icon="pi pi-times"
+        [class.w-full]="esMovil"
+        [styleClass]="esMovil ? 'w-full justify-center min-h-12' : ''"
+        [ariaLabel]="etiquetaCancelar(reserva)"
+        (click)="abrirModalCancelacion(reserva)"
+      />
+    }
+    @case ('deshabilitada') {
+      <span
+        class="inline-flex"
+        [class.w-full]="esMovil"
+        [pTooltip]="motivoCancelacionIniciada"
+        tooltipPosition="top"
+      >
+        <p-button
+          [label]="esMovil ? 'Cancelar turno' : 'Cancelar'"
+          severity="danger"
+          [outlined]="true"
+          icon="pi pi-times"
+          [disabled]="true"
+          [class.w-full]="esMovil"
+          [styleClass]="esMovil ? 'w-full justify-center min-h-12' : ''"
+          [ariaLabel]="etiquetaCancelar(reserva)"
+        />
+        <span class="sr-only">{{ motivoCancelacionIniciada }}</span>
+      </span>
+    }
+  }
+</ng-template>
+
 <section class="flex flex-col gap-6">
   <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
     <div>
@@ -313,7 +351,9 @@
               <app-estado-badge [estado]="reserva.estado" />
             </td>
             <td class="py-3 px-4 text-right">
-              <!-- cancelar -->
+              <ng-container
+                *ngTemplateOutlet="botonCancelar; context: { reserva, esMovil: false }"
+              />
             </td>
           </tr>
         </ng-template>
@@ -352,6 +392,8 @@
               </span>
             </p>
           </div>
+
+          <ng-container *ngTemplateOutlet="botonCancelar; context: { reserva, esMovil: true }" />
         </article>
       }
     </div>
@@ -441,4 +483,12 @@
       </div>
     </ng-template>
   </p-drawer>
+
+  <app-cancelar-turno-dialog
+    [reserva]="turnoACancelar()"
+    [(visible)]="modalCancelacionVisible"
+    [cancelando]="cancelando()"
+    (confirmar)="confirmarCancelacion()"
+    (cancelar)="cerrarModalCancelacion()"
+  />
 </section>

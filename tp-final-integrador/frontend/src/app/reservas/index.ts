@@ -1,4 +1,5 @@
 export * from './agenda-diaria/agenda-diaria';
+export * from './comprobante-turno/comprobante-turno';
 export * from './regla-cancelacion';
 export * from './regla-reserva';
 export * from './reserva';

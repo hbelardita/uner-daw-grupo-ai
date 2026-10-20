@@ -8,7 +8,9 @@ import {
   ActualizarReservaEstadoResponse,
   CancelarReservaResponse,
   CrearReservaResponse,
+  type FiltrosReservasAdmin,
   HistorialReservaResponse,
+  type ReservasAdminPaginadasResponse,
   TurnoMedicoResponse,
 } from './reservas-dto';
 import type { TurnoAgenda } from './turno-agenda';
@@ -32,6 +34,42 @@ export class ReservasService {
 
   obtenerMisReservas(): Observable<HistorialReservaResponse[]> {
     return this.http.get<HistorialReservaResponse[]>(`${this.baseUrl}/reservas`);
+  }
+
+  obtenerTodasLasReservas(
+    filtros: FiltrosReservasAdmin = {},
+  ): Observable<ReservasAdminPaginadasResponse> {
+    let params = new HttpParams();
+
+    if (filtros.fechaDesde) {
+      params = params.set('fechaDesde', filtros.fechaDesde);
+    }
+    if (filtros.fechaHasta) {
+      params = params.set('fechaHasta', filtros.fechaHasta);
+    }
+    if (filtros.idMedico !== undefined) {
+      params = params.set('idMedico', filtros.idMedico);
+    }
+    if (filtros.busquedaPaciente) {
+      params = params.set('busquedaPaciente', filtros.busquedaPaciente);
+    }
+    if (filtros.estado && filtros.estado.length > 0) {
+      params = params.set('estado', filtros.estado.join(','));
+    }
+    if (filtros.pagina !== undefined) {
+      params = params.set('pagina', filtros.pagina);
+    }
+    if (filtros.limite !== undefined) {
+      params = params.set('limite', filtros.limite);
+    }
+    if (filtros.ordenarPor) {
+      params = params.set('ordenarPor', filtros.ordenarPor);
+    }
+    if (filtros.direccion) {
+      params = params.set('direccion', filtros.direccion);
+    }
+
+    return this.http.get<ReservasAdminPaginadasResponse>(`${this.baseUrl}/reservas`, { params });
   }
 
   crearReserva(payload: CrearReserva): Observable<CrearReservaResponse> {

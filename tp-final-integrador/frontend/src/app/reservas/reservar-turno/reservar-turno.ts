@@ -292,10 +292,10 @@ class ReservarTurno implements OnInit {
     this.reservaConfirmada.set(null);
     this.franjaSeleccionada.set(null);
     this.medicoSeleccionado.set(null);
+    this.fechaSeleccionada.set(this.rangoFechas().diasHabiles[0] ?? null);
     this.slots.set([]);
     this.errorConfirmacion.set(null);
     this.actualizarParametrosUrl({ medico: null, fecha: null });
-    this.cargarDisponibilidad();
   }
 
   alCambiarFechaDate(nuevaFecha: Date | null): void {

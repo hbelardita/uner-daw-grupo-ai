@@ -1,0 +1,444 @@
+<section class="flex flex-col gap-6">
+  <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-semibold text-slate-900">Turnos</h1>
+      <p class="text-sm text-slate-600 mt-1">Listado global de turnos de la clínica</p>
+    </div>
+    <p-button label="Reservar turno" icon="pi pi-plus" [routerLink]="rutaReservar" />
+  </header>
+
+  <!-- Escritorio: barra de herramientas con filtros inline -->
+  <div
+    role="search"
+    aria-label="Filtros de turnos"
+    class="hidden lg:flex lg:flex-wrap lg:items-end lg:gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs"
+  >
+    <div class="flex flex-col gap-1">
+      <label for="filtro-fechas" class="text-xs font-medium text-slate-600">
+        Rango de fechas
+      </label>
+      <p-datepicker
+        inputId="filtro-fechas"
+        selectionMode="range"
+        [readonlyInput]="true"
+        [showClear]="true"
+        [showIcon]="true"
+        dateFormat="dd/mm/yy"
+        [ngModel]="rangoFechas()"
+        (ngModelChange)="cambiarRango($event)"
+        ariaLabel="Rango de fechas de los turnos"
+        class="w-60"
+      />
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="filtro-medico" class="text-xs font-medium text-slate-600"> Médico</label>
+      <p-select
+        inputId="filtro-medico"
+        [options]="opcionesMedicos()"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        [showClear]="true"
+        [loading]="cargandoMedicos()"
+        placeholder="Todos"
+        [ngModel]="idMedico()"
+        (ngModelChange)="cambiarMedico($event)"
+        ariaLabel="Filtrar por médico"
+        class="w-64"
+      />
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="filtro-paciente" class="text-xs font-medium text-slate-600">
+        Paciente (DNI o apellido)
+      </label>
+      <p-iconfield>
+        <p-inputicon class="pi pi-search text-slate-400" aria-hidden="true" />
+        <input
+          pInputText
+          id="filtro-paciente"
+          type="search"
+          placeholder="Buscar paciente"
+          maxlength="100"
+          [formControl]="busquedaControl"
+          aria-label="Buscar paciente por DNI o apellido"
+          class="w-64"
+        />
+      </p-iconfield>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="filtro-estado" class="text-xs font-medium text-slate-600">
+        Estado del turno
+      </label>
+      <p-select
+        inputId="filtro-estado"
+        [options]="opcionesEstado"
+        optionLabel="label"
+        optionValue="value"
+        [showClear]="true"
+        placeholder="Todos"
+        [ngModel]="estadoSeleccionado()"
+        (ngModelChange)="cambiarEstadoSeleccionado($event)"
+        ariaLabel="Filtrar por estado del turno"
+        class="w-48"
+      />
+    </div>
+
+    <div class="flex items-center gap-3 xl:ml-auto">
+      <p-button
+        label="Limpiar filtros"
+        icon="pi pi-filter-slash"
+        severity="secondary"
+        [text]="true"
+        [disabled]="!hayFiltros()"
+        (click)="limpiarFiltros()"
+      />
+    </div>
+  </div>
+
+  <!-- Móvil: búsqueda rápida, chips y acceso al panel de filtros -->
+  <div class="flex flex-col gap-3 lg:hidden">
+    <p-iconfield class="w-full">
+      <p-inputicon class="pi pi-search text-slate-400" aria-hidden="true" />
+      <input
+        pInputText
+        type="search"
+        placeholder="Buscar por DNI o apellido"
+        maxlength="100"
+        [formControl]="busquedaControl"
+        aria-label="Buscar paciente por DNI o apellido"
+        class="w-full"
+      />
+    </p-iconfield>
+
+    @if (chips().length > 0) {
+      <div class="flex flex-wrap gap-2" role="group" aria-label="Filtros activos">
+        @for (chip of chips(); track chip.clave + (chip.estado ?? '')) {
+          <button
+            type="button"
+            class="inline-flex min-h-12 min-w-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+            [attr.aria-label]="chip.ariaQuitar"
+            (click)="quitarFiltro(chip)"
+          >
+            <span class="truncate">{{ chip.etiqueta }}</span>
+            <i class="pi pi-times shrink-0 text-xs" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
+    }
+
+    <p-button
+      label="Más filtros"
+      icon="pi pi-filter"
+      severity="secondary"
+      [outlined]="true"
+      styleClass="min-h-12"
+      (click)="abrirDrawerFiltros()"
+    />
+  </div>
+
+  <p role="status" aria-live="polite" class="sr-only">{{ total() }} turnos encontrados</p>
+
+  @if (error()) {
+    <div
+      role="alert"
+      class="rounded-xl border border-rose-200 bg-rose-50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <div class="flex items-center gap-3 text-rose-800">
+        <i class="pi pi-exclamation-circle text-2xl" aria-hidden="true"></i>
+        <div>
+          <p class="font-medium text-sm">{{ error() }}</p>
+          <p class="text-xs text-rose-600">Por favor, verificá tu conexión e intentá nuevamente.</p>
+        </div>
+      </div>
+      <p-button
+        label="Reintentar"
+        icon="pi pi-refresh"
+        severity="danger"
+        [outlined]="true"
+        [loading]="cargando()"
+        (click)="recargar()"
+      />
+    </div>
+  } @else if (cargando()) {
+    <div
+      class="hidden lg:block rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden"
+      aria-busy="true"
+    >
+      <table class="w-full text-left text-sm border-collapse">
+        <caption class="sr-only">
+          Cargando listado global de turnos
+        </caption>
+        <thead class="text-slate-700 bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th scope="col" class="py-3 px-4">Fecha y Hora</th>
+            <th scope="col" class="py-3 px-4">Paciente</th>
+            <th scope="col" class="py-3 px-4">Médico</th>
+            <th scope="col" class="py-3 px-4 text-right">Valor consulta</th>
+            <th scope="col" class="py-3 px-4">Estado</th>
+            <th scope="col" class="py-3 px-4 text-right">Operaciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of [1, 2, 3, 4, 5]; track item) {
+            <tr class="border-b border-slate-100">
+              <td class="py-3 px-4"><p-skeleton width="11rem" height="1.25rem" /></td>
+              <td class="py-3 px-4"><p-skeleton width="12rem" height="1.25rem" /></td>
+              <td class="py-3 px-4"><p-skeleton width="11rem" height="1.25rem" /></td>
+              <td class="py-3 px-4">
+                <div class="flex justify-end"><p-skeleton width="6rem" height="1.25rem" /></div>
+              </td>
+              <td class="py-3 px-4">
+                <p-skeleton width="6rem" height="1.5rem" borderRadius="0.5rem" />
+              </td>
+              <td class="py-3 px-4">
+                <div class="flex justify-end">
+                  <p-skeleton width="5rem" height="2rem" borderRadius="0.5rem" />
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex flex-col gap-3 lg:hidden" aria-busy="true">
+      @for (item of [1, 2, 3]; track item) {
+        <article
+          class="rounded-xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col gap-3"
+        >
+          <div class="flex items-center justify-between gap-2">
+            <p-skeleton width="10rem" height="1.25rem" />
+            <p-skeleton width="5.5rem" height="1.5rem" borderRadius="0.5rem" />
+          </div>
+          <p-skeleton width="12rem" height="1rem" />
+          <p-skeleton width="10rem" height="1rem" />
+          <p-skeleton width="8rem" height="1.25rem" />
+        </article>
+      }
+    </div>
+  } @else if (reservas().length === 0) {
+    <app-empty-state
+      icono="pi pi-search"
+      titulo="No se encontraron turnos con los filtros seleccionados"
+      descripcion="Probá con otro rango de fechas o quitá algún filtro para ampliar la búsqueda."
+    >
+      @if (hayFiltros()) {
+        <p-button
+          label="Limpiar filtros"
+          icon="pi pi-filter-slash"
+          severity="secondary"
+          [outlined]="true"
+          class="mt-4"
+          (click)="limpiarFiltros()"
+        />
+      }
+    </app-empty-state>
+  } @else {
+    <div
+      class="hidden lg:block rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden"
+    >
+      <p-table
+        [value]="reservas()"
+        [lazy]="true"
+        [paginator]="true"
+        [rows]="limite()"
+        [first]="primerRegistro()"
+        [totalRecords]="total()"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [rowHover]="true"
+        [loading]="cargando()"
+        [sortField]="ordenarPor()"
+        [sortOrder]="direccion() === 'DESC' ? -1 : 1"
+        sortMode="single"
+        [tableStyle]="{ 'min-width': '64rem' }"
+        (onPage)="cambiarPagina($event)"
+        (onSort)="cambiarOrden($event)"
+      >
+        <ng-template #header>
+          <tr class="text-slate-700 text-sm">
+            <th scope="col" class="py-3 px-4 text-left" pSortableColumn="fechaHora">
+              Fecha y Hora
+              <p-sortIcon field="fechaHora" />
+            </th>
+            <th scope="col" class="py-3 px-4 text-left" pSortableColumn="paciente">
+              Paciente
+              <p-sortIcon field="paciente" />
+            </th>
+            <th scope="col" class="py-3 px-4 text-left" pSortableColumn="medico">
+              Médico
+              <p-sortIcon field="medico" />
+            </th>
+            <th scope="col" class="py-3 px-4 text-right" pSortableColumn="valorConsulta">
+              Valor consulta
+              <p-sortIcon field="valorConsulta" />
+            </th>
+            <th scope="col" class="py-3 px-4 text-left" pSortableColumn="estado">
+              Estado
+              <p-sortIcon field="estado" />
+            </th>
+            <th scope="col" class="py-3 px-4 text-right">Operaciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-reserva>
+          <tr
+            class="border-b border-slate-100 text-sm text-slate-900 hover:bg-slate-50 transition-colors"
+          >
+            <td class="py-3 px-4 tabular-nums font-medium text-slate-900">
+              {{ formatearFechaHora(reserva.fechaHora) }}
+            </td>
+            <td class="py-3 px-4">
+              <p class="font-medium text-slate-900">
+                {{ reserva.paciente.apellidos }}, {{ reserva.paciente.nombres }}
+              </p>
+              <p class="text-xs text-muted-foreground tabular-nums">
+                DNI {{ reserva.paciente.documento | documento }}
+              </p>
+            </td>
+            <td class="py-3 px-4">
+              <p class="font-medium text-slate-900">
+                {{ reserva.medico.apellidos }}, {{ reserva.medico.nombres }}
+              </p>
+              <p class="text-xs text-muted-foreground tabular-nums">
+                MP {{ reserva.medico.matricula }}
+              </p>
+            </td>
+            <td class="py-3 px-4 text-right tabular-nums font-semibold text-foreground-teal">
+              {{ reserva.valorConsulta | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+            </td>
+            <td class="py-3 px-4">
+              <app-estado-badge [estado]="reserva.estado" />
+            </td>
+            <td class="py-3 px-4 text-right">
+              <!-- cancelar -->
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div class="flex flex-col gap-3 lg:hidden">
+      @for (reserva of reservas(); track reserva.id) {
+        <article
+          class="rounded-xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col gap-3"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <h2 class="text-base font-semibold text-slate-900 tabular-nums">
+              {{ formatearFechaHora(reserva.fechaHora) }}
+            </h2>
+            <app-estado-badge [estado]="reserva.estado" class="shrink-0" />
+          </div>
+
+          <div class="flex flex-col gap-1 text-sm text-slate-600">
+            <p class="font-medium text-slate-800">
+              {{ reserva.paciente.apellidos }}, {{ reserva.paciente.nombres }}
+              <span class="text-xs font-normal text-slate-500 tabular-nums">
+                · DNI {{ reserva.paciente.documento | documento }}
+              </span>
+            </p>
+            <p class="text-sm text-slate-700">
+              {{ reserva.medico.apellidos }}, {{ reserva.medico.nombres }}
+              <span class="text-xs font-normal text-slate-500 tabular-nums">
+                · MP {{ reserva.medico.matricula }}
+              </span>
+            </p>
+            <p class="text-xs text-slate-500">
+              Valor consulta:
+              <span class="font-semibold text-slate-700 tabular-nums">
+                {{ reserva.valorConsulta | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+              </span>
+            </p>
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+  <p-drawer
+    [(visible)]="drawerFiltrosVisible"
+    position="full"
+    header="Filtros de turnos"
+    ariaCloseLabel="Cerrar filtros"
+    styleClass="lg:hidden"
+    [closeOnEscape]="true"
+  >
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <label for="filtro-fechas-movil" class="text-xs font-medium text-slate-600">
+          Rango de fechas
+        </label>
+        <p-datepicker
+          inputId="filtro-fechas-movil"
+          selectionMode="range"
+          [readonlyInput]="true"
+          [showClear]="true"
+          [showIcon]="true"
+          dateFormat="dd/mm/yy"
+          [ngModel]="borrador().rangoFechas"
+          (ngModelChange)="cambiarRangoFechaBorrador($event)"
+          ariaLabel="Rango de fechas de los turnos"
+          class="w-full"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label for="filtro-medico-movil" class="text-xs font-medium text-slate-600"> Médico </label>
+        <p-select
+          inputId="filtro-medico-movil"
+          [options]="opcionesMedicos()"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          [showClear]="true"
+          [loading]="cargandoMedicos()"
+          placeholder="Todos"
+          [ngModel]="borrador().idMedico"
+          (ngModelChange)="cambiarMedicoBorrador($event)"
+          ariaLabel="Filtrar por médico"
+          class="w-full"
+        />
+      </div>
+
+      <fieldset class="flex flex-col gap-1">
+        <legend class="text-xs font-medium text-slate-600 mb-1">Estado del turno</legend>
+        @for (opcion of opcionesEstadoDrawer; track opcion.value) {
+          <label
+            class="flex min-h-11 items-center gap-2 rounded-lg px-1 text-sm text-slate-800"
+            [attr.for]="'filtro-estado-' + opcion.value"
+          >
+            <p-checkbox
+              [inputId]="'filtro-estado-' + opcion.value"
+              [binary]="true"
+              [ngModel]="estaEstadoSeleccionado(opcion.value)"
+              (ngModelChange)="alternarEstadoBorrador(opcion.value, $event)"
+            />
+            {{ opcion.label }}
+          </label>
+        }
+      </fieldset>
+    </div>
+
+    <ng-template #footer>
+      <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <p-button
+          label="Limpiar filtros"
+          icon="pi pi-filter-slash"
+          severity="secondary"
+          [text]="true"
+          [disabled]="!hayFiltrosBorrador()"
+          styleClass="w-full sm:w-auto justify-center min-h-12"
+          (click)="limpiarFiltrosDrawer()"
+        />
+        <p-button
+          label="Ver resultados"
+          icon="pi pi-check"
+          styleClass="w-full sm:w-auto justify-center min-h-12"
+          (click)="aplicarFiltrosDrawer()"
+        />
+      </div>
+    </ng-template>
+  </p-drawer>
+</section>

@@ -176,6 +176,45 @@ describe('Endpoint GET /api/v1/reservas - Listado global de turnos (e2e)', () =>
       );
       expect(orden).toEqual(orden.toSorted((a, b) => a - b));
     });
+
+    it('ordena por valor de consulta descendente', async () => {
+      const response = await listar(
+        '?ordenarPor=valorConsulta&direccion=DESC&limite=100',
+        adminToken,
+      ).expect(200);
+
+      const valores = response.body.data.map(
+        (reserva: { valorConsulta: number }) => reserva.valorConsulta,
+      );
+      expect(valores).toEqual(valores.toSorted((a, b) => b - a));
+      expect(valores.length).toBeGreaterThan(1);
+    });
+
+    it('invierte el orden al cambiar la dirección sobre la misma columna', async () => {
+      const consulta = `?fechaDesde=${FECHA_CON_TURNOS}&fechaHasta=2026-12-02&ordenarPor=paciente`;
+      const ascendente = await listar(
+        `${consulta}&direccion=ASC`,
+        adminToken,
+      ).expect(200);
+      const descendente = await listar(
+        `${consulta}&direccion=DESC`,
+        adminToken,
+      ).expect(200);
+
+      expect(idsDe(ascendente)).toHaveLength(3);
+      expect(idsDe(descendente)).toEqual(idsDe(ascendente).toReversed());
+    });
+
+    it('ordena por médico sin romper la paginación', async () => {
+      const respuesta = await listar(
+        '?ordenarPor=medico&direccion=ASC&pagina=1&limite=2',
+        adminToken,
+      ).expect(200);
+
+      expect(respuesta.body.data).toHaveLength(2);
+      expect(respuesta.body.meta.pagina).toBe(1);
+      expect(respuesta.body.meta.total).toBeGreaterThanOrEqual(2);
+    });
   });
 
   describe('Filtros multicriterio', () => {
@@ -238,6 +277,149 @@ describe('Endpoint GET /api/v1/reservas - Listado global de turnos (e2e)', () =>
       }
     });
 
+    it('filtra por rango de fechas inclusivo', async () => {
+      const response = await listar(
+        `?fechaDesde=${FECHA_CON_TURNOS}&fechaHasta=2026-12-02`,
+        adminToken,
+      ).expect(200);
+
+      expect(idsDe(response)).toEqual(
+        expect.arrayContaining([
+          reservaActivoId,
+          reservaAtendidoId,
+          reservaOtroMedicoId,
+        ]),
+      );
+      expect(idsDe(response)).not.toContain(reservaCanceladoId);
+      for (const item of response.body.data) {
+        expect(item.fechaHora >= '2026-12-01').toBe(true);
+        expect(item.fechaHora < '2026-12-03').toBe(true);
+      }
+    });
+
+    it('combina el rango de fechas con el estado', async () => {
+      const response = await listar(
+        `?fechaDesde=${FECHA_CON_TURNOS}&fechaHasta=2026-12-02&estado=ATENDIDO`,
+        adminToken,
+      ).expect(200);
+
+      expect(response.body.meta.total).toBe(1);
+      expect(idsDe(response)).toEqual([reservaAtendidoId]);
+      for (const item of response.body.data) {
+        expect(item.estado).toBe('ATENDIDO');
+        expect(item.fechaHora >= '2026-12-01').toBe(true);
+        expect(item.fechaHora < '2026-12-03').toBe(true);
+      }
+    });
+
+    it('filtra por varios estados separados por coma', async () => {
+      const response = await listar(
+        `?fechaDesde=${FECHA_CON_TURNOS}&fechaHasta=2026-12-02&estado=ACTIVO,ATENDIDO`,
+        adminToken,
+      ).expect(200);
+
+      expect(response.body.meta.total).toBe(3);
+      expect(idsDe(response)).toEqual(
+        expect.arrayContaining([
+          reservaActivoId,
+          reservaAtendidoId,
+          reservaOtroMedicoId,
+        ]),
+      );
+      for (const item of response.body.data) {
+        expect(['ACTIVO', 'ATENDIDO']).toContain(item.estado);
+      }
+    });
+
+    it('filtra por varios estados con el parámetro repetido', async () => {
+      const response = await listar(
+        `?fechaDesde=${FECHA_CON_TURNOS}&fechaHasta=2026-12-02&estado=ACTIVO&estado=ATENDIDO`,
+        adminToken,
+      ).expect(200);
+
+      expect(response.body.meta.total).toBe(3);
+      expect(idsDe(response)).toEqual(
+        expect.arrayContaining([
+          reservaActivoId,
+          reservaAtendidoId,
+          reservaOtroMedicoId,
+        ]),
+      );
+    });
+
+    it('aplica solo la cota inferior cuando se envía únicamente fechaDesde', async () => {
+      const response = await listar(
+        '?fechaDesde=2026-12-03&limite=100',
+        adminToken,
+      ).expect(200);
+
+      expect(idsDe(response)).toContain(reservaCanceladoId);
+      expect(idsDe(response)).not.toContain(reservaActivoId);
+      for (const item of response.body.data) {
+        expect(item.fechaHora >= '2026-12-03').toBe(true);
+      }
+    });
+
+    it('aplica solo la cota superior cuando se envía únicamente fechaHasta', async () => {
+      const response = await listar(
+        `?fechaHasta=${FECHA_CON_TURNOS}&limite=100`,
+        adminToken,
+      ).expect(200);
+
+      expect(idsDe(response)).toEqual(
+        expect.arrayContaining([reservaActivoId, reservaOtroMedicoId]),
+      );
+      expect(idsDe(response)).not.toContain(reservaAtendidoId);
+      for (const item of response.body.data) {
+        expect(item.fechaHora < '2026-12-02').toBe(true);
+      }
+    });
+
+    it('busca al paciente por apellido sin distinguir mayúsculas', async () => {
+      const response = await listar(
+        `?busquedaPaciente=fernandez&fechaDesde=${FECHA_CON_TURNOS}&fechaHasta=2026-12-02`,
+        adminToken,
+      ).expect(200);
+
+      expect(idsDe(response)).toEqual(
+        expect.arrayContaining([reservaActivoId, reservaAtendidoId]),
+      );
+      for (const item of response.body.data) {
+        expect(item.paciente.apellidos.toLowerCase()).toContain('fernandez');
+      }
+    });
+
+    it('busca al paciente por documento parcial', async () => {
+      const response = await listar(
+        '?busquedaPaciente=3011',
+        adminToken,
+      ).expect(200);
+
+      expect(response.body.data.length).toBeGreaterThan(0);
+      for (const item of response.body.data) {
+        const coincide =
+          item.paciente.documento.includes('3011') ||
+          item.paciente.apellidos.toLowerCase().includes('3011') ||
+          item.paciente.nombres.toLowerCase().includes('3011');
+        expect(coincide).toBe(true);
+      }
+    });
+
+    it('busca al paciente por nombres', async () => {
+      const response = await listar(
+        '?busquedaPaciente=JULIA&limite=100',
+        adminToken,
+      ).expect(200);
+
+      expect(idsDe(response)).toEqual(
+        expect.arrayContaining([reservaActivoId, reservaAtendidoId]),
+      );
+      for (const item of response.body.data) {
+        expect(item.paciente.id).toBe(idPaciente1);
+        expect(item.paciente.nombres.toLowerCase()).toContain('julia');
+      }
+    });
+
     it('devuelve un listado vacío cuando los filtros no tienen coincidencias', async () => {
       const response = await listar('?fecha=2000-01-01', adminToken).expect(
         200,
@@ -255,7 +437,7 @@ describe('Endpoint GET /api/v1/reservas - Listado global de turnos (e2e)', () =>
     it('ignora los filtros enviados vacíos en lugar de aplicarlos como valor', async () => {
       const sinFiltros = await listar('', adminToken).expect(200);
       const vacios = await listar(
-        '?fecha=&idMedico=&idPaciente=&documentoPaciente=&estado=&pagina=&limite=',
+        '?fecha=&idMedico=&idPaciente=&documentoPaciente=&estado=&pagina=&limite=&fechaDesde=&fechaHasta=&busquedaPaciente=',
         adminToken,
       ).expect(200);
 
@@ -288,15 +470,61 @@ describe('Endpoint GET /api/v1/reservas - Listado global de turnos (e2e)', () =>
       },
     );
 
+    it('rechaza una fecha desde con formato incorrecto', async () => {
+      const response = await listar('?fechaDesde=2026-2-3', adminToken).expect(
+        400,
+      );
+
+      expect(response.body.message).toContain(
+        'La fecha desde debe tener formato AAAA-MM-DD.',
+      );
+    });
+
+    it('rechaza una fecha hasta con formato incorrecto', async () => {
+      const response = await listar('?fechaHasta=3/12/2026', adminToken).expect(
+        400,
+      );
+
+      expect(response.body.message).toContain(
+        'La fecha hasta debe tener formato AAAA-MM-DD.',
+      );
+    });
+
+    it('rechaza un rango con fecha desde posterior a fecha hasta', async () => {
+      const response = await listar(
+        '?fechaDesde=2026-12-10&fechaHasta=2026-12-01',
+        adminToken,
+      ).expect(400);
+
+      expect(response.body.message).toContain(
+        'La fecha desde no puede ser posterior a la fecha hasta.',
+      );
+    });
+
     it.each([
       ['?pagina=0', 'El parámetro pagina debe ser mayor o igual a 1.'],
       ['?pagina=abc', 'El parámetro pagina debe ser un número entero.'],
+      ['?pagina=10001', 'El parámetro pagina no puede superar 10000.'],
       ['?limite=0', 'El parámetro limite debe ser mayor o igual a 1.'],
+      ['?limite=101', 'El parámetro limite no puede superar 100.'],
       ['?idMedico=abc', 'El idMedico debe ser un número entero.'],
       ['?idPaciente=1.5', 'El idPaciente debe ser un número entero.'],
       [
         '?estado=INVENTADO',
         'El estado debe ser uno de los valores válidos: ACTIVO, ATENDIDO, AUSENTE, CANCELADO.',
+      ],
+      [
+        '?estado=ACTIVO,INVENTADO',
+        'El estado debe ser uno de los valores válidos: ACTIVO, ATENDIDO, AUSENTE, CANCELADO.',
+      ],
+      [
+        '?ordenarPor=INVENTADO',
+        'El orden debe ser uno de los valores válidos: fechaHora, paciente, medico, valorConsulta, estado.',
+      ],
+      ['?direccion=LATERAL', 'La dirección del orden debe ser ASC o DESC.'],
+      [
+        '?fecha=2026-12-01&fechaDesde=2026-12-01',
+        'No se puede combinar el parámetro fecha con fechaDesde o fechaHasta.',
       ],
     ])('rechaza el parámetro inválido %s', async (query, mensaje) => {
       const response = await listar(query, adminToken).expect(400);

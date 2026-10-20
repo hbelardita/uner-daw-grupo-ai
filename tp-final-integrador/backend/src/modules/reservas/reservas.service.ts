@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Raw, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { MedicosService } from '../medicos/medicos.service.js';
 import { EstadoUsuario } from '../usuarios/enums/estado-usuario.enum.js';
 import { RolUsuario } from '../usuarios/enums/rol-usuario.enum.js';
@@ -16,7 +16,11 @@ import {
   validarCancelacionAdministrador,
   validarReglasCreacionReserva,
 } from './domain/reglas-temporales.js';
-import { PAGINACION_ADMIN_DEFAULTS } from './dto/index.js';
+import {
+  PAGINACION_ADMIN_DEFAULTS,
+  type CampoOrdenReservasAdmin,
+  type DireccionOrden,
+} from './dto/index.js';
 import { Reserva } from './entities/reserva.entity.js';
 import { EstadoReserva } from './enums/index.js';
 
@@ -34,12 +38,17 @@ export interface CrearReservaParams {
 
 export interface FiltrosListarReservasAdmin {
   fecha?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
   idMedico?: number;
   idPaciente?: number;
   documentoPaciente?: string;
-  estado?: EstadoReserva;
+  busquedaPaciente?: string;
+  estado?: EstadoReserva[];
   pagina?: number;
   limite?: number;
+  ordenarPor?: CampoOrdenReservasAdmin;
+  direccion?: DireccionOrden;
 }
 
 export interface ReservasAdminPaginadasResultado {
@@ -51,6 +60,27 @@ export interface ReservasAdminPaginadasResultado {
     totalPaginas: number;
   };
 }
+
+function escaparLike(termino: string): string {
+  return termino.replace(/[%_\\]/g, '\\$&');
+}
+
+function sumarUnDia(fechaIso: string): string {
+  const fecha = new Date(`${fechaIso}T00:00:00.000Z`);
+  fecha.setUTCDate(fecha.getUTCDate() + 1);
+  return fecha.toISOString().slice(0, 10);
+}
+
+const MAPA_ORDEN_RESERVAS_ADMIN: Record<
+  CampoOrdenReservasAdmin,
+  readonly string[]
+> = {
+  fechaHora: ['reserva.fechaHora'],
+  paciente: ['paciente.apellidos', 'paciente.nombres'],
+  medico: ['medicoUsuario.apellidos', 'medicoUsuario.nombres'],
+  valorConsulta: ['reserva.valorConsulta'],
+  estado: ['reserva.estado'],
+};
 
 @Injectable()
 export class ReservasService {
@@ -151,45 +181,89 @@ export class ReservasService {
     const limite = filtros.limite ?? PAGINACION_ADMIN_DEFAULTS.LIMITE;
     const skip = (pagina - 1) * limite;
 
-    const where: FindOptionsWhere<Reserva> = {};
+    // `fecha` equivale a un rango de un solo día.
+    const usaRango =
+      filtros.fechaDesde !== undefined || filtros.fechaHasta !== undefined;
 
-    if (filtros.fecha) {
-      where.fechaHora = Raw((alias) => `DATE(${alias}) = :fecha`, {
-        fecha: filtros.fecha,
+    if (usaRango && filtros.fecha !== undefined) {
+      throw new BadRequestException(
+        'No se puede combinar el parámetro fecha con fechaDesde o fechaHasta.',
+      );
+    }
+
+    const fechaDesde = filtros.fechaDesde ?? filtros.fecha;
+    const fechaHasta = filtros.fechaHasta ?? filtros.fecha;
+
+    if (fechaDesde && fechaHasta && fechaDesde > fechaHasta) {
+      throw new BadRequestException(
+        'La fecha desde no puede ser posterior a la fecha hasta.',
+      );
+    }
+
+    const consulta = this.reservasRepository
+      .createQueryBuilder('reserva')
+      .leftJoinAndSelect('reserva.medico', 'medico')
+      .leftJoinAndSelect('medico.usuario', 'medicoUsuario')
+      .leftJoinAndSelect('reserva.paciente', 'paciente');
+
+    if (fechaDesde) {
+      consulta.andWhere('reserva.fechaHora >= :fechaDesde', {
+        fechaDesde: `${fechaDesde} 00:00:00`,
+      });
+    }
+
+    if (fechaHasta) {
+      consulta.andWhere('reserva.fechaHora < :fechaHastaExclusivo', {
+        fechaHastaExclusivo: `${sumarUnDia(fechaHasta)} 00:00:00`,
       });
     }
 
     if (filtros.idMedico !== undefined) {
-      where.idMedico = filtros.idMedico;
+      consulta.andWhere('reserva.idMedico = :idMedico', {
+        idMedico: filtros.idMedico,
+      });
     }
 
     if (filtros.idPaciente !== undefined) {
-      where.idPaciente = filtros.idPaciente;
+      consulta.andWhere('reserva.idPaciente = :idPaciente', {
+        idPaciente: filtros.idPaciente,
+      });
     }
 
     if (filtros.documentoPaciente) {
-      where.paciente = { documento: filtros.documentoPaciente };
+      consulta.andWhere('paciente.documento = :documentoPaciente', {
+        documentoPaciente: filtros.documentoPaciente,
+      });
     }
 
-    if (filtros.estado) {
-      where.estado = filtros.estado;
+    if (filtros.busquedaPaciente) {
+      consulta.andWhere(
+        '(paciente.documento ILIKE :busquedaPaciente OR paciente.apellidos ILIKE :busquedaPaciente OR paciente.nombres ILIKE :busquedaPaciente)',
+        { busquedaPaciente: `%${escaparLike(filtros.busquedaPaciente)}%` },
+      );
     }
 
-    const [data, total] = await this.reservasRepository.findAndCount({
-      where,
-      relations: {
-        medico: {
-          usuario: true,
-        },
-        paciente: true,
-      },
-      order: {
-        fechaHora: 'ASC',
-        id: 'ASC',
-      },
-      skip,
-      take: limite,
-    });
+    if (filtros.estado?.length) {
+      consulta.andWhere('reserva.estado IN (:...estados)', {
+        estados: filtros.estado,
+      });
+    }
+
+    const columnasOrden =
+      MAPA_ORDEN_RESERVAS_ADMIN[filtros.ordenarPor ?? 'fechaHora'];
+    const direccion = filtros.direccion ?? 'ASC';
+    const [primeraColumna, ...restoColumnas] = columnasOrden;
+
+    consulta.orderBy(primeraColumna, direccion);
+    for (const columna of restoColumnas) {
+      consulta.addOrderBy(columna, direccion);
+    }
+    consulta.addOrderBy('reserva.id', direccion);
+
+    const [data, total] = await consulta
+      .skip(skip)
+      .take(limite)
+      .getManyAndCount();
 
     const totalPaginas = total === 0 ? 0 : Math.ceil(total / limite);
 

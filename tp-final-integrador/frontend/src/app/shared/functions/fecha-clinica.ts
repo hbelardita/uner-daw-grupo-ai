@@ -134,3 +134,10 @@ export function sumarUnaHora(hora: string): string {
 
   return `${String(horas).padStart(2, '0')}:${coincidencia[2]}`;
 }
+export function formatearFechaCorta(fechaIso: string): string {
+  const [anio, mes, dia] = fechaIso.split('-');
+  if (!anio || !mes || !dia) {
+    return fechaIso;
+  }
+  return `${dia}/${mes}/${anio}`;
+}

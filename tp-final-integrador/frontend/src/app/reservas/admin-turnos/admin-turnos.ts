@@ -21,7 +21,7 @@ import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
-import { catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, of, switchMap, tap } from 'rxjs';
 import { RUTAS } from '../../constantes/rutas';
 import type { MedicoListItem } from '../../medicos/medico';
 import { MedicosService } from '../../medicos/medicos-service';
@@ -273,9 +273,19 @@ export default class AdminTurnos implements OnInit {
     return chips;
   });
 
+  private readonly LONGITUD_MINIMA_BUSQUEDA = 3;
+
   constructor() {
     this.busquedaControl.valueChanges
-      .pipe(debounceTime(this.INPUT_DEBOUNCE_TIME), distinctUntilChanged(), takeUntilDestroyed())
+      .pipe(
+        debounceTime(this.INPUT_DEBOUNCE_TIME),
+        map((valor) => {
+          const limpio = valor.trim();
+          return limpio.length >= this.LONGITUD_MINIMA_BUSQUEDA ? limpio : '';
+        }),
+        distinctUntilChanged(),
+        takeUntilDestroyed(),
+      )
       .subscribe((valor) => {
         this.busqueda.set(valor);
         this.pagina.set(1);

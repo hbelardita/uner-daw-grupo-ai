@@ -20,13 +20,6 @@ export class TurnoMedicoDetalleComponent {}
 export class MiTurnoDetalleComponent {}
 
 @Component({
-  selector: 'app-turno-nuevo',
-  imports: [],
-  template: '<p>Reservar Nuevo Turno</p>',
-})
-export class TurnoNuevoComponent {}
-
-@Component({
   selector: 'app-turnos-admin-lista',
   imports: [],
   template: '<p>Listado Global de Turnos (Admin)</p>',
@@ -101,7 +94,7 @@ export const routes: Routes = [
             path: SEGMENTOS_RUTA.TURNOS_NUEVO,
             title: 'Reservar Turno',
             canActivate: [roleGuard(['PACIENTE', 'ADMINISTRADOR'])],
-            component: TurnoNuevoComponent,
+            loadComponent: () => import('./reservas/reservar-turno/reservar-turno'),
           },
           {
             path: '',

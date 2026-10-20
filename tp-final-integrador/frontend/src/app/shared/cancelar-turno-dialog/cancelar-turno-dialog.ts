@@ -13,10 +13,9 @@ import {
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { Drawer } from 'primeng/drawer';
-import { formatearFechaHoraTurno } from '../functions/utils';
 import type { MedicoHistorialResponse } from '../../reservas/reservas-dto';
+import { formatearFechaHoraClinica } from '../functions/fecha-clinica';
 
-/** Contrato mínimo que el diálogo necesita de un turno: su fecha y el profesional asignado. */
 export interface TurnoACancelar {
   fechaHora: string;
   medico: MedicoHistorialResponse;
@@ -41,7 +40,7 @@ export class CancelarTurnoDialog implements OnInit {
 
   readonly fechaHoraFormateada = computed(() => {
     const fecha = this.reserva()?.fechaHora;
-    return fecha ? formatearFechaHoraTurno(fecha) : '';
+    return fecha ? formatearFechaHoraClinica(fecha) : '';
   });
 
   ngOnInit(): void {

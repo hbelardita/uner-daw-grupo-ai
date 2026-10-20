@@ -2,11 +2,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { API_BASE_URL } from '../app.config';
-import { obtenerFechaLocalIso } from './regla-cancelacion';
-import type { ActualizarReservaEstado } from './reserva';
+import { obtenerFechaLocalIso } from '../shared/functions/fecha-clinica';
+import type { ActualizarReservaEstado, CrearReserva } from './reserva';
 import {
   ActualizarReservaEstadoResponse,
   CancelarReservaResponse,
+  CrearReservaResponse,
   HistorialReservaResponse,
   TurnoMedicoResponse,
 } from './reservas-dto';
@@ -31,6 +32,10 @@ export class ReservasService {
 
   obtenerMisReservas(): Observable<HistorialReservaResponse[]> {
     return this.http.get<HistorialReservaResponse[]>(`${this.baseUrl}/reservas`);
+  }
+
+  crearReserva(payload: CrearReserva): Observable<CrearReservaResponse> {
+    return this.http.post<CrearReservaResponse>(`${this.baseUrl}/reservas`, payload);
   }
 
   cancelarReserva(id: number): Observable<CancelarReservaResponse> {

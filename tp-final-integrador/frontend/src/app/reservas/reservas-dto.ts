@@ -48,3 +48,12 @@ export interface ActualizarReservaEstadoResponse {
   estado: EstadoReserva;
   valorConsulta: number;
 }
+
+export interface CrearReservaResponse {
+  id: number;
+  idMedico: number;
+  idPaciente: number;
+  fechaHora: string;
+  estado: EstadoReserva;
+  valorConsulta: number;
+}

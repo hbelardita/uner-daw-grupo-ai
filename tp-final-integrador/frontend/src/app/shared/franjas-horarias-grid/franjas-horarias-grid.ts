@@ -2,7 +2,7 @@ import { Component, computed, input, model } from '@angular/core';
 import { Skeleton } from 'primeng/skeleton';
 import type { DisponibilidadSlot } from '../../medicos/medico';
 import { HORAS_JORNADA_MEDICA, type HoraJornada } from '../../reservas/turno-agenda';
-import { extraerHoraClinica } from '../../reservas/turno-agenda.mapper';
+import { extraerHoraClinica } from '../../shared/functions/fecha-clinica';
 
 export type EstadoFranja = 'SELECCIONADA' | 'DISPONIBLE' | 'OCUPADA';
 

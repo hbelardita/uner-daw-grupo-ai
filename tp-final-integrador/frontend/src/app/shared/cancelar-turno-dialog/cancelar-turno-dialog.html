@@ -5,6 +5,17 @@
       <div
         class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 flex flex-col gap-2.5 text-sm"
       >
+        @if (r.paciente; as paciente) {
+          <div>
+            <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold block"
+              >Paciente</span
+            >
+            <p class="font-medium text-slate-900 mt-0.5">
+              {{ paciente.apellidos }}, {{ paciente.nombres }}
+            </p>
+          </div>
+        }
+
         <div>
           <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold block"
             >Profesional</span

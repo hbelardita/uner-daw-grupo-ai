@@ -19,6 +19,10 @@ import { formatearFechaHoraClinica } from '../functions/fecha-clinica';
 export interface TurnoACancelar {
   fechaHora: string;
   medico: MedicoHistorialResponse;
+  paciente?: {
+    nombres: string;
+    apellidos: string;
+  };
 }
 
 @Component({

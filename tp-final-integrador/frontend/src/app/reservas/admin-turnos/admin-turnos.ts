@@ -1,4 +1,4 @@
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,6 +11,7 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
 import { DatePicker } from 'primeng/datepicker';
@@ -21,17 +22,32 @@ import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
-import { catchError, debounceTime, distinctUntilChanged, map, of, switchMap, tap } from 'rxjs';
+import { Tooltip } from 'primeng/tooltip';
+import {
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  finalize,
+  map,
+  of,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { RUTAS } from '../../constantes/rutas';
 import type { MedicoListItem } from '../../medicos/medico';
 import { MedicosService } from '../../medicos/medicos-service';
-import { EmptyState, EstadoBadge } from '../../shared';
+import { CancelarTurnoDialog, EmptyState, EstadoBadge } from '../../shared';
 import { DocumentoPipe } from '../../shared/documento-pipe';
+import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
 import {
   formatearFechaCorta,
   formatearFechaHoraClinica,
   obtenerFechaLocalIso,
 } from '../../shared/functions/fecha-clinica';
+import {
+  evaluarCancelacionAdministrativa,
+  MOTIVO_CANCELACION_INICIADA,
+} from '../regla-cancelacion';
 import type { EstadoReserva } from '../reserva';
 import type {
   CampoOrdenReservasAdmin,
@@ -72,6 +88,12 @@ const BORRADOR_VACIO: BorradorFiltros = {
   rangoFechas: null,
   idMedico: null,
   estados: [],
+};
+
+const TEXTOS_FALLO_CANCELACION: TextosFalloHttp = {
+  desincronizado: 'El turno cambió de estado. Actualizamos el listado de turnos.',
+  sinPermiso: 'No tenés permiso para cancelar este turno.',
+  generico: 'No pudimos cancelar el turno. Por favor, reintentá.',
 };
 
 export const OPCIONES_ESTADO: readonly OpcionEstado[] = [
@@ -120,6 +142,7 @@ function normalizarRango(rango: Date[] | null | undefined): Date[] | null {
     Button,
     Checkbox,
     DatePicker,
+    NgTemplateOutlet,
     Drawer,
     IconField,
     InputIcon,
@@ -127,9 +150,11 @@ function normalizarRango(rango: Date[] | null | undefined): Date[] | null {
     Select,
     Skeleton,
     TableModule,
+    Tooltip,
     EstadoBadge,
     EmptyState,
     DocumentoPipe,
+    CancelarTurnoDialog,
   ],
   templateUrl: './admin-turnos.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -137,6 +162,7 @@ function normalizarRango(rango: Date[] | null | undefined): Date[] | null {
 export default class AdminTurnos implements OnInit {
   private readonly reservasService = inject(ReservasService);
   private readonly medicosService = inject(MedicosService);
+  private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly rutaReservar = RUTAS.TURNOS_NUEVO;
@@ -158,6 +184,14 @@ export default class AdminTurnos implements OnInit {
   protected readonly ordenarPor = signal<CampoOrdenReservasAdmin>('fechaHora');
   protected readonly direccion = signal<DireccionOrden>('DESC');
   private readonly refresco = signal<number>(0);
+
+  protected readonly ahora = signal<Date>(new Date());
+  protected readonly turnoACancelar = signal<ReservaAdminResponse | null>(null);
+  protected readonly modalCancelacionVisible = signal<boolean>(false);
+  protected readonly cancelando = signal<boolean>(false);
+
+  protected readonly evaluarCancelacionAdministrativa = evaluarCancelacionAdministrativa;
+  protected readonly motivoCancelacionIniciada = MOTIVO_CANCELACION_INICIADA;
 
   // señales temporales para el drawer en mobile
   protected readonly borrador = signal<BorradorFiltros>(BORRADOR_VACIO);
@@ -311,6 +345,7 @@ export default class AdminTurnos implements OnInit {
         if (respuesta) {
           this.reservas.set(respuesta.data);
           this.total.set(respuesta.meta.total);
+          this.ahora.set(new Date());
         } else {
           this.reservas.set([]);
           this.total.set(0);
@@ -443,6 +478,68 @@ export default class AdminTurnos implements OnInit {
 
   protected recargar(): void {
     this.refresco.update((valor) => valor + 1);
+  }
+
+  protected abrirModalCancelacion(reserva: ReservaAdminResponse): void {
+    this.turnoACancelar.set(reserva);
+    this.modalCancelacionVisible.set(true);
+  }
+
+  protected cerrarModalCancelacion(): void {
+    if (this.cancelando()) {
+      return;
+    }
+    this.modalCancelacionVisible.set(false);
+    this.turnoACancelar.set(null);
+  }
+
+  protected etiquetaCancelar(reserva: ReservaAdminResponse): string {
+    return `Cancelar el turno de ${reserva.paciente.nombres} ${reserva.paciente.apellidos} el ${this.formatearFechaHora(reserva.fechaHora)}`;
+  }
+
+  protected confirmarCancelacion(): void {
+    const turno = this.turnoACancelar();
+    if (!turno) {
+      return;
+    }
+
+    this.cancelando.set(true);
+    this.reservasService
+      .cancelarReserva(turno.id)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.cancelando.set(false)),
+      )
+      .subscribe({
+        next: (reservaCancelada) => {
+          this.reservas.update((actuales) =>
+            actuales.map((reserva) =>
+              reserva.id === reservaCancelada.id
+                ? { ...reserva, estado: reservaCancelada.estado }
+                : reserva,
+            ),
+          );
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Turno cancelado',
+            detail: 'El turno fue cancelado correctamente.',
+          });
+          this.modalCancelacionVisible.set(false);
+          this.turnoACancelar.set(null);
+        },
+        error: (error: unknown) => {
+          const fallo = clasificarFalloHttp(error, TEXTOS_FALLO_CANCELACION);
+          this.messageService.add({
+            severity: 'error',
+            summary: fallo.requiereRecargar ? 'Turno no disponible' : 'Error al cancelar',
+            detail: fallo.mensaje,
+          });
+          if (fallo.requiereRecargar) {
+            this.cerrarModalCancelacion();
+            this.recargar();
+          }
+        },
+      });
   }
 
   private cargarMedicos(): void {

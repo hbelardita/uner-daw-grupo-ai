@@ -15,6 +15,20 @@ export interface TurnoCancelable {
 }
 
 /**
+ * Disponibilidad del botón de cancelación administrativa, modelada como unión discriminada:
+ * - 'oculta': el turno no admite cancelación desde la UI (estado distinto de 'ACTIVO' o fecha inválida).
+ * - 'habilitada': el administrador puede cancelar el turno.
+ * - 'deshabilitada': el botón se muestra inactivo con un motivo explicativo.
+ */
+export type DisponibilidadCancelacion =
+  | { readonly tipo: 'oculta' }
+  | { readonly tipo: 'habilitada' }
+  | { readonly tipo: 'deshabilitada' };
+
+/** Motivo mostrado cuando la consulta ya comenzó y por lo tanto no puede cancelarse. */
+export const MOTIVO_CANCELACION_INICIADA = 'No se puede cancelar: la consulta ya comenzó.';
+
+/**
  * Calcula el instante límite de las 23:59:59.000 en la zona horaria de Argentina (UTC-3).
  */
 function obtenerFinDelDiaUtc3(fecha: Date): Date {
@@ -49,6 +63,33 @@ export function puedeCancelar(reserva: TurnoCancelable, rol: RolUsuario, ahora: 
   }
 
   return false;
+}
+
+/**
+ * Evalúa la disponibilidad del botón de cancelación para el rol ADMINISTRADOR:
+ * - Estado distinto de 'ACTIVO' o 'fechaHora' no interpretable: 'oculta'.
+ * - Cancelable según las reglas de dominio: 'habilitada'.
+ * - Resto de los casos: 'deshabilitada' (el motivo se explica en la UI con `MOTIVO_CANCELACION_INICIADA`).
+ * La comparación temporal se delega en `puedeCancelar` para no duplicar la regla.
+ */
+export function evaluarCancelacionAdministrativa(
+  reserva: TurnoCancelable,
+  ahora: Date,
+): DisponibilidadCancelacion {
+  if (reserva.estado !== 'ACTIVO') {
+    return { tipo: 'oculta' };
+  }
+
+  const fechaTurno = new Date(reserva.fechaHora);
+  if (Number.isNaN(fechaTurno.getTime())) {
+    return { tipo: 'oculta' };
+  }
+
+  if (puedeCancelar(reserva, 'ADMINISTRADOR', ahora)) {
+    return { tipo: 'habilitada' };
+  }
+
+  return { tipo: 'deshabilitada' };
 }
 
 /**

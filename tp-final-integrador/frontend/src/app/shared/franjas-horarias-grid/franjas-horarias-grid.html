@@ -1,0 +1,37 @@
+@if (cargando()) {
+  <div
+    class="grid grid-cols-2 lg:grid-cols-4 gap-3"
+    aria-busy="true"
+    aria-label="Cargando franjas horarias"
+  >
+    @for (hora of skeletonItems; track hora) {
+      <p-skeleton borderRadius="0.5rem" height="3rem" class="w-full" />
+    }
+  </div>
+} @else {
+  <div
+    role="radiogroup"
+    aria-label="Franjas horarias disponibles"
+    class="grid grid-cols-2 lg:grid-cols-4 gap-3"
+  >
+    @for (franja of franjas(); track franja.hora) {
+      <button
+        type="button"
+        role="radio"
+        [attr.aria-checked]="franja.seleccionada"
+        [disabled]="!franja.disponible"
+        class="min-h-12 rounded-lg border px-3 py-2 text-sm font-medium tabular-nums transition-colors flex items-center justify-between gap-2"
+        [class]="franja.ui.clasesBoton"
+        (click)="alSeleccionar(franja)"
+      >
+        <span>{{ franja.etiquetaHora }}</span>
+        @if (franja.ui.mostrarCheck) {
+          <i class="pi pi-check text-xs" aria-hidden="true"></i>
+        }
+        @if (franja.ui.etiquetaSecundaria) {
+          <span class="text-xs font-normal">{{ franja.ui.etiquetaSecundaria }}</span>
+        }
+      </button>
+    }
+  </div>
+}

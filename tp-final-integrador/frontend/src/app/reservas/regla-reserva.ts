@@ -6,6 +6,7 @@ import {
   obtenerFechaLocalIso,
   sumarUnaHora,
 } from '../shared/functions/fecha-clinica';
+import { obtenerDiaLimiteCancelacionSinCargo } from './regla-cancelacion';
 import type { CrearReservaResponse } from './reservas-dto';
 
 const PATRON_FECHA_ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -75,6 +76,26 @@ export interface ReservaConfirmadaVista {
   readonly medico: MedicoListItem;
   readonly etiquetaFecha: string;
   readonly rangoHorario: string;
+}
+
+/** Datos del paciente necesarios para armar el comprobante del turno. */
+export interface PacienteComprobante {
+  readonly nombres: string;
+  readonly apellidos: string;
+  readonly documento: string;
+}
+
+/** Comprobante del turno confirmado, listo para mostrarse en pantalla. */
+export interface ComprobanteTurnoVista {
+  readonly codigo: string;
+  readonly paciente: string;
+  readonly documento: string;
+  readonly medico: string;
+  readonly matricula: string;
+  readonly fecha: string;
+  readonly rangoHorario: string;
+  readonly arancel: number;
+  readonly limiteCancelacion: string;
 }
 
 /**
@@ -210,4 +231,29 @@ export function formatearFechaLargaReserva(fechaIso: string): string {
   }
 
   return formatearFechaLargaClinica(crearInstanteMediodiaClinica(fechaIso));
+}
+
+/**
+ * Construye el comprobante de un turno confirmado a partir de la reserva y del
+ * paciente autenticado. El arancel conserva el valor congelado por el servidor.
+ */
+export function construirComprobanteTurno(
+  vista: ReservaConfirmadaVista,
+  paciente: PacienteComprobante | null,
+): ComprobanteTurnoVista {
+  const nombrePaciente = paciente ? `${paciente.nombres} ${paciente.apellidos}`.trim() : '';
+
+  return {
+    codigo: `#R-${vista.reserva.id}`,
+    paciente: nombrePaciente,
+    documento: paciente?.documento ?? '',
+    medico: `${vista.medico.apellidos}, ${vista.medico.nombres}`,
+    matricula: `MP ${vista.medico.matricula}`,
+    fecha: vista.etiquetaFecha,
+    rangoHorario: vista.rangoHorario,
+    arancel: vista.reserva.valorConsulta,
+    limiteCancelacion: formatearFechaLargaReserva(
+      obtenerDiaLimiteCancelacionSinCargo(vista.reserva.fechaHora),
+    ),
+  };
 }

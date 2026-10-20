@@ -15,11 +15,13 @@ import { ActivatedRoute, Router, type Params } from '@angular/router';
 import { Button } from 'primeng/button';
 import { Skeleton } from 'primeng/skeleton';
 import { finalize } from 'rxjs';
+import { RUTAS } from '../../constantes/rutas';
 import type { DisponibilidadSlot, MedicoListItem } from '../../medicos/medico';
 import { MedicosService } from '../../medicos/medicos-service';
 import { EmptyState, FranjasHorariasGrid, ResumenErrores, SelectorFecha } from '../../shared';
 import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
 import { obtenerFechaLocalIso } from '../../shared/functions/fecha-clinica';
+import { ComprobanteTurno } from '../comprobante-turno/comprobante-turno';
 import {
   construirDiaReservable,
   esFechaReservableValida,
@@ -49,6 +51,7 @@ const TEXTOS_FALLO_RESERVA: TextosFalloHttp = {
     FormsModule,
     Button,
     Skeleton,
+    ComprobanteTurno,
     EmptyState,
     FranjasHorariasGrid,
     ResumenErrores,
@@ -68,7 +71,7 @@ class ReservarTurno implements OnInit {
 
   /**
    * Secuencia de la última solicitud de disponibilidad emitida.
-   * Permite descartar respuestas que llegan fuera de orden (carrera).
+   * Permite descartar respuestas que llegan fuera de orden .
    */
   private secuenciaDisponibilidad = 0;
 
@@ -281,9 +284,15 @@ class ReservarTurno implements OnInit {
       });
   }
 
+  irAMisTurnos(): void {
+    this.router.navigate([RUTAS.MIS_TURNOS]);
+  }
+
   reiniciar(): void {
     this.reservaConfirmada.set(null);
     this.franjaSeleccionada.set(null);
+    this.medicoSeleccionado.set(null);
+    this.slots.set([]);
     this.errorConfirmacion.set(null);
     this.actualizarParametrosUrl({ medico: null, fecha: null });
     this.cargarDisponibilidad();

@@ -1,10 +1,13 @@
 import type { RolUsuario } from '../auth/rol-usuario';
 import {
+  crearInstanteMediodiaClinica,
   esMismaFechaLocal,
   obtenerFechaLocalIso,
   OFFSET_CLINICA,
 } from '../shared/functions/fecha-clinica';
 import type { EstadoReserva } from './reserva';
+
+const MILISEGUNDOS_POR_DIA = 86_400_000;
 
 export interface TurnoCancelable {
   estado: EstadoReserva;
@@ -46,6 +49,30 @@ export function puedeCancelar(reserva: TurnoCancelable, rol: RolUsuario, ahora: 
   }
 
   return false;
+}
+
+/**
+ * día de calendario local hasta el cual el paciente puede cancelar sin cargo.
+ * Es el día anterior al del turno. Devuelve 'YYYY-MM-DD' o '' si el turno no es interpretable.
+ */
+export function obtenerDiaLimiteCancelacionSinCargo(fechaHoraIso: string): string {
+  const instanteTurno = new Date(fechaHoraIso);
+
+  if (Number.isNaN(instanteTurno.getTime())) {
+    return '';
+  }
+
+  const diaTurno = obtenerFechaLocalIso(instanteTurno);
+
+  if (!diaTurno) {
+    return '';
+  }
+
+  const instanteDiaAnterior = new Date(
+    crearInstanteMediodiaClinica(diaTurno).getTime() - MILISEGUNDOS_POR_DIA,
+  );
+
+  return obtenerFechaLocalIso(instanteDiaAnterior);
 }
 
 /**

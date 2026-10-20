@@ -1,0 +1,121 @@
+<p-dialog
+  [visible]="true"
+  [modal]="true"
+  [showHeader]="true"
+  [header]="'¡Turno reservado!'"
+  [closable]="false"
+  [dismissableMask]="false"
+  styleClass="m-0 w-screen h-dvh max-h-dvh rounded-none  md:m-auto md:w-[500px] md:h-auto md:max-h-[90vh] md:rounded-2xl"
+  [closeOnEscape]="false"
+  [draggable]="false"
+  [resizable]="false"
+  role="dialog"
+>
+  <ng-template #header #encabezado let-ariaLabelledBy="ariaLabelledBy">
+    <div class="flex items-center gap-3">
+      <div
+        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
+        style="background-color: var(--color-atendido-bg)"
+      >
+        <i
+          class="pi pi-check-circle text-2xl"
+          style="color: var(--color-atendido-fg)"
+          aria-hidden="true"
+        ></i>
+      </div>
+      <h2 [id]="ariaLabelledBy" class="text-lg md:text-xl font-semibold">¡Turno reservado!</h2>
+    </div>
+  </ng-template>
+
+  @if (comprobante(); as comprobante) {
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-3 rounded-xl border border-border-accent bg-surface-tint p-4">
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >Código de reserva</span
+          >
+          <span class="text-sm font-semibold tabular-nums text-foreground">{{
+            comprobante.codigo
+          }}</span>
+        </div>
+
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >Paciente</span
+          >
+          <p class="text-sm font-medium text-foreground">
+            {{ comprobante.paciente }}
+            <span class="tabular-nums text-muted-foreground"
+              >DNI {{ comprobante.documento | documento }}</span
+            >
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >Profesional</span
+          >
+          <p class="text-sm font-medium text-foreground">
+            {{ comprobante.medico }}
+            <span class="tabular-nums text-muted-foreground">· {{ comprobante.matricula }}</span>
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >Fecha</span
+          >
+          <p class="text-sm font-medium tabular-nums text-foreground">
+            {{ comprobante.fecha }}
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >Horario</span
+          >
+          <p class="text-sm font-medium tabular-nums text-foreground">
+            {{ comprobante.rangoHorario }}
+          </p>
+        </div>
+
+        <div
+          class="flex flex-wrap items-center justify-between gap-3 border-t border-border-accent pt-3"
+        >
+          <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >Valor consulta</span
+          >
+          <span class="text-lg font-semibold tabular-nums text-foreground">{{
+            comprobante.arancel | currency: 'ARS' : 'symbol-narrow' : '1.0-0'
+          }}</span>
+        </div>
+      </div>
+
+      @if (comprobante.limiteCancelacion) {
+        <p-message severity="info" styleClass="w-full"
+          >Podés cancelar este turno sin cargo hasta el {{ comprobante.limiteCancelacion }} a las
+          23:59 hs.</p-message
+        >
+      }
+
+      <div class="flex flex-col-reverse gap-2.5 pt-2 sm:flex-row sm:justify-end">
+        <p-button
+          label="Realizar otra reserva"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="min-h-12"
+          fluid
+          class="w-full sm:w-auto"
+          (click)="nuevaReserva.emit()"
+        />
+        <p-button
+          label="Ver mis turnos"
+          styleClass="min-h-12"
+          fluid
+          class="w-full sm:w-auto"
+          (click)="verMisTurnos.emit()"
+        />
+      </div>
+    </div>
+  }
+</p-dialog>

@@ -2,6 +2,7 @@
   @if (reservaConfirmada(); as confirmada) {
     <app-comprobante-turno
       [reserva]="confirmada"
+      [paciente]="pacienteSeleccionado()"
       (verMisTurnos)="irAMisTurnos()"
       (nuevaReserva)="reiniciar()"
     />
@@ -143,6 +144,14 @@
           />
         }
       </section>
+
+      <!-- Zona D: paciente -->
+      @if (esAdministrador()) {
+        <section class="flex flex-col gap-3" aria-labelledby="titulo-paciente">
+          <h2 id="titulo-paciente" class="text-lg font-semibold text-slate-900">Paciente</h2>
+          <app-pacientes (pacienteSeleccionado)="pacienteSeleccionado.set($event)" />
+        </section>
+      }
     </div>
 
     <aside
@@ -156,6 +165,9 @@
 
         @if (medicoSeleccionado(); as medico) {
           <div class="flex min-w-0 flex-col gap-0.5 text-sm lg:gap-1">
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              PROFESIONAL
+            </span>
             <span class="truncate font-medium text-slate-900">
               {{ medico.apellidos }}, {{ medico.nombres }}
             </span>
@@ -176,7 +188,26 @@
             <span class="text-xs text-muted-foreground"> Arancel fijo congelado al confirmar </span>
           </div>
         } @else {
+          <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            PROFESIONAL
+          </span>
           <p class="text-sm text-slate-600">Elegí profesional, fecha y horario para confirmar.</p>
+        }
+
+        @if (esAdministrador()) {
+          <div class="border-t border-slate-200 pt-2 text-sm lg:pt-3">
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Paciente
+            </span>
+            @if (pacienteSeleccionado(); as paciente) {
+              <p class="font-medium text-slate-900">
+                {{ paciente.apellidos }}, {{ paciente.nombres }}
+              </p>
+              <p class="text-xs text-slate-600 tabular-nums">DNI {{ paciente.documento }}</p>
+            } @else {
+              <p class="text-sm text-slate-600">Seleccioná un paciente.</p>
+            }
+          </div>
         }
 
         <p-button

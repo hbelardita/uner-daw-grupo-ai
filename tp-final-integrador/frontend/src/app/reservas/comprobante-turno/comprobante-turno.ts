@@ -7,6 +7,7 @@ import { CurrentUser } from '../../auth/current-user';
 import { DocumentoPipe } from '../../shared/documento-pipe';
 import {
   construirComprobanteTurno,
+  type PacienteComprobante,
   type ComprobanteTurnoVista,
   type ReservaConfirmadaVista,
 } from '../regla-reserva';
@@ -20,9 +21,13 @@ export class ComprobanteTurno {
   private readonly currentUser = inject(CurrentUser);
 
   readonly reserva = input<ReservaConfirmadaVista | null>(null);
+  readonly paciente = input<PacienteComprobante | null>(null);
 
   readonly verMisTurnos = output<void>();
   readonly nuevaReserva = output<void>();
+  readonly etiquetaVerTurnos = computed(() =>
+    this.currentUser.usuario()?.rol === 'ADMINISTRADOR' ? 'Ver todos los turnos' : 'Ver mis turnos',
+  );
 
   readonly comprobante = computed<ComprobanteTurnoVista | null>(() => {
     const reserva = this.reserva();
@@ -32,13 +37,14 @@ export class ComprobanteTurno {
     }
 
     const usuario = this.currentUser.usuario();
-    const paciente = usuario
+    const pacienteSeleccionado = this.paciente();
+    const paciente = pacienteSeleccionado ?? (usuario
       ? {
           nombres: usuario.nombres,
           apellidos: usuario.apellidos,
           documento: usuario.documento,
         }
-      : null;
+      : null);
 
     return construirComprobanteTurno(reserva, paciente);
   });

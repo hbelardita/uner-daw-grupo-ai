@@ -9,7 +9,11 @@
     <h2 id="titulo-profesional" class="text-lg font-semibold text-slate-900">Profesional</h2>
 
     @if (cargandoMedicos()) {
-      <div class="grid gap-3 sm:grid-cols-2" aria-busy="true" aria-label="Cargando profesionales">
+      <div
+        class="grid grid-cols-1 gap-3 min-[710px]:grid-cols-2"
+        aria-busy="true"
+        aria-label="Cargando profesionales"
+      >
         @for (item of [1, 2, 3]; track item) {
           <p-skeleton height="6rem" borderRadius="0.75rem" class="w-full" />
         }
@@ -35,7 +39,11 @@
     } @else if (medicos().length === 0) {
       <app-empty-state icono="pi pi-user" titulo="No hay profesionales disponibles para reservar" />
     } @else {
-      <div role="radiogroup" aria-label="Elegí un profesional" class="grid gap-3 sm:grid-cols-2">
+      <div
+        role="radiogroup"
+        aria-label="Elegí un profesional"
+        class="grid grid-cols-1 gap-3 min-[710px]:grid-cols-2"
+      >
         @for (medico of medicos(); track medico.id) {
           <button
             type="button"

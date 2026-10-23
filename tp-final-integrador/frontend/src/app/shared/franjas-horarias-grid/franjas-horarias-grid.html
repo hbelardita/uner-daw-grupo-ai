@@ -1,6 +1,6 @@
 @if (cargando()) {
   <div
-    class="grid grid-cols-2 lg:grid-cols-4 gap-3"
+    class="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3"
     aria-busy="true"
     aria-label="Cargando franjas horarias"
   >
@@ -12,7 +12,7 @@
   <div
     role="radiogroup"
     aria-label="Franjas horarias disponibles"
-    class="grid grid-cols-2 lg:grid-cols-4 gap-3"
+    class="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3"
   >
     @for (franja of franjas(); track franja.hora) {
       <button

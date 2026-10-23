@@ -25,7 +25,7 @@ export class SelectorFecha {
   readonly maxDate = input<Date | undefined>(undefined);
   readonly diasDeshabilitados = input<number[]>([0, 6]);
   readonly ariaLabel = input<string>('Seleccionar fecha');
-  readonly anchoClass = input<string>('w-44 sm:w-56');
+  readonly anchoClass = input<string>('w-36 min-[400px]:w-44 sm:w-56');
   readonly deshabilitado = input<boolean>(false);
 
   protected readonly esFechaDeHoy = computed<boolean>(() => {

@@ -20,23 +20,23 @@
     </div>
 
     <aside
-      class="fixed inset-x-0 bottom-18 z-20 px-4 lg:sticky lg:bottom-auto lg:top-24 lg:z-auto lg:self-start lg:px-0"
+      class="fixed inset-x-0 bottom-18 z-20 px-2 sm:px-4 lg:sticky lg:bottom-auto lg:top-24 lg:z-auto lg:self-start lg:px-0"
       aria-label="Resumen de la reserva"
     >
       <div
-        class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg lg:gap-3 lg:p-5 lg:shadow-sm"
+        class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-lg sm:p-4 lg:gap-3 lg:p-5 lg:shadow-sm"
       >
         <h2 class="hidden text-lg font-semibold text-slate-900 lg:block">Tu reserva</h2>
 
         @if (seleccionActiva(); as activa) {
-          <div class="flex min-w-0 flex-col gap-0.5 text-sm lg:gap-1">
+          <div class="flex min-w-0 flex-col gap-0.5 text-xs sm:text-sm lg:gap-1">
             <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               PROFESIONAL
             </span>
-            <span class="truncate font-medium text-slate-900">
+            <span class="wrap-break-word font-medium text-slate-900">
               {{ activa.medico.apellidos }}, {{ activa.medico.nombres }}
             </span>
-            <span class="truncate text-slate-600">{{ activa.etiquetaFecha }}</span>
+            <span class="wrap-break-word text-slate-600">{{ activa.etiquetaFecha }}</span>
             <span class="font-semibold text-slate-900 tabular-nums">{{ activa.rangoHorario }}</span>
             <span class="text-slate-600">
               Valor de la consulta:

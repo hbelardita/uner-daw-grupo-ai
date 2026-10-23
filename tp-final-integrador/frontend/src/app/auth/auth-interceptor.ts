@@ -1,8 +1,11 @@
-import type { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, type HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { catchError, throwError } from 'rxjs';
+import { AuthService } from './auth-service';
 import { TokenStorage } from './token-storage';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const authService = inject(AuthService);
   const tokenStorage = inject(TokenStorage);
   const token = tokenStorage.obtenerToken();
 
@@ -12,7 +15,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    return next(peticionClonada);
+    return next(peticionClonada).pipe(
+      catchError((error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 401) {
+          authService.cerrarSesion();
+        }
+        return throwError(() => error);
+      }),
+    );
   }
 
   return next(req);

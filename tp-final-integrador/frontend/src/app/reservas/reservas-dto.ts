@@ -1,3 +1,4 @@
+import type { PacienteResumen } from '../pacientes/paciente';
 import type { EstadoReserva } from './reserva';
 
 export interface MedicoHistorialResponse {
@@ -58,20 +59,13 @@ export interface CrearReservaResponse {
   valorConsulta: number;
 }
 
-export interface PacienteAdminResponse {
-  id: number;
-  documento: string;
-  nombres: string;
-  apellidos: string;
-}
-
 export interface ReservaAdminResponse {
   id: number;
   fechaHora: string;
   estado: EstadoReserva;
   valorConsulta: number;
   medico: MedicoHistorialResponse;
-  paciente: PacienteAdminResponse;
+  paciente: PacienteResumen;
 }
 
 export interface MetaPaginacion {

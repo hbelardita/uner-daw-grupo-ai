@@ -20,7 +20,7 @@ import { RUTAS } from '../../constantes/rutas';
 import type { DisponibilidadSlot, MedicoListItem } from '../../medicos/medico';
 import { MedicosService } from '../../medicos/medicos-service';
 import { Pacientes } from '../../pacientes/pacientes/pacientes';
-import type { PacienteAdminResponse } from '../reservas-dto';
+import type { PacienteResumen } from '../../pacientes/paciente';
 import { EmptyState, FranjasHorariasGrid, ResumenErrores, SelectorFecha } from '../../shared';
 import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
 import { obtenerFechaLocalIso } from '../../shared/functions/fecha-clinica';
@@ -131,7 +131,7 @@ class ReservarTurno implements OnInit {
   readonly cargandoSlots = signal<boolean>(false);
   readonly errorSlots = signal<string | null>(null);
   readonly franjaSeleccionada = signal<string | null>(null);
-  readonly pacienteSeleccionado = signal<PacienteAdminResponse | null>(null);
+  readonly pacienteSeleccionado = signal<PacienteResumen | null>(null);
   readonly esAdministrador = computed(() => this.authService.rol() === 'ADMINISTRADOR');
 
   readonly confirmando = signal<boolean>(false);

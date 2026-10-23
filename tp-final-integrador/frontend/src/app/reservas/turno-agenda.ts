@@ -1,4 +1,5 @@
-import type { EstadoReserva, PacienteResumen } from './reserva';
+import type { PacienteResumen } from '../pacientes/paciente';
+import type { EstadoReserva } from './reserva';
 
 export type PacienteTurnoAgenda = PacienteResumen;
 

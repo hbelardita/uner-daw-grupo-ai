@@ -13,16 +13,6 @@ export interface ActualizarReservaEstado {
   estado: EstadoAsistencia;
 }
 
-/** Información resumida de un paciente reutilizada en autocompletes, tablas y agendas */
-export interface PacienteResumen {
-  id: number;
-  documento: string;
-  nombres: string;
-  apellidos: string;
-}
-
-export type PacienteAutocompleteItem = PacienteResumen;
-
 export interface FiltroReservas {
   fecha?: Date | string;
   idMedico?: number;

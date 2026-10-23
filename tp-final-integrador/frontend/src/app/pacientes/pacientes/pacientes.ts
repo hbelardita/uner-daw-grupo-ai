@@ -4,16 +4,9 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
-import {
-  catchError,
-  debounceTime,
-  distinctUntilChanged,
-  of,
-  startWith,
-  switchMap,
-} from 'rxjs';
-import type { PacienteAdminResponse } from '../../reservas/reservas-dto';
-import { Pacientes as PacientesService } from '../pacientes';
+import { catchError, debounceTime, distinctUntilChanged, of, startWith, switchMap } from 'rxjs';
+import type { PacienteResumen } from '../paciente';
+import { PacientesService } from '../pacientes-service';
 
 @Component({
   selector: 'app-pacientes',
@@ -24,8 +17,8 @@ export class Pacientes {
   private readonly pacientesService = inject(PacientesService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly pacienteSeleccionado = output<PacienteAdminResponse>();
-  protected readonly pacientes = signal<PacienteAdminResponse[]>([]);
+  readonly pacienteSeleccionado = output<PacienteResumen>();
+  protected readonly pacientes = signal<PacienteResumen[]>([]);
   protected readonly cargando = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly busquedaControl = new FormControl('', { nonNullable: true });
@@ -40,11 +33,11 @@ export class Pacientes {
           this.cargando.set(true);
           this.error.set(null);
 
-          return this.pacientesService.obtenerPacientes(busqueda).pipe(
+          return this.pacientesService.buscar(busqueda).pipe(
             catchError(() => {
               this.error.set('No pudimos cargar el listado de pacientes.');
               return of([]);
-            }            ),
+            }),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -60,7 +53,7 @@ export class Pacientes {
     this.error.set(null);
 
     this.pacientesService
-      .obtenerPacientes(this.busquedaControl.value)
+      .buscar(this.busquedaControl.value)
       .pipe(
         catchError(() => {
           this.error.set('No pudimos cargar el listado de pacientes.');
@@ -74,7 +67,7 @@ export class Pacientes {
       });
   }
 
-  protected seleccionarPaciente(paciente: PacienteAdminResponse): void {
+  protected seleccionarPaciente(paciente: PacienteResumen): void {
     this.pacienteSeleccionado.emit(paciente);
   }
 }

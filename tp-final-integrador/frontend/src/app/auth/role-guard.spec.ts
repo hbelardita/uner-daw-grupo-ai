@@ -77,34 +77,34 @@ describe('roleGuard', () => {
       expect((resultado as UrlTree).toString()).toBe('/login');
     });
 
-    it('debe redirigir a /agenda si un médico intenta ingresar a una ruta de paciente', () => {
+    it('debe redirigir a /acceso-denegado si un médico intenta ingresar a una ruta de paciente', () => {
       rolSignal.set('MEDICO');
       const guard = roleGuard(['PACIENTE']);
 
       const resultado = TestBed.runInInjectionContext(() => guard(dummyRoute, dummyState));
 
       expect(resultado instanceof UrlTree).toBe(true);
-      expect((resultado as UrlTree).toString()).toBe('/agenda');
+      expect((resultado as UrlTree).toString()).toBe('/acceso-denegado');
     });
 
-    it('debe redirigir a /mis-turnos si un paciente intenta ingresar a una ruta de administrador', () => {
+    it('debe redirigir a /acceso-denegado si un paciente intenta ingresar a una ruta de administrador', () => {
       rolSignal.set('PACIENTE');
       const guard = roleGuard(['ADMINISTRADOR']);
 
       const resultado = TestBed.runInInjectionContext(() => guard(dummyRoute, dummyState));
 
       expect(resultado instanceof UrlTree).toBe(true);
-      expect((resultado as UrlTree).toString()).toBe('/mis-turnos');
+      expect((resultado as UrlTree).toString()).toBe('/acceso-denegado');
     });
 
-    it('debe redirigir a /turnos si un administrador intenta ingresar a una ruta de médico', () => {
+    it('debe redirigir a /acceso-denegado si un administrador intenta ingresar a una ruta de médico', () => {
       rolSignal.set('ADMINISTRADOR');
       const guard = roleGuard(['MEDICO']);
 
       const resultado = TestBed.runInInjectionContext(() => guard(dummyRoute, dummyState));
 
       expect(resultado instanceof UrlTree).toBe(true);
-      expect((resultado as UrlTree).toString()).toBe('/turnos');
+      expect((resultado as UrlTree).toString()).toBe('/acceso-denegado');
     });
   });
 
@@ -119,14 +119,14 @@ describe('roleGuard', () => {
       expect((resultado as UrlTree).toString()).toBe('/login');
     });
 
-    it('debe redirigir a la ruta por rol del usuario si la lista de roles permitidos está vacía', () => {
+    it('debe redirigir a /acceso-denegado si la lista de roles permitidos está vacía', () => {
       rolSignal.set('PACIENTE');
       const guard = roleGuard([]);
 
       const resultado = TestBed.runInInjectionContext(() => guard(dummyRoute, dummyState));
 
       expect(resultado instanceof UrlTree).toBe(true);
-      expect((resultado as UrlTree).toString()).toBe('/mis-turnos');
+      expect((resultado as UrlTree).toString()).toBe('/acceso-denegado');
     });
   });
 });

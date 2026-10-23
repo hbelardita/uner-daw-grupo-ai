@@ -7,3 +7,4 @@ export * from './reservas-dto';
 export * from './reservas-service';
 export * from './turno-agenda';
 export * from './turno-agenda.mapper';
+export * from './seleccion-turno/seleccion-turno';

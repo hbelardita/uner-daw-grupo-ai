@@ -52,7 +52,7 @@ describe('layout-navigation (funciones puras)', () => {
       ]);
     });
 
-    it('debe devolver 3 destinos para ADMINISTRADOR incluyendo /turnos/nuevo', () => {
+    it('debe devolver 3 destinos para ADMINISTRADOR incluyendo /turnos/admin', () => {
       const items = obtenerItemsNavegacion('ADMINISTRADOR');
       expect(items).toEqual([
         {
@@ -63,7 +63,7 @@ describe('layout-navigation (funciones puras)', () => {
         },
         {
           etiqueta: 'Nueva Reserva',
-          ruta: '/turnos/nuevo',
+          ruta: '/turnos/admin',
           icono: 'pi pi-calendar-plus',
           exacto: true,
         },

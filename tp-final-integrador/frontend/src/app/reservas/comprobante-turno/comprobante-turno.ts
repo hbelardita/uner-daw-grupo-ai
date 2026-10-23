@@ -1,9 +1,8 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { Message } from 'primeng/message';
-import { CurrentUser } from '../../auth/current-user';
 import { DocumentoPipe } from '../../shared/documento-pipe';
 import {
   construirComprobanteTurno,
@@ -18,16 +17,12 @@ import {
   templateUrl: './comprobante-turno.html',
 })
 export class ComprobanteTurno {
-  private readonly currentUser = inject(CurrentUser);
-
   readonly reserva = input<ReservaConfirmadaVista | null>(null);
   readonly paciente = input<PacienteComprobante | null>(null);
+  readonly etiquetaVerTurnos = input<string>('Ver mis turnos');
 
   readonly verMisTurnos = output<void>();
   readonly nuevaReserva = output<void>();
-  readonly etiquetaVerTurnos = computed(() =>
-    this.currentUser.usuario()?.rol === 'ADMINISTRADOR' ? 'Ver todos los turnos' : 'Ver mis turnos',
-  );
 
   readonly comprobante = computed<ComprobanteTurnoVista | null>(() => {
     const reserva = this.reserva();
@@ -36,16 +31,6 @@ export class ComprobanteTurno {
       return null;
     }
 
-    const usuario = this.currentUser.usuario();
-    const pacienteSeleccionado = this.paciente();
-    const paciente = pacienteSeleccionado ?? (usuario
-      ? {
-          nombres: usuario.nombres,
-          apellidos: usuario.apellidos,
-          documento: usuario.documento,
-        }
-      : null);
-
-    return construirComprobanteTurno(reserva, paciente);
+    return construirComprobanteTurno(reserva, this.paciente());
   });
 }

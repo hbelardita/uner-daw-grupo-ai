@@ -122,6 +122,13 @@ npm run db:down    # Detiene los contenedores sin borrar datos
 npm run db:reset   # Detiene, elimina volúmenes (datos) y vuelve a crear la base
 ```
 
+### Contrato de fechas y husos horarios
+
+- `reservas.fecha_hora` es `timestamp` **sin zona** y se persiste siempre en **UTC**.
+- El backend fija el proceso en UTC (`src/config/zona-horaria.ts`): el driver de PostgreSQL serializa los `Date` con los componentes locales del proceso, así que sin este ajuste lo almacenado dependería del huso del host.
+- La franja de atención (08:00 a 15:00 de Argentina) se valida con `Intl` en la zona `America/Argentina/Buenos_Aires` al aplicar reglas de negocio, y la constraint `chk_reservas_horario_atencion` proyecta el valor almacenado a esa misma zona antes de comparar.
+- La API expone `fechaHora` como instante ISO 8601 en UTC (por ejemplo `2026-10-30T18:00:00.000Z`, equivalente a las 15:00 de Argentina).
+
 ### Conexión en pgAdmin (Cliente Web)
 
 1. Ingresá a [http://localhost:5050](http://localhost:5050).

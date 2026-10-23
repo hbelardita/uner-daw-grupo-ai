@@ -54,7 +54,7 @@ export async function setup(): Promise<void> {
     await adminClient.end().catch(() => {});
   }
 
-  // Paso 2: conectar a la base de pruebas, asegurar esquema, truncar y sembrar datos
+  // Paso 2: conectar a la base de pruebas, recrear el esquema y sembrar datos
   const testClient = new Client({
     ...connectionConfig,
     database: testDb,
@@ -63,13 +63,19 @@ export async function setup(): Promise<void> {
   try {
     await testClient.connect();
 
-    // Asegurar que el esquema esté actualizado (crea tipos y tablas si no existen)
-    await testClient.query(initSql);
+    // Recrear el esquema desde cero: `01-init.sql` usa CREATE TABLE IF NOT
+    // EXISTS, por lo que sin este borrado los cambios de esquema (columnas,
+    // constraints, índices) no llegarían a una base de tests ya existente.
+    await testClient.query(`
+      DROP TABLE IF EXISTS reservas CASCADE;
+      DROP TABLE IF EXISTS medicos CASCADE;
+      DROP TABLE IF EXISTS usuarios CASCADE;
+      DROP TYPE IF EXISTS estados_reservas CASCADE;
+      DROP TYPE IF EXISTS roles_usuarios CASCADE;
+      DROP TYPE IF EXISTS estados_usuarios CASCADE;
+    `);
 
-    // Truncar datos existentes y reiniciar secuencias de identidad
-    await testClient.query(
-      'TRUNCATE TABLE reservas, medicos, usuarios RESTART IDENTITY CASCADE;',
-    );
+    await testClient.query(initSql);
 
     // Poblar datos iniciales (seed)
     await testClient.query(seedSql);

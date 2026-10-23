@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
+import { fechaHoraUtcNaive } from './setup/fechas.js';
 
 function idsDe(respuesta: { body: { data: { id: number }[] } }): number[] {
   return respuesta.body.data.map((reserva) => reserva.id);
@@ -87,13 +88,14 @@ describe('Endpoint GET /api/v1/reservas - Listado global de turnos (e2e)', () =>
 
     // Turnos propios en un mes que ningún otro spec usa, para que los
     // conteos de los filtros por fecha sean deterministas.
+    // Las horas indicadas son de Argentina y se persisten en UTC (hora + 3).
     const insertadas = await dataSource.query(
       `INSERT INTO reservas (id_medico, id_paciente, fecha_hora, estado, valor_consulta)
        VALUES
-         ($1, $2, '2026-12-01 09:00:00', 'ACTIVO', 5000),
-         ($3, $2, '2026-12-02 10:00:00', 'ATENDIDO', 5000),
-         ($4, $5, '2026-12-03 11:00:00', 'CANCELADO', 5000),
-         ($6, $7, '2026-12-01 09:00:00', 'ACTIVO', 4500)
+         ($1, $2, '${fechaHoraUtcNaive('2026-12-01', 9)}', 'ACTIVO', 5000),
+         ($3, $2, '${fechaHoraUtcNaive('2026-12-02', 10)}', 'ATENDIDO', 5000),
+         ($4, $5, '${fechaHoraUtcNaive('2026-12-03', 11)}', 'CANCELADO', 5000),
+         ($6, $7, '${fechaHoraUtcNaive('2026-12-01', 9)}', 'ACTIVO', 4500)
        RETURNING id;`,
       [
         idMedico1,

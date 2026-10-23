@@ -7,7 +7,7 @@ import { finalize } from 'rxjs';
 import { CurrentUser } from '../../auth/current-user';
 import { RUTAS } from '../../constantes/rutas';
 import { ResumenErrores } from '../../shared';
-import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
+import { clasificarFalloHttp } from '../../shared/functions/fallo-http';
 import { ComprobanteTurno } from '../comprobante-turno/comprobante-turno';
 import {
   formatearRangoHorarioReserva,
@@ -15,14 +15,8 @@ import {
   type ReservaConfirmadaVista,
 } from '../regla-reserva';
 import { ReservasService } from '../reservas-service';
+import { TEXTOS_FALLO_RESERVA } from '../textos-fallo-reserva';
 import { SeleccionTurno, type SeleccionTurnoVista } from '../seleccion-turno/seleccion-turno';
-
-const TEXTOS_FALLO_RESERVA: TextosFalloHttp = {
-  desincronizado:
-    'Ese horario acaba de ser reservado por otra persona. Actualizamos la disponibilidad para que elijas otro.',
-  sinPermiso: 'No tenes permiso para reservar turnos.',
-  generico: 'No pudimos confirmar la reserva. Por favor, reintentá.',
-};
 
 @Component({
   selector: 'app-reservar-turno',

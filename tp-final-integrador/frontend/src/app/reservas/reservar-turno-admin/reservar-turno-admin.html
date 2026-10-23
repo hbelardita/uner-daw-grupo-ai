@@ -1,0 +1,115 @@
+<section class="flex flex-col gap-6 pb-64 lg:pb-0">
+  @if (reservaConfirmada(); as confirmada) {
+    <app-comprobante-turno
+      [reserva]="confirmada"
+      [paciente]="pacienteDelComprobante()"
+      etiquetaVerTurnos="Ver todos los turnos"
+      (verMisTurnos)="irATodosLosTurnos()"
+      (nuevaReserva)="reiniciar()"
+    />
+  }
+
+  <header>
+    <h1 class="text-2xl md:text-3xl font-semibold text-slate-900">Nueva reserva</h1>
+    <p class="text-sm text-slate-600 mt-1">Reservá un turno en nombre de un paciente registrado.</p>
+  </header>
+
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="flex flex-col gap-6">
+      <app-resumen-errores [mensaje]="errorConfirmacion()" />
+
+      <section aria-labelledby="titulo-paciente">
+        <app-buscador-paciente [(pacienteSeleccionado)]="pacienteSeleccionado" />
+      </section>
+
+      <section class="flex flex-col gap-3" aria-labelledby="titulo-seleccion">
+        <h2 id="titulo-seleccion" class="text-lg font-semibold text-slate-900">
+          Profesional, fecha y horario
+        </h2>
+
+        @if (!pacienteSeleccionado()) {
+          <p
+            class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+            role="status"
+          >
+            Seleccioná primero al paciente para habilitar la agenda de disponibilidad.
+          </p>
+        }
+
+        <app-seleccion-turno
+          [habilitado]="habilitarSeleccion()"
+          (seleccion)="alSeleccionar($event)"
+        />
+      </section>
+    </div>
+
+    <aside
+      class="fixed inset-x-0 bottom-18 z-20 px-4 lg:sticky lg:bottom-auto lg:top-24 lg:z-auto lg:self-start lg:px-0"
+      aria-label="Resumen de la reserva"
+    >
+      <div
+        class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg lg:gap-3 lg:p-5 lg:shadow-sm"
+      >
+        <h2 class="hidden text-lg font-semibold text-slate-900 lg:block">Resumen de la reserva</h2>
+
+        <div class="flex min-w-0 flex-col gap-0.5 text-sm lg:gap-1">
+          <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            PACIENTE
+          </span>
+          @if (pacienteSeleccionado(); as paciente) {
+            <span class="truncate font-medium text-slate-900">
+              {{ paciente.apellidos }}, {{ paciente.nombres }}
+            </span>
+            <span class="truncate text-slate-600 tabular-nums">
+              DNI {{ paciente.documento | documento }}
+            </span>
+          } @else {
+            <span class="text-sm text-slate-600">Sin paciente seleccionado</span>
+          }
+        </div>
+
+        @if (seleccionActiva(); as activa) {
+          <div
+            class="flex min-w-0 flex-col gap-0.5 border-t border-slate-200 pt-2 text-sm lg:gap-1 lg:pt-3"
+          >
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              PROFESIONAL
+            </span>
+            <span class="truncate font-medium text-slate-900">
+              {{ activa.medico.apellidos }}, {{ activa.medico.nombres }}
+            </span>
+            <span class="truncate text-slate-600">{{ activa.etiquetaFecha }}</span>
+            <span class="font-semibold text-slate-900 tabular-nums">{{ activa.rangoHorario }}</span>
+            <span class="text-slate-600">
+              Valor de la consulta:
+              <span class="font-semibold text-slate-900 tabular-nums">{{
+                activa.medico.valorConsulta | currency: 'ARS' : 'symbol-narrow' : '1.0-0'
+              }}</span>
+            </span>
+            <span class="text-xs text-muted-foreground"> Arancel fijo congelado al confirmar </span>
+          </div>
+        } @else {
+          <div class="border-t border-slate-200 pt-2 lg:pt-3">
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              PROFESIONAL
+            </span>
+            <p class="text-sm text-slate-600">Elegí profesional, fecha y horario.</p>
+          </div>
+        }
+
+        <p-button
+          label="Confirmar reserva"
+          class="w-full"
+          styleClass="w-full justify-center min-h-12"
+          [disabled]="!puedeConfirmar()"
+          [loading]="confirmando()"
+          (click)="confirmarReserva()"
+        />
+
+        @if (motivoBloqueo(); as motivo) {
+          <p class="text-xs text-muted-foreground">{{ motivo }}</p>
+        }
+      </div>
+    </aside>
+  </div>
+</section>

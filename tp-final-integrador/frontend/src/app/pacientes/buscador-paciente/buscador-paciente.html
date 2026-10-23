@@ -1,0 +1,108 @@
+<section class="flex w-full min-w-0 flex-col gap-3" aria-labelledby="buscador-paciente-titulo">
+  <div class="flex flex-col gap-1">
+    <h2 id="buscador-paciente-titulo" class="text-base font-semibold text-slate-900">Paciente</h2>
+    <p [id]="idAyuda" class="text-sm text-slate-600">
+      Buscá por DNI o apellido. Se muestran hasta 10 pacientes activos ordenados por apellido.
+    </p>
+  </div>
+
+  @if (pacienteSeleccionado(); as paciente) {
+    <div class="flex flex-col gap-3 rounded-xl border border-primary bg-primary-subtle p-4">
+      <div class="min-w-0">
+        <p class="text-xs font-medium uppercase tracking-wide text-primary-hover">
+          Paciente seleccionado
+        </p>
+        <p class="truncate text-base font-semibold text-slate-900">
+          {{ paciente.apellidos }}, {{ paciente.nombres }}
+        </p>
+        <p class="mt-1 text-sm text-slate-700">
+          DNI
+          <span class="ml-1 font-medium tabular-nums">{{ paciente.documento | documento }}</span>
+        </p>
+      </div>
+      <p-button
+        label="Cambiar paciente"
+        icon="pi pi-user-edit"
+        severity="secondary"
+        [outlined]="true"
+        styleClass="min-h-12 w-full"
+        (click)="cambiarPaciente()"
+      />
+    </div>
+  } @else {
+    <div class="flex min-w-0 flex-col gap-2">
+      <label [for]="idEntrada" class="text-sm font-medium text-slate-700">Buscar paciente</label>
+      <div class="flex min-w-0 items-start gap-2">
+        <p-autocomplete
+          class="min-w-0 flex-1"
+          [inputId]="idEntrada"
+          inputStyleClass="w-full min-h-12"
+          [ngModel]="pacienteSeleccionado()"
+          (ngModelChange)="actualizarConsulta($event)"
+          [suggestions]="sugerencias()"
+          [optionLabel]="etiquetaPaciente"
+          [delay]="retrasoAutocomplete"
+          [minQueryLength]="longitudMinimaBusqueda"
+          [showEmptyMessage]="false"
+          [pt]="descripcionEntrada"
+          placeholder="DNI o apellido"
+          autocomplete="off"
+          appendTo="body"
+          (completeMethod)="buscar($event)"
+          (onSelect)="seleccionarPaciente($event.value)"
+          (onClear)="manejarLimpiado()"
+        >
+          <ng-template #item let-paciente>
+            <div class="flex min-w-0 flex-col gap-0.5 py-1">
+              <span class="truncate text-sm font-medium text-slate-900">
+                {{ paciente.apellidos }}, {{ paciente.nombres }}
+              </span>
+              <span class="text-xs text-slate-600 tabular-nums">
+                DNI {{ paciente.documento | documento }}
+              </span>
+            </div>
+          </ng-template>
+        </p-autocomplete>
+
+        @if (consulta()) {
+          <p-button
+            icon="pi pi-times"
+            severity="secondary"
+            [text]="true"
+            ariaLabel="Limpiar búsqueda de pacientes"
+            styleClass="min-h-12 min-w-12"
+            (click)="vaciarBusqueda()"
+          />
+        }
+      </div>
+
+      @if (cargando()) {
+        <p class="text-sm text-slate-600" role="status">Buscando pacientes...</p>
+      }
+
+      @if (error(); as mensaje) {
+        <div
+          role="alert"
+          class="flex flex-col gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"
+        >
+          <p>{{ mensaje }}</p>
+          <p-button
+            label="Reintentar"
+            icon="pi pi-refresh"
+            severity="danger"
+            [outlined]="true"
+            styleClass="min-h-12"
+            (click)="reintentar()"
+          />
+        </div>
+      } @else if (sinResultados()) {
+        <p
+          class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"
+          role="status"
+        >
+          No se encontraron pacientes activos con los datos ingresados.
+        </p>
+      }
+    </div>
+  }
+</section>

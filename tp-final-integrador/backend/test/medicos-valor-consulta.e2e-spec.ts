@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
+import { fechaHoraUtcNaive } from './setup/fechas.js';
 
 describe('Endpoint PATCH /api/v1/medicos/:id/valor-consulta (e2e)', () => {
   let app: INestApplication;
@@ -108,13 +109,19 @@ describe('Endpoint PATCH /api/v1/medicos/:id/valor-consulta (e2e)', () => {
       );
       const idPaciente = pacienteResult[0].id;
 
-      // 2. Insertar una reserva previa con un honorario histórico congelado (ej: 4200)
+      // 2. Insertar una reserva previa con un honorario histórico congelado (ej: 4200).
+      // La franja es 10:00 de Argentina, que se persiste como las 13:00 UTC.
       const valorHistoricoCongelado = 4200;
       const reservaInsertada = await dataSource.query(
         `INSERT INTO reservas (id_medico, id_paciente, fecha_hora, estado, valor_consulta)
-         VALUES ($1, $2, '2026-11-20 10:00:00', 'ACTIVO', $3)
+         VALUES ($1, $2, $4, 'ACTIVO', $3)
          RETURNING id, valor_consulta`,
-        [idMedicoExistente, idPaciente, valorHistoricoCongelado],
+        [
+          idMedicoExistente,
+          idPaciente,
+          valorHistoricoCongelado,
+          fechaHoraUtcNaive('2026-11-20', 10),
+        ],
       );
       const idReserva = reservaInsertada[0].id;
 

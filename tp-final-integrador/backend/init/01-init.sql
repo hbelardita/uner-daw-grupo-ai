@@ -53,7 +53,10 @@ CREATE TABLE IF NOT EXISTS reservas (
     CONSTRAINT fk_reservas_paciente FOREIGN KEY (id_paciente) REFERENCES usuarios(id) ON DELETE RESTRICT,
     CONSTRAINT chk_reservas_horario_atencion
     CHECK (
-        "fecha_hora"::time IN (
+        -- `fecha_hora` se persiste en UTC sobre una columna `timestamp` sin
+        -- zona: primero se la rotula como UTC y luego se la proyecta a la zona
+        -- de la clínica antes de evaluar la franja de atención.
+        (fecha_hora AT TIME ZONE 'UTC' AT TIME ZONE 'America/Argentina/Buenos_Aires')::time IN (
             '08:00:00', '09:00:00', '10:00:00', '11:00:00',
             '12:00:00', '13:00:00', '14:00:00', '15:00:00'
         )

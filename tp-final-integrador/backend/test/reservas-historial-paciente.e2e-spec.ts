@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
+import { fechaHoraUtcNaive } from './setup/fechas.js';
 
 describe('Endpoint GET /api/v1/reservas - Historial de turnos de paciente (e2e)', () => {
   let app: INestApplication;
@@ -112,18 +113,19 @@ describe('Endpoint GET /api/v1/reservas - Historial de turnos de paciente (e2e)'
     );
 
     // 3. Sembrar reservas de prueba
-    // Para Paciente 1: 4 reservas en distintos estados y fechas
-    // Fecha 1: más antigua (2026-11-10 10:00:00) -> CANCELADO
-    // Fecha 2: intermedia (2026-11-15 09:00:00) -> AUSENTE
-    // Fecha 3: intermedia (2026-11-20 11:00:00) -> ATENDIDO
-    // Fecha 4: más reciente (2026-11-25 14:00:00) -> ACTIVO
+    // Para Paciente 1: 4 reservas en distintos estados y fechas.
+    // Las horas indicadas son de Argentina y se persisten en UTC (hora + 3).
+    // Fecha 1: más antigua (2026-11-10 10:00 AR) -> CANCELADO
+    // Fecha 2: intermedia (2026-11-15 09:00 AR) -> AUSENTE
+    // Fecha 3: intermedia (2026-11-20 11:00 AR) -> ATENDIDO
+    // Fecha 4: más reciente (2026-11-25 14:00 AR) -> ACTIVO
     const insertP1Res = await dataSource.query(
       `INSERT INTO reservas (id_medico, id_paciente, fecha_hora, estado, valor_consulta)
        VALUES
-         ($1, $2, '2026-11-10 10:00:00', 'CANCELADO', 5000),
-         ($3, $2, '2026-11-15 09:00:00', 'AUSENTE', 4500),
-         ($1, $2, '2026-11-20 11:00:00', 'ATENDIDO', 5000),
-         ($1, $2, '2026-11-25 14:00:00', 'ACTIVO', 5000)
+         ($1, $2, '${fechaHoraUtcNaive('2026-11-10', 10)}', 'CANCELADO', 5000),
+         ($3, $2, '${fechaHoraUtcNaive('2026-11-15', 9)}', 'AUSENTE', 4500),
+         ($1, $2, '${fechaHoraUtcNaive('2026-11-20', 11)}', 'ATENDIDO', 5000),
+         ($1, $2, '${fechaHoraUtcNaive('2026-11-25', 14)}', 'ACTIVO', 5000)
        RETURNING id;`,
       [idMedico1, idPaciente1, idMedico2],
     );
@@ -133,7 +135,7 @@ describe('Endpoint GET /api/v1/reservas - Historial de turnos de paciente (e2e)'
     const insertP2Res = await dataSource.query(
       `INSERT INTO reservas (id_medico, id_paciente, fecha_hora, estado, valor_consulta)
        VALUES
-         ($1, $2, '2026-11-18 10:00:00', 'ACTIVO', 4500)
+         ($1, $2, '${fechaHoraUtcNaive('2026-11-18', 10)}', 'ACTIVO', 4500)
        RETURNING id;`,
       [idMedico2, idPaciente2],
     );

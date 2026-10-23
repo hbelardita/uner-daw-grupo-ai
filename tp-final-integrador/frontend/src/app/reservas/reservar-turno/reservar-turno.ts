@@ -1,44 +1,21 @@
 import { CurrencyPipe } from '@angular/common';
-import {
-  Component,
-  computed,
-  DestroyRef,
-  effect,
-  inject,
-  input,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, type Params } from '@angular/router';
+import { Router } from '@angular/router';
 import { Button } from 'primeng/button';
-import { Skeleton } from 'primeng/skeleton';
 import { finalize } from 'rxjs';
-import { AuthService } from '../../auth/auth-service';
+import { CurrentUser } from '../../auth/current-user';
 import { RUTAS } from '../../constantes/rutas';
-import type { DisponibilidadSlot, MedicoListItem } from '../../medicos/medico';
-import { MedicosService } from '../../medicos/medicos-service';
-import { Pacientes } from '../../pacientes/pacientes/pacientes';
-import type { PacienteResumen } from '../../pacientes/paciente';
-import { EmptyState, FranjasHorariasGrid, ResumenErrores, SelectorFecha } from '../../shared';
+import { ResumenErrores } from '../../shared';
 import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
-import { obtenerFechaLocalIso } from '../../shared/functions/fecha-clinica';
 import { ComprobanteTurno } from '../comprobante-turno/comprobante-turno';
 import {
-  construirDiaReservable,
-  esFechaReservableValida,
   formatearRangoHorarioReserva,
-  obtenerRangoFechasReserva,
-  type DiaReservable,
-  type RangoFechasReserva,
+  type PacienteComprobante,
   type ReservaConfirmadaVista,
-  type ResumenReservaActiva,
 } from '../regla-reserva';
 import { ReservasService } from '../reservas-service';
-
-const TEXTO_ERROR_MEDICOS = 'No pudimos cargar los profesionales. Por favor, reintentá.';
-const TEXTO_ERROR_DISPONIBILIDAD = 'No pudimos cargar la disponibilidad. Por favor, reintentá.';
+import { SeleccionTurno, type SeleccionTurnoVista } from '../seleccion-turno/seleccion-turno';
 
 const TEXTOS_FALLO_RESERVA: TextosFalloHttp = {
   desincronizado:
@@ -49,231 +26,59 @@ const TEXTOS_FALLO_RESERVA: TextosFalloHttp = {
 
 @Component({
   selector: 'app-reservar-turno',
-  imports: [
-    CurrencyPipe,
-    FormsModule,
-    Button,
-    Skeleton,
-    ComprobanteTurno,
-    EmptyState,
-    FranjasHorariasGrid,
-    ResumenErrores,
-    SelectorFecha,
-    Pacientes,
-  ],
+  imports: [Button, ComprobanteTurno, CurrencyPipe, ResumenErrores, SeleccionTurno],
   templateUrl: './reservar-turno.html',
 })
-class ReservarTurno implements OnInit {
-  private readonly medicosService = inject(MedicosService);
+class ReservarTurno {
   private readonly reservasService = inject(ReservasService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly authService = inject(AuthService);
+  private readonly currentUser = inject(CurrentUser);
 
-  readonly medico = input<string | undefined>(undefined);
-  readonly fecha = input<string | undefined>(undefined);
+  private readonly seleccionZona = viewChild(SeleccionTurno);
 
-  /**
-   * Secuencia de la última solicitud de disponibilidad emitida.
-   * Permite descartar respuestas que llegan fuera de orden .
-   */
-  private secuenciaDisponibilidad = 0;
-
-  constructor() {
-    effect(() => {
-      const medicoParam = this.medico();
-      const fechaParam = this.fecha();
-      const medicos = this.medicos();
-
-      let cambio = false;
-      if (fechaParam) {
-        const diaExistente = this.rangoFechas().diasHabiles.find((d) => d.fechaIso === fechaParam);
-        const diaValido =
-          diaExistente ??
-          (esFechaReservableValida(fechaParam) ? construirDiaReservable(fechaParam) : null);
-        if (diaValido && this.fechaSeleccionada()?.fechaIso !== diaValido.fechaIso) {
-          this.fechaSeleccionada.set(diaValido);
-          this.franjaSeleccionada.set(null);
-          cambio = true;
-        }
-      }
-
-      if (medicoParam && medicos.length > 0) {
-        const id = Number.parseInt(medicoParam, 10);
-        if (Number.isInteger(id)) {
-          const medicoEncontrado = medicos.find((m) => m.id === id);
-          if (medicoEncontrado && this.medicoSeleccionado()?.id !== medicoEncontrado.id) {
-            this.medicoSeleccionado.set(medicoEncontrado);
-            this.franjaSeleccionada.set(null);
-            cambio = true;
-          }
-        }
-      }
-
-      if (cambio && this.medicoSeleccionado() && this.fechaSeleccionada()) {
-        this.cargarDisponibilidad();
-      }
-    });
-  }
-
-  readonly medicos = signal<MedicoListItem[]>([]);
-  readonly cargandoMedicos = signal<boolean>(true);
-  readonly errorMedicos = signal<string | null>(null);
-  readonly medicoSeleccionado = signal<MedicoListItem | null>(null);
-
-  readonly rangoFechas = signal<RangoFechasReserva>(obtenerRangoFechasReserva());
-  readonly fechaSeleccionada = signal<DiaReservable | null>(
-    this.rangoFechas().diasHabiles[0] ?? null,
-  );
-
-  readonly slots = signal<readonly DisponibilidadSlot[]>([]);
-  readonly cargandoSlots = signal<boolean>(false);
-  readonly errorSlots = signal<string | null>(null);
-  readonly franjaSeleccionada = signal<string | null>(null);
-  readonly pacienteSeleccionado = signal<PacienteResumen | null>(null);
-  readonly esAdministrador = computed(() => this.authService.rol() === 'ADMINISTRADOR');
-
+  readonly seleccionActiva = signal<SeleccionTurnoVista | null>(null);
   readonly confirmando = signal<boolean>(false);
   readonly errorConfirmacion = signal<string | null>(null);
   readonly reservaConfirmada = signal<ReservaConfirmadaVista | null>(null);
 
-  readonly fechaMinima = computed<Date>(() => this.rangoFechas().fechaMinima);
-  readonly fechaMaxima = computed<Date>(() => this.rangoFechas().fechaMaxima);
-  readonly fechaSeleccionadaDate = computed<Date>(
-    () => this.fechaSeleccionada()?.fechaDate ?? this.rangoFechas().fechaMinima,
-  );
-
-  readonly resumen = computed<ResumenReservaActiva | null>(() => {
-    const medico = this.medicoSeleccionado();
-    const dia = this.fechaSeleccionada();
-    const franja = this.franjaSeleccionada();
-
-    if (!medico || !dia || !franja) {
+  readonly pacienteDelComprobante = computed<PacienteComprobante | null>(() => {
+    const usuario = this.currentUser.usuario();
+    if (!usuario) {
       return null;
     }
-
     return {
-      medico,
-      dia,
-      fechaHoraIso: franja,
-      rangoHorario: formatearRangoHorarioReserva(franja),
-      valorConsulta: medico.valorConsulta,
+      nombres: usuario.nombres,
+      apellidos: usuario.apellidos,
+      documento: usuario.documento,
     };
   });
 
   readonly puedeConfirmar = computed<boolean>(
-    () =>
-      this.resumen() !== null &&
-      !this.confirmando() &&
-      (!this.esAdministrador() || this.pacienteSeleccionado() !== null),
+    () => this.seleccionActiva() !== null && !this.confirmando(),
   );
 
-  ngOnInit(): void {
-    this.cargarMedicos();
+  alSeleccionar(seleccion: SeleccionTurnoVista | null): void {
+    this.seleccionActiva.set(seleccion);
+
+    if (seleccion) {
+      this.errorConfirmacion.set(null);
+    }
   }
 
-  cargarMedicos(): void {
-    this.cargandoMedicos.set(true);
-    this.errorMedicos.set(null);
-    this.medicosService
-      .obtenerMedicos()
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.cargandoMedicos.set(false)),
-      )
-      .subscribe({
-        next: (medicos) => {
-          this.medicos.set(medicos);
-        },
-        error: () => {
-          this.errorMedicos.set(TEXTO_ERROR_MEDICOS);
-        },
-      });
-  }
-
-  seleccionarMedico(medico: MedicoListItem): void {
-    if (this.medicoSeleccionado()?.id === medico.id) {
+  confirmarReserva(): void {
+    const seleccion = this.seleccionActiva();
+    if (!seleccion || this.confirmando()) {
       return;
     }
 
-    this.medicoSeleccionado.set(medico);
-    this.franjaSeleccionada.set(null);
-    this.errorConfirmacion.set(null);
-    this.errorSlots.set(null);
-    this.actualizarParametrosUrl({ medico: medico.id });
-    this.cargarDisponibilidad();
-  }
-
-  seleccionarDia(dia: DiaReservable): void {
-    if (this.fechaSeleccionada()?.fechaIso === dia.fechaIso) {
-      return;
-    }
-    this.fechaSeleccionada.set(dia);
-    this.franjaSeleccionada.set(null);
-    this.errorConfirmacion.set(null);
-    this.actualizarParametrosUrl({ fecha: dia.fechaIso });
-    this.cargarDisponibilidad();
-  }
-
-  cargarDisponibilidad(): void {
-    const medico = this.medicoSeleccionado();
-    const dia = this.fechaSeleccionada();
-
-    if (!medico || !dia) {
-      this.slots.set([]);
-      this.cargandoSlots.set(false);
-      return;
-    }
-
-    const secuencia = (this.secuenciaDisponibilidad += 1);
-    this.cargandoSlots.set(true);
-    this.errorSlots.set(null);
-
-    this.medicosService
-      .obtenerDisponibilidad(medico.id, dia.fechaIso)
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => {
-          if (secuencia === this.secuenciaDisponibilidad) {
-            this.cargandoSlots.set(false);
-          }
-        }),
-      )
-      .subscribe({
-        next: (slots) => {
-          if (secuencia !== this.secuenciaDisponibilidad) {
-            return;
-          }
-          this.slots.set(slots);
-        },
-        error: () => {
-          if (secuencia !== this.secuenciaDisponibilidad) {
-            return;
-          }
-          this.errorSlots.set(TEXTO_ERROR_DISPONIBILIDAD);
-          this.slots.set([]);
-        },
-      });
-  }
-
-  confirmar(): void {
-    const resumen = this.resumen();
-    if (!resumen || this.confirmando()) {
-      return;
-    }
-
-    const { medico, dia } = resumen;
     this.confirmando.set(true);
     this.errorConfirmacion.set(null);
 
     this.reservasService
       .crearReserva({
-        idMedico: medico.id,
-        fechaHora: resumen.fechaHoraIso,
-        ...(this.esAdministrador() && this.pacienteSeleccionado() !== null
-          ? { idPaciente: this.pacienteSeleccionado()!.id }
-          : {}),
+        idMedico: seleccion.medico.id,
+        fechaHora: seleccion.fechaHoraIso,
       })
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -283,59 +88,32 @@ class ReservarTurno implements OnInit {
         next: (reserva) => {
           this.reservaConfirmada.set({
             reserva,
-            medico,
-            etiquetaFecha: dia.etiquetaCompleta,
+            medico: seleccion.medico,
+            etiquetaFecha: seleccion.etiquetaFecha,
             rangoHorario: formatearRangoHorarioReserva(reserva.fechaHora),
           });
-          this.franjaSeleccionada.set(null);
-          this.cargarDisponibilidad();
         },
         error: (error: unknown) => {
           const fallo = clasificarFalloHttp(error, TEXTOS_FALLO_RESERVA);
           this.errorConfirmacion.set(fallo.mensaje);
 
           if (fallo.requiereRecargar) {
-            this.franjaSeleccionada.set(null);
-            this.cargarDisponibilidad();
+            this.seleccionActiva.set(null);
+            this.seleccionZona()?.recargarDisponibilidad();
           }
         },
       });
   }
 
   irAMisTurnos(): void {
-    const ruta = this.esAdministrador() ? RUTAS.TURNOS_ADMIN : RUTAS.MIS_TURNOS;
-    this.router.navigate([ruta]);
+    this.router.navigate([RUTAS.MIS_TURNOS]);
   }
 
   reiniciar(): void {
     this.reservaConfirmada.set(null);
-    this.franjaSeleccionada.set(null);
-    this.medicoSeleccionado.set(null);
-    this.pacienteSeleccionado.set(null);
-    this.fechaSeleccionada.set(this.rangoFechas().diasHabiles[0] ?? null);
-    this.slots.set([]);
+    this.seleccionActiva.set(null);
     this.errorConfirmacion.set(null);
-    this.actualizarParametrosUrl({ medico: null, fecha: null });
-  }
-
-  alCambiarFechaDate(nuevaFecha: Date | null): void {
-    if (!nuevaFecha || Number.isNaN(nuevaFecha.getTime())) {
-      return;
-    }
-    const fechaIso = obtenerFechaLocalIso(nuevaFecha);
-    const dia = construirDiaReservable(fechaIso);
-    if (dia) {
-      this.seleccionarDia(dia);
-    }
-  }
-
-  private actualizarParametrosUrl(queryParams: Params): void {
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams,
-      queryParamsHandling: 'merge',
-      replaceUrl: true,
-    });
+    this.seleccionZona()?.reiniciar();
   }
 }
 

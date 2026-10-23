@@ -2,7 +2,7 @@
   @if (reservaConfirmada(); as confirmada) {
     <app-comprobante-turno
       [reserva]="confirmada"
-      [paciente]="pacienteSeleccionado()"
+      [paciente]="pacienteDelComprobante()"
       (verMisTurnos)="irAMisTurnos()"
       (nuevaReserva)="reiniciar()"
     />
@@ -15,143 +15,8 @@
 
   <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
     <div class="flex flex-col gap-6">
-      <!-- Zona A: profesional -->
-      <section class="flex flex-col gap-3" aria-labelledby="titulo-profesional">
-        <h2 id="titulo-profesional" class="text-lg font-semibold text-slate-900">Profesional</h2>
-
-        @if (cargandoMedicos()) {
-          <div
-            class="grid gap-3 sm:grid-cols-2"
-            aria-busy="true"
-            aria-label="Cargando profesionales"
-          >
-            @for (item of [1, 2, 3]; track item) {
-              <p-skeleton height="6rem" borderRadius="0.75rem" class="w-full" />
-            }
-          </div>
-        } @else if (errorMedicos(); as mensaje) {
-          <div
-            role="alert"
-            class="rounded-xl border border-rose-200 bg-rose-50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
-          >
-            <div class="flex items-center gap-3 text-rose-800">
-              <i class="pi pi-exclamation-circle text-2xl" aria-hidden="true"></i>
-              <p class="font-medium text-sm">{{ mensaje }}</p>
-            </div>
-            <p-button
-              label="Reintentar"
-              icon="pi pi-refresh"
-              severity="danger"
-              [outlined]="true"
-              [loading]="cargandoMedicos()"
-              (click)="cargarMedicos()"
-            />
-          </div>
-        } @else if (medicos().length === 0) {
-          <app-empty-state
-            icono="pi pi-user"
-            titulo="No hay profesionales disponibles para reservar"
-          />
-        } @else {
-          <div
-            role="radiogroup"
-            aria-label="Elegí un profesional"
-            class="grid gap-3 sm:grid-cols-2"
-          >
-            @for (medico of medicos(); track medico.id) {
-              <button
-                type="button"
-                role="radio"
-                [attr.aria-checked]="medicoSeleccionado()?.id === medico.id"
-                (click)="seleccionarMedico(medico)"
-                class="min-h-12 text-left rounded-xl border p-4 transition-colors flex flex-col gap-1"
-                [class]="
-                  medicoSeleccionado()?.id === medico.id
-                    ? 'border-2 border-primary bg-muted'
-                    : 'border-slate-200 bg-white hover:border-primary'
-                "
-              >
-                <span class="flex items-center justify-between gap-2">
-                  <span class="font-medium text-slate-900">
-                    {{ medico.apellidos }}, {{ medico.nombres }}
-                  </span>
-                  @if (medicoSeleccionado()?.id === medico.id) {
-                    <i class="pi pi-check text-primary" aria-hidden="true"></i>
-                  }
-                </span>
-                <span class="text-sm text-slate-600 tabular-nums">MP {{ medico.matricula }}</span>
-                <span class="text-sm font-semibold text-slate-900 tabular-nums">{{
-                  medico.valorConsulta | currency: 'ARS' : 'symbol-narrow' : '1.0-0'
-                }}</span>
-              </button>
-            }
-          </div>
-        }
-      </section>
-
-      <!-- Zona B: fecha -->
-      <section class="flex flex-col gap-3" aria-labelledby="titulo-fecha">
-        <h2 id="titulo-fecha" class="text-lg font-semibold text-slate-900">Fecha</h2>
-
-        <app-selector-fecha
-          [fecha]="fechaSeleccionadaDate()"
-          (fechaChange)="alCambiarFechaDate($event)"
-          [minDate]="fechaMinima()"
-          [maxDate]="fechaMaxima()"
-          ariaLabel="Seleccionar fecha del turno"
-        />
-
-        <p class="text-xs text-slate-600">
-          Podés reservar entre hoy y los próximos 30 días, de lunes a viernes.
-        </p>
-      </section>
-
-      <!-- Zona C: horario -->
-      <section class="flex flex-col gap-3" aria-labelledby="titulo-horario">
-        <h2 id="titulo-horario" class="text-lg font-semibold text-slate-900">Horario</h2>
-
-        <app-resumen-errores [mensaje]="errorConfirmacion()" />
-
-        @if (!medicoSeleccionado()) {
-          <div
-            role="status"
-            class="rounded-xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600"
-          >
-            Elegí un profesional para ver los horarios disponibles
-          </div>
-        } @else if (errorSlots(); as mensaje) {
-          <div
-            role="alert"
-            class="rounded-xl border border-rose-200 bg-rose-50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
-          >
-            <div class="flex items-center gap-3 text-rose-800">
-              <i class="pi pi-exclamation-circle text-2xl" aria-hidden="true"></i>
-              <p class="font-medium text-sm">{{ mensaje }}</p>
-            </div>
-            <p-button
-              label="Reintentar"
-              icon="pi pi-refresh"
-              severity="danger"
-              [outlined]="true"
-              (click)="cargarDisponibilidad()"
-            />
-          </div>
-        } @else {
-          <app-franjas-horarias-grid
-            [slots]="slots()"
-            [(seleccionado)]="franjaSeleccionada"
-            [cargando]="cargandoSlots()"
-          />
-        }
-      </section>
-
-      <!-- Zona D: paciente -->
-      @if (esAdministrador()) {
-        <section class="flex flex-col gap-3" aria-labelledby="titulo-paciente">
-          <h2 id="titulo-paciente" class="text-lg font-semibold text-slate-900">Paciente</h2>
-          <app-pacientes (pacienteSeleccionado)="pacienteSeleccionado.set($event)" />
-        </section>
-      }
+      <app-resumen-errores [mensaje]="errorConfirmacion()" />
+      <app-seleccion-turno [habilitado]="!confirmando()" (seleccion)="alSeleccionar($event)" />
     </div>
 
     <aside
@@ -163,26 +28,20 @@
       >
         <h2 class="hidden text-lg font-semibold text-slate-900 lg:block">Tu reserva</h2>
 
-        @if (medicoSeleccionado(); as medico) {
+        @if (seleccionActiva(); as activa) {
           <div class="flex min-w-0 flex-col gap-0.5 text-sm lg:gap-1">
             <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               PROFESIONAL
             </span>
             <span class="truncate font-medium text-slate-900">
-              {{ medico.apellidos }}, {{ medico.nombres }}
+              {{ activa.medico.apellidos }}, {{ activa.medico.nombres }}
             </span>
-            @if (fechaSeleccionada(); as dia) {
-              <span class="truncate text-slate-600">{{ dia.etiquetaCompleta }}</span>
-            }
-            @if (resumen(); as activa) {
-              <span class="font-semibold text-slate-900 tabular-nums">{{
-                activa.rangoHorario
-              }}</span>
-            }
+            <span class="truncate text-slate-600">{{ activa.etiquetaFecha }}</span>
+            <span class="font-semibold text-slate-900 tabular-nums">{{ activa.rangoHorario }}</span>
             <span class="text-slate-600">
               Valor de la consulta:
               <span class="font-semibold text-slate-900 tabular-nums">{{
-                medico.valorConsulta | currency: 'ARS' : 'symbol-narrow' : '1.0-0'
+                activa.medico.valorConsulta | currency: 'ARS' : 'symbol-narrow' : '1.0-0'
               }}</span>
             </span>
             <span class="text-xs text-muted-foreground"> Arancel fijo congelado al confirmar </span>
@@ -194,29 +53,13 @@
           <p class="text-sm text-slate-600">Elegí profesional, fecha y horario para confirmar.</p>
         }
 
-        @if (esAdministrador()) {
-          <div class="border-t border-slate-200 pt-2 text-sm lg:pt-3">
-            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Paciente
-            </span>
-            @if (pacienteSeleccionado(); as paciente) {
-              <p class="font-medium text-slate-900">
-                {{ paciente.apellidos }}, {{ paciente.nombres }}
-              </p>
-              <p class="text-xs text-slate-600 tabular-nums">DNI {{ paciente.documento }}</p>
-            } @else {
-              <p class="text-sm text-slate-600">Seleccioná un paciente.</p>
-            }
-          </div>
-        }
-
         <p-button
           label="Confirmar reserva"
           class="w-full"
           styleClass="w-full justify-center min-h-12"
           [disabled]="!puedeConfirmar()"
           [loading]="confirmando()"
-          (click)="confirmar()"
+          (click)="confirmarReserva()"
         />
       </div>
     </aside>

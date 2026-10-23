@@ -15,12 +15,16 @@ import { TOKEN_KEY } from './token-storage';
 describe('authInterceptor', () => {
   let httpClient: HttpClient;
   let httpMock: HttpTestingController;
-  let authServiceMock: { cerrarSesion: ReturnType<typeof vi.fn> };
+  let authServiceMock: {
+    cerrarSesion: ReturnType<typeof vi.fn>;
+    estaAutenticado: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     localStorage.clear();
     authServiceMock = {
       cerrarSesion: vi.fn(),
+      estaAutenticado: vi.fn(() => false),
     };
     TestBed.configureTestingModule({
       providers: [
@@ -117,6 +121,25 @@ describe('authInterceptor', () => {
 
       expect(authServiceMock.cerrarSesion).not.toHaveBeenCalled();
       expect(errorRecibido).toBeInstanceOf(HttpErrorResponse);
+      expect((errorRecibido as HttpErrorResponse).status).toBe(401);
+    });
+
+    it('debe cerrar sesión cuando el token fue eliminado de localStorage pero la sesión sigue activa y responde 401', () => {
+      authServiceMock.estaAutenticado.mockReturnValue(true);
+      let errorRecibido: unknown;
+
+      httpClient.get('/api/v1/test').subscribe({
+        next: () => expect.fail('no debía resolverse exitosamente'),
+        error: (error: unknown) => {
+          errorRecibido = error;
+        },
+      });
+
+      const peticion = httpMock.expectOne('/api/v1/test');
+      expect(peticion.request.headers.has('Authorization')).toBe(false);
+      peticion.flush({ mensaje: 'No autorizado' }, { status: 401, statusText: 'Unauthorized' });
+
+      expect(authServiceMock.cerrarSesion).toHaveBeenCalledTimes(1);
       expect((errorRecibido as HttpErrorResponse).status).toBe(401);
     });
 

@@ -8,6 +8,8 @@ async function bootstrap() {
   configurarZonaHorariaUtc();
 
   const app = await NestFactory.create(AppModule);
+  // Habilita el cierre ordenado
+  app.enableShutdownHooks();
   configureApp(app);
 
   const configService = app.get(ConfigService);

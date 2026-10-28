@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 import { RUTAS } from '../constantes/rutas';
 import { AuthService } from './auth-service';
+import { obtenerRutaInicioPorRol } from './auth-navigation';
 import type { RolUsuario } from './rol-usuario';
 
 export function roleGuard(allowedRoles?: readonly RolUsuario[] | RolUsuario): CanActivateFn {
@@ -28,6 +29,6 @@ export function roleGuard(allowedRoles?: readonly RolUsuario[] | RolUsuario): Ca
       return true;
     }
 
-    return router.createUrlTree([RUTAS.ACCESO_DENEGADO]);
+    return router.createUrlTree([obtenerRutaInicioPorRol(rolActual)]);
   };
 }

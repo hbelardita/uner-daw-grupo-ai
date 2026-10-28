@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "nest build",
-    "deploy": "nest deploy",
+    "deploy": "npm install && npm run build && npx pm2 startOrReload ecosystem.config.cjs --env production && npx pm2 save",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -41,6 +41,7 @@
     "helmet": "^8.3.0",
     "joi": "^18.2.9",
     "pg": "^8.23.0",
+    "pm2": "^6.0.8",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",

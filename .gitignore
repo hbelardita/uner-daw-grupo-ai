@@ -16,3 +16,11 @@ Thumbs.db
 # Variables de entorno globales (Secretos)
 .env
 .oldenv.example
+
+# Runtime de despliegue local (PM2 y Nginx)
+tp-final-integrador/backend/.pm2/
+tp-final-integrador/nginx/logs/
+tp-final-integrador/nginx/run/
+tp-final-integrador/nginx/temp/
+tp-final-integrador/nginx/certs/
+

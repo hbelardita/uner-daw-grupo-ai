@@ -8,6 +8,7 @@ module.exports = {
       exec_mode: 'fork',
       autorestart: true,
       restart_delay: 5000,
+      kill_timeout: 5000,
       env_production: {
         NODE_ENV: 'production',
         PORT: 3000,

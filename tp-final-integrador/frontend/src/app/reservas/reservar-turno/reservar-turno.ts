@@ -15,9 +15,12 @@ import { ActivatedRoute, Router, type Params } from '@angular/router';
 import { Button } from 'primeng/button';
 import { Skeleton } from 'primeng/skeleton';
 import { finalize } from 'rxjs';
+import { AuthService } from '../../auth/auth-service';
 import { RUTAS } from '../../constantes/rutas';
 import type { DisponibilidadSlot, MedicoListItem } from '../../medicos/medico';
 import { MedicosService } from '../../medicos/medicos-service';
+import { Pacientes } from '../../pacientes/pacientes/pacientes';
+import type { PacienteAdminResponse } from '../reservas-dto';
 import { EmptyState, FranjasHorariasGrid, ResumenErrores, SelectorFecha } from '../../shared';
 import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
 import { obtenerFechaLocalIso } from '../../shared/functions/fecha-clinica';
@@ -56,6 +59,7 @@ const TEXTOS_FALLO_RESERVA: TextosFalloHttp = {
     FranjasHorariasGrid,
     ResumenErrores,
     SelectorFecha,
+    Pacientes,
   ],
   templateUrl: './reservar-turno.html',
 })
@@ -65,6 +69,7 @@ class ReservarTurno implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
 
   readonly medico = input<string | undefined>(undefined);
   readonly fecha = input<string | undefined>(undefined);
@@ -126,6 +131,8 @@ class ReservarTurno implements OnInit {
   readonly cargandoSlots = signal<boolean>(false);
   readonly errorSlots = signal<string | null>(null);
   readonly franjaSeleccionada = signal<string | null>(null);
+  readonly pacienteSeleccionado = signal<PacienteAdminResponse | null>(null);
+  readonly esAdministrador = computed(() => this.authService.rol() === 'ADMINISTRADOR');
 
   readonly confirmando = signal<boolean>(false);
   readonly errorConfirmacion = signal<string | null>(null);
@@ -155,7 +162,12 @@ class ReservarTurno implements OnInit {
     };
   });
 
-  readonly puedeConfirmar = computed<boolean>(() => this.resumen() !== null && !this.confirmando());
+  readonly puedeConfirmar = computed<boolean>(
+    () =>
+      this.resumen() !== null &&
+      !this.confirmando() &&
+      (!this.esAdministrador() || this.pacienteSeleccionado() !== null),
+  );
 
   ngOnInit(): void {
     this.cargarMedicos();
@@ -256,7 +268,13 @@ class ReservarTurno implements OnInit {
     this.errorConfirmacion.set(null);
 
     this.reservasService
-      .crearReserva({ idMedico: medico.id, fechaHora: resumen.fechaHoraIso })
+      .crearReserva({
+        idMedico: medico.id,
+        fechaHora: resumen.fechaHoraIso,
+        ...(this.esAdministrador() && this.pacienteSeleccionado() !== null
+          ? { idPaciente: this.pacienteSeleccionado()!.id }
+          : {}),
+      })
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => this.confirmando.set(false)),
@@ -285,13 +303,15 @@ class ReservarTurno implements OnInit {
   }
 
   irAMisTurnos(): void {
-    this.router.navigate([RUTAS.MIS_TURNOS]);
+    const ruta = this.esAdministrador() ? RUTAS.TURNOS_ADMIN : RUTAS.MIS_TURNOS;
+    this.router.navigate([ruta]);
   }
 
   reiniciar(): void {
     this.reservaConfirmada.set(null);
     this.franjaSeleccionada.set(null);
     this.medicoSeleccionado.set(null);
+    this.pacienteSeleccionado.set(null);
     this.fechaSeleccionada.set(this.rangoFechas().diasHabiles[0] ?? null);
     this.slots.set([]);
     this.errorConfirmacion.set(null);

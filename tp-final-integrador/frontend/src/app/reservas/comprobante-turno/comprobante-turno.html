@@ -109,7 +109,7 @@
           (click)="nuevaReserva.emit()"
         />
         <p-button
-          label="Ver mis turnos"
+          [label]="etiquetaVerTurnos()"
           styleClass="min-h-12"
           fluid
           class="w-full sm:w-auto"

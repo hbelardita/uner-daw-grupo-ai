@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 import { RUTAS } from '../constantes/rutas';
-import { AuthService } from './auth-service';
 import { obtenerRutaInicioPorRol } from './auth-navigation';
+import { AuthService } from './auth-service';
 import type { RolUsuario } from './rol-usuario';
 
 export function roleGuard(allowedRoles?: readonly RolUsuario[] | RolUsuario): CanActivateFn {
@@ -29,6 +29,8 @@ export function roleGuard(allowedRoles?: readonly RolUsuario[] | RolUsuario): Ca
       return true;
     }
 
-    return router.createUrlTree([obtenerRutaInicioPorRol(rolActual)]);
+    // Keep users in the section associated with their role when they try to
+    // access a route that is not available to them.
+    return router.parseUrl(obtenerRutaInicioPorRol(rolActual));
   };
 }

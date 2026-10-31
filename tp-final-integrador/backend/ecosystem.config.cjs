@@ -20,7 +20,6 @@ module.exports = {
         POSTGRES_DB_TEST: 'tp-integrador-test',
         DB_LOGGING: false,
         SWAGGER_HABILITADO: false,
-        CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost',
       },
     },
   ],

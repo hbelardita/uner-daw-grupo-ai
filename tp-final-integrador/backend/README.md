@@ -79,22 +79,23 @@ Si trabajás situado dentro de `tp-final-integrador/backend`:
 
 ## ⚙️ Variables de Entorno (`.env`)
 
-| Variable             | Valor por Defecto       | Descripción                                                |
-| :------------------- | :---------------------- | :--------------------------------------------------------- |
-| `NODE_ENV`           | `development`           | Entorno de ejecución (`development`, `production`, `test`) |
-| `PORT`               | `3000`                  | Puerto HTTP donde corre la API                             |
-| `POSTGRES_HOST`      | `localhost`             | Host de la base de datos                                   |
-| `POSTGRES_PORT`      | `5432`                  | Puerto expuesto de PostgreSQL                              |
-| `POSTGRES_USER`      | `postgres`              | Usuario de PostgreSQL                                      |
-| `POSTGRES_PASSWORD`  | `postgres`              | Contraseña de PostgreSQL                                   |
-| `POSTGRES_DB`        | `tp-integrador`         | Nombre de la base de datos principal                       |
-| `POSTGRES_DB_TEST`   | `tp-integrador-test`    | Nombre de la base de datos de tests                        |
-| `DB_LOGGING`         | `false`                 | Habilita logs de consultas SQL de TypeORM                  |
-| `CORS_ORIGIN`        | `http://localhost:4200` | Origen permitido para solicitudes CORS (Frontend)          |
-| `SWAGGER_HABILITADO` | `true`                  | Habilita la documentación OpenAPI/Swagger en `/api/docs`   |
-| `PGADMIN_PORT`       | `5050`                  | Puerto del panel web pgAdmin                               |
-| `PGADMIN_EMAIL`      | `admin@admin.com`       | Email de inicio de sesión de pgAdmin                       |
-| `PGADMIN_PASSWORD`   | `admin`                 | Clave de inicio de sesión de pgAdmin                       |
+| Variable             | Valor por Defecto    | Descripción                                                |
+| :------------------- | :------------------- | :--------------------------------------------------------- |
+| `NODE_ENV`           | `development`        | Entorno de ejecución (`development`, `production`, `test`) |
+| `PORT`               | `3000`               | Puerto HTTP donde corre la API                             |
+| `POSTGRES_HOST`      | `localhost`          | Host de la base de datos                                   |
+| `POSTGRES_PORT`      | `5432`               | Puerto expuesto de PostgreSQL                              |
+| `POSTGRES_USER`      | `postgres`           | Usuario de PostgreSQL                                      |
+| `POSTGRES_PASSWORD`  | `postgres`           | Contraseña de PostgreSQL                                   |
+| `POSTGRES_DB`        | `tp-integrador`      | Nombre de la base de datos principal                       |
+| `POSTGRES_DB_TEST`   | `tp-integrador-test` | Nombre de la base de datos de tests                        |
+| `DB_LOGGING`         | `false`              | Habilita logs de consultas SQL de TypeORM                  |
+| `SWAGGER_HABILITADO` | `true`               | Habilita la documentación OpenAPI/Swagger en `/api/docs`   |
+| `PGADMIN_PORT`       | `5050`               | Puerto del panel web pgAdmin                               |
+| `PGADMIN_EMAIL`      | `admin@admin.com`    | Email de inicio de sesión de pgAdmin                       |
+| `PGADMIN_PASSWORD`   | `admin`              | Clave de inicio de sesión de pgAdmin                       |
+
+> **Sin CORS a propósito.** La API no habilita CORS porque el frontend la consume siempre desde el mismo origen: el dev-server de Angular proxya `/api/*` a `http://localhost:3000` y, en el despliegue, nginx hace lo propio con `location /api/`. Si en algún momento el cliente apunta a otro origen (por ejemplo un `API_BASE_URL` absoluto), hay que habilitarlo en `src/app.setup.ts`.
 
 ---
 

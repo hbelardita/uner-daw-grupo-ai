@@ -15,15 +15,6 @@ export function configureApp(app: INestApplication): void {
 
   app.use(helmet());
 
-  const corsOrigin = configService.get<string>(
-    'CORS_ORIGIN',
-    'http://localhost:4200',
-  );
-  app.enableCors({
-    origin: corsOrigin,
-    credentials: true,
-  });
-
   app.setGlobalPrefix(GLOBAL_PREFIX);
 
   // URI versioning  default '1' -> /api/v1/...

@@ -92,15 +92,13 @@ describe('Bootstrap de la Aplicación y Ruteo Global (e2e)', () => {
       expect(response.headers['content-security-policy']).toBeDefined();
     });
 
-    it('debe incluir cabeceras CORS para el origen permitido cuando se especifica Origin', async () => {
+    it('no debe emitir cabeceras CORS al no estar habilitado en la API', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/health')
         .set('Origin', 'http://localhost:4200')
         .expect(200);
 
-      expect(response.headers['access-control-allow-origin']).toBe(
-        'http://localhost:4200',
-      );
+      expect(response.headers['access-control-allow-origin']).toBeUndefined();
     });
   });
 });

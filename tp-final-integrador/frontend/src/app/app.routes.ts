@@ -1,30 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { inject } from '@angular/core';
 import { type RedirectFunction, type Routes } from '@angular/router';
 import { authGuard, guestGuard, roleGuard } from './auth';
 import { obtenerRutaInicioPorRol } from './auth/auth-navigation';
 import { AuthService } from './auth/auth-service';
 import { SEGMENTOS_RUTA } from './constantes/rutas';
-
-@Component({
-  selector: 'app-turno-medico-detalle',
-  imports: [],
-  template: '<p>Detalle de Turno Médico</p>',
-})
-export class TurnoMedicoDetalleComponent {}
-
-@Component({
-  selector: 'app-mi-turno-detalle',
-  imports: [],
-  template: '<p>Detalle Mi Turno</p>',
-})
-export class MiTurnoDetalleComponent {}
-
-@Component({
-  selector: 'app-turno-admin-detalle',
-  imports: [],
-  template: '<p>Detalle de Turno (Admin)</p>',
-})
-export class TurnoAdminDetalleComponent {}
 
 export const resolverRutaInicio: RedirectFunction = () => {
   const auth = inject(AuthService);
@@ -57,11 +36,6 @@ export const routes: Routes = [
             path: '',
             loadComponent: () => import('./reservas/agenda-diaria/agenda-diaria'),
           },
-          {
-            path: `${SEGMENTOS_RUTA.TURNOS}/:id`,
-            title: 'Detalle del Turno',
-            component: TurnoMedicoDetalleComponent,
-          },
         ],
       },
       {
@@ -72,11 +46,6 @@ export const routes: Routes = [
           {
             path: '',
             loadComponent: () => import('./reservas/mis-turnos/mis-turnos'),
-          },
-          {
-            path: ':id',
-            title: 'Detalle de Mi Turno',
-            component: MiTurnoDetalleComponent,
           },
         ],
       },
@@ -101,12 +70,6 @@ export const routes: Routes = [
             title: 'Turnos',
             canActivate: [roleGuard(['ADMINISTRADOR'])],
             loadComponent: () => import('./reservas/admin-turnos/admin-turnos'),
-          },
-          {
-            path: ':id',
-            title: 'Detalle del Turno',
-            canActivate: [roleGuard(['ADMINISTRADOR'])],
-            component: TurnoAdminDetalleComponent,
           },
         ],
       },

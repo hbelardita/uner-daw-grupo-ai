@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
       testTimeout: 30000,
       globalSetup: ['./test/setup/global-setup.ts'],
       env: {
+        TZ: 'UTC',
         NODE_ENV: 'test',
         POSTGRES_DB: env.POSTGRES_DB_TEST || 'tp-integrador-test',
         DB_LOGGING: 'false',

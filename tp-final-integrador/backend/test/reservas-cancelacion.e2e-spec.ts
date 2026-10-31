@@ -5,6 +5,10 @@ import { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
+import {
+  fechaCalendarioClinicaConDesplazamiento,
+  fechaHoraUtcNaive,
+} from './setup/fechas.js';
 
 describe('Endpoint POST /api/v1/reservas/:id/cancelacion - Cancelación de reserva (e2e)', () => {
   let app: INestApplication;
@@ -79,17 +83,28 @@ describe('Endpoint POST /api/v1/reservas/:id/cancelacion - Cancelación de reser
     );
     idMedico1 = medico1Res[0].id;
 
-    // Calcular fechas dinámicas para pruebas e2e relativas a "hoy"
-    const hoy = new Date();
-    const fechaHoyIso = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')} 12:00:00`;
+    // Calcular fechas dinámicas para pruebas e2e relativas a "hoy".
+    // Los turnos se expresan con la hora de Argentina de la clínica y se
+    // persisten en UTC (por ejemplo 10:00 AR = 13:00 UTC).
+    const fechaHoyIso = fechaHoraUtcNaive(
+      fechaCalendarioClinicaConDesplazamiento(0),
+      12,
+    );
 
-    const fechaFutura = new Date(hoy.getTime() + 5 * 86_400_000);
-    const fechaFuturaIso = `${fechaFutura.getFullYear()}-${String(fechaFutura.getMonth() + 1).padStart(2, '0')}-${String(fechaFutura.getDate()).padStart(2, '0')} 10:00:00`;
+    const fechaFuturaIso = fechaHoraUtcNaive(
+      fechaCalendarioClinicaConDesplazamiento(5),
+      10,
+    );
 
-    fechaFuturaP2Iso = `${fechaFutura.getFullYear()}-${String(fechaFutura.getMonth() + 1).padStart(2, '0')}-${String(fechaFutura.getDate()).padStart(2, '0')} 14:00:00`;
+    fechaFuturaP2Iso = fechaHoraUtcNaive(
+      fechaCalendarioClinicaConDesplazamiento(5),
+      14,
+    );
 
-    const fechaPasada = new Date(hoy.getTime() - 2 * 86_400_000);
-    const fechaPasadaIso = `${fechaPasada.getFullYear()}-${String(fechaPasada.getMonth() + 1).padStart(2, '0')}-${String(fechaPasada.getDate()).padStart(2, '0')} 11:00:00`;
+    const fechaPasadaIso = fechaHoraUtcNaive(
+      fechaCalendarioClinicaConDesplazamiento(-2),
+      11,
+    );
 
     const insertRes = await dataSource.query(
       `INSERT INTO reservas (id_medico, id_paciente, fecha_hora, estado, valor_consulta)

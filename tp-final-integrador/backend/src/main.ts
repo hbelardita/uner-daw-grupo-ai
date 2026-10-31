@@ -1,10 +1,15 @@
-import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { configureApp } from './app.setup.js';
+import { configurarZonaHorariaUtc } from './config/zona-horaria.js';
 
 async function bootstrap() {
+  configurarZonaHorariaUtc();
+
   const app = await NestFactory.create(AppModule);
+  // Habilita el cierre ordenado
+  app.enableShutdownHooks();
   configureApp(app);
 
   const configService = app.get(ConfigService);

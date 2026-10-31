@@ -15,14 +15,10 @@ export function configureApp(app: INestApplication): void {
 
   app.use(helmet());
 
-  const corsOrigin = configService.get<string>(
-    'CORS_ORIGIN',
-    'http://localhost:4200',
-  );
-  app.enableCors({
-    origin: corsOrigin,
-    credentials: true,
-  });
+  // Sin CORS a proposito: el cliente consume la API siempre desde el mismo
+  // origen (proxy de `ng serve` en desarrollo y reverse proxy de nginx en el
+  // despliegue), asi que el navegador nunca hace una request cross-origin.
+  // Si algun dia el frontend apunta a otro origen, hay que habilitarlo aca.
 
   app.setGlobalPrefix(GLOBAL_PREFIX);
 

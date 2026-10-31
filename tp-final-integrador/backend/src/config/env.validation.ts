@@ -11,7 +11,6 @@ export const envValidationSchema = Joi.object({
   POSTGRES_PASSWORD: Joi.string().allow('').default('postgres'),
   POSTGRES_DB: Joi.string().default('tp-integrador'),
   DB_LOGGING: Joi.boolean().default(false),
-  CORS_ORIGIN: Joi.string().default('http://localhost:4200'),
   SWAGGER_HABILITADO: Joi.boolean().default(true),
   JWT_SECRET: Joi.string()
     .min(16)

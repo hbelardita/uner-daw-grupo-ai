@@ -165,7 +165,7 @@ export default class AdminTurnos implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly rutaReservar = RUTAS.TURNOS_NUEVO;
+  protected readonly rutaReservar = RUTAS.RESERVA_ADMIN;
 
   protected readonly reservas = signal<ReservaAdminResponse[]>([]);
   protected readonly total = signal<number>(0);

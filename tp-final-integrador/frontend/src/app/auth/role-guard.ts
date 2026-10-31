@@ -1,7 +1,6 @@
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 import { RUTAS } from '../constantes/rutas';
-import { obtenerRutaInicioPorRol } from './auth-navigation';
 import { AuthService } from './auth-service';
 import type { RolUsuario } from './rol-usuario';
 
@@ -29,8 +28,6 @@ export function roleGuard(allowedRoles?: readonly RolUsuario[] | RolUsuario): Ca
       return true;
     }
 
-    // Keep users in the section associated with their role when they try to
-    // access a route that is not available to them.
-    return router.parseUrl(obtenerRutaInicioPorRol(rolActual));
+    return router.createUrlTree([RUTAS.ACCESO_DENEGADO]);
   };
 }

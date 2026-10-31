@@ -46,7 +46,7 @@ export const NAVEGACION_POR_ROL: Readonly<Record<RolUsuario, readonly ItemNavega
     },
     {
       etiqueta: 'Nueva Reserva',
-      ruta: RUTAS.TURNOS_NUEVO,
+      ruta: RUTAS.RESERVA_ADMIN,
       icono: 'pi pi-calendar-plus',
       exacto: true,
     },

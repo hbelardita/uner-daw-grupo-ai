@@ -65,7 +65,7 @@ describe('roleGuard', () => {
     });
   });
 
-  describe('errores esperados y redirección por jerarquía de roles', () => {
+  describe('errores esperados y redirección a acceso denegado', () => {
     it('debe redirigir a /login si el usuario no tiene sesión iniciada', () => {
       estaAutenticadoSignal.set(false);
       rolSignal.set('PACIENTE');

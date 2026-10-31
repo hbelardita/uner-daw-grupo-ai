@@ -86,8 +86,14 @@ export const routes: Routes = [
           {
             path: SEGMENTOS_RUTA.TURNOS_NUEVO,
             title: 'Reservar Turno',
-            canActivate: [roleGuard(['PACIENTE', 'ADMINISTRADOR'])],
+            canActivate: [roleGuard(['PACIENTE'])],
             loadComponent: () => import('./reservas/reservar-turno/reservar-turno'),
+          },
+          {
+            path: SEGMENTOS_RUTA.RESERVA_ADMIN,
+            title: 'Nueva Reserva',
+            canActivate: [roleGuard(['ADMINISTRADOR'])],
+            loadComponent: () => import('./reservas/reservar-turno-admin/reservar-turno-admin'),
           },
           {
             path: '',

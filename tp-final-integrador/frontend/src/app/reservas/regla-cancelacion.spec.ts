@@ -69,12 +69,31 @@ describe('regla-cancelacion domain functions', () => {
   });
 
   describe('debeMostrarCancelacionDeshabilitada', () => {
-    it('retorna true para turnos ACTIVOS del día de hoy que no pueden cancelarse', () => {
+    it('retorna true para turnos ACTIVOS del día de hoy cuyo horario aún no comenzó', () => {
+      const turnoHoyPendiente: TurnoCancelable = {
+        ...baseTurno,
+        fechaHora: '2026-10-11T15:00:00.000-03:00',
+      };
+      const antesDelTurno = new Date('2026-10-11T10:00:00.000-03:00');
+      expect(
+        debeMostrarCancelacionDeshabilitada(turnoHoyPendiente, 'PACIENTE', antesDelTurno),
+      ).toBe(true);
+    });
+
+    it('retorna false para turnos ACTIVOS del día de hoy cuyo horario ya comenzó o pasó', () => {
       const turnoHoy: TurnoCancelable = {
         ...baseTurno,
-        fechaHora: '2026-10-11T16:00:00.000-03:00',
+        fechaHora: '2026-10-11T15:00:00.000-03:00',
       };
-      expect(debeMostrarCancelacionDeshabilitada(turnoHoy, 'PACIENTE', ahora)).toBe(true);
+      const enHorarioDelTurno = new Date('2026-10-11T15:00:00.000-03:00');
+      const despuesDelTurno = new Date('2026-10-11T21:00:00.000-03:00');
+
+      expect(debeMostrarCancelacionDeshabilitada(turnoHoy, 'PACIENTE', enHorarioDelTurno)).toBe(
+        false,
+      );
+      expect(debeMostrarCancelacionDeshabilitada(turnoHoy, 'PACIENTE', despuesDelTurno)).toBe(
+        false,
+      );
     });
 
     it('retorna false para turnos ACTIVOS pasados (anteriores a hoy)', () => {

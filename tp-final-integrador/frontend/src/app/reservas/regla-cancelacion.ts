@@ -132,7 +132,8 @@ export function esTurnoDeHoy(reserva: TurnoCancelable, ahora: Date): boolean {
  * Determina si debe mostrarse el botón de cancelación deshabilitado con motivo explicativo:
  * - La reserva debe encontrarse en estado 'ACTIVO'.
  * - No debe ser cancelable por las reglas vigentes.
- * - Debe ser un turno del día de hoy en UTC-3. Para turnos anteriores a hoy, ya ocurrieron y no se muestra botón.
+ * - Debe ser un turno del día de hoy en UTC-3 cuyo horario de inicio aún no haya comenzado.
+ *   Una vez alcanzada o superada la hora del turno, o en turnos de días previos, no se muestra aviso.
  */
 export function debeMostrarCancelacionDeshabilitada(
   reserva: TurnoCancelable,
@@ -147,5 +148,6 @@ export function debeMostrarCancelacionDeshabilitada(
     return false;
   }
 
-  return esTurnoDeHoy(reserva, ahora);
+  const fechaTurno = new Date(reserva.fechaHora);
+  return esTurnoDeHoy(reserva, ahora) && fechaTurno.getTime() > ahora.getTime();
 }

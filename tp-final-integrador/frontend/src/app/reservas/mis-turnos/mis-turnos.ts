@@ -10,20 +10,12 @@ import { Skeleton } from 'primeng/skeleton';
 import { RUTAS } from '../../constantes/rutas';
 import { CancelarTurnoDialog, EmptyState, EstadoBadge } from '../../shared';
 import { clasificarFalloHttp, type TextosFalloHttp } from '../../shared/functions/fallo-http';
-import {
-  crearInstanteInicioDiaClinica,
-  formatearFechaHoraClinica,
-  obtenerFechaLocalIso,
-} from '../../shared/functions/fecha-clinica';
+import { formatearFechaHoraClinica } from '../../shared/functions/fecha-clinica';
 import { debeMostrarCancelacionDeshabilitada, puedeCancelar } from '../regla-cancelacion';
 import type { HistorialReservaResponse } from '../reservas-dto';
 import { ReservasService } from '../reservas-service';
 
 export type VistaTurnos = 'proximos' | 'historial';
-
-function obtenerInicioDiaHoy(): number {
-  return crearInstanteInicioDiaClinica(obtenerFechaLocalIso(new Date())).getTime();
-}
 
 const TEXTOS_FALLO_CANCELACION: TextosFalloHttp = {
   desincronizado: 'El turno cambió de estado. Actualizamos tu lista de turnos.',
@@ -65,19 +57,21 @@ export default class MisTurnos implements OnInit {
   protected readonly puedeCancelar = puedeCancelar;
   protected readonly debeMostrarCancelacionDeshabilitada = debeMostrarCancelacionDeshabilitada;
 
-  protected readonly proximos = computed(() => {
-    const inicioHoy = obtenerInicioDiaHoy();
-    return this.reservas()
-      .filter((r) => r.estado === 'ACTIVO' && new Date(r.fechaHora).getTime() >= inicioHoy)
-      .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime());
-  });
+  protected readonly proximos = computed(() =>
+    this.reservas()
+      .filter(
+        (r) => r.estado === 'ACTIVO' && new Date(r.fechaHora).getTime() >= this.ahora.getTime(),
+      )
+      .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime()),
+  );
 
-  protected readonly historial = computed(() => {
-    const inicioHoy = obtenerInicioDiaHoy();
-    return this.reservas()
-      .filter((r) => r.estado !== 'ACTIVO' || new Date(r.fechaHora).getTime() < inicioHoy)
-      .sort((a, b) => new Date(b.fechaHora).getTime() - new Date(a.fechaHora).getTime());
-  });
+  protected readonly historial = computed(() =>
+    this.reservas()
+      .filter(
+        (r) => r.estado !== 'ACTIVO' || new Date(r.fechaHora).getTime() < this.ahora.getTime(),
+      )
+      .sort((a, b) => new Date(b.fechaHora).getTime() - new Date(a.fechaHora).getTime()),
+  );
 
   protected readonly conteoProximos = computed(() => this.proximos().length);
 
